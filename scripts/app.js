@@ -3,7 +3,7 @@ function print_string(num) {
 		document.getElementById(i).innerHTML = i
 		//console.log(i)
 		document.getElementById(i).style.color = f(i)
-		if (i==num) {
+		if (num.some(i)) {
 			document.getElementById(i).style.color = "blue"
 		}
 	}
@@ -27,8 +27,28 @@ function f(num) {
 		return 'black'
 }
 function multi(){
-	print_string(document.getElementById('name').value)
+	tmp = document.getElementById('name').value)
+	print_string(neibors(tmp)) 
 }
+function neibors(num){
+const wr = [0,
+                  32, 15 , 19, 4, 21, 2,
+                  25, 17, 34, 6, 27, 13,
+                  36, 11, 30, 8, 23, 10,
+                  5, 24, 16, 33, 1, 20,
+                  14, 31, 9, 22, 18, 29,
+                  7, 28, 12, 35, 3, 26]
+//console.log (wheel_roulette[1]) 
+ ans = []
+    nid = wr.indexOf(num)
+    ans. push(wr[nid - 2])
+    ans. push(wr[nid - 1])
+    ans. push(wr[nid])
+    ans. push(wr[nid + 1])
+    ans. push(wr[nid + 2])
+ return ans            
+}
+ //console.log(neibors(11) )
 print_string()
 
 
