@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задачки и вопросы про Казино</title>
+    <link rel="stylesheet" href="./styles/style_trening1.css">
+  
+    <meta property="og:title" content="Заголовок страницы в OG">
+    <meta property="og:description" content="Описание страницы в OG">
+    <meta property="og:image" content="images/logo_boom.png">
+    <meta property="og:url" content="https://example.com/">
+  </head>
+  <body>
+    <header> 
+     <nav>
+        <ul>
+          <li><a href="index.html">Главная страница</a></li>
+        </ul>
+      </nav>
+      <h1>Таблица умножения</h1>
+      <p>Здесь можно проверить знания таблицы умножения</p>
+    </header>
+    <main>
+      <article>
+        <section>
+          <h2>Уровень сложности</h2>
+          <form>
+            <input type="checkbox" id="vehicle1" name="vehicle1" value="bj">
+            <label for="vehicle1"> умножение на 2.5</label><br>
+            <input type="checkbox" id="vehicle2" name="vehicle2" value="rul" checked>
+            <label for="vehicle2"> умножение на 17 и 35</label><br>
+            <input type="checkbox" id="vehicle3" name="vehicle3" value="hard" checked>
+            <label for="vehicle3"> счет до 20</label>
+          </form>
+        </section>
+        <section>
+          <h2>Пример</h2>
+          <div>
+            <p id = "output_multiple">Чтобы начать нажмите кнопку</p>
+          </div>
+          <button onclick="multiple()"  class="btn btn-primary" >Показать</button>
+        </section>
+      </article>
+    </main>
+    <footer>
+      <!--<p>Автор Владимир Кулагин</p>-->
+    </footer>
+    <script src="scripts/multiple.js" defer></script>
+  </body>
+</html>
