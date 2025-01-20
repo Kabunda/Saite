@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задачки и вопросы про Казино</title>
+    <link rel="stylesheet" href="./styles/style_trening1.css">
+  
+    <meta property="og:title" content="Заголовок страницы в OG">
+    <meta property="og:description" content="Описание страницы в OG">
+    <meta property="og:image" content="images/logo_boom.png">
+    <meta property="og:url" content="https://example.com/">
+  </head>
+  <body>
+    <header> 
+     <nav>
+        <ul>
+          <li><a href="index.html">Главная страница</a></li>
+        </ul>
+      </nav>
+      <h1>Комплиты</h1>
+      <p>Будет задан номер и номинал комплита, нужно назвать ставку и выплату</p>
+    </header>
+    <main>
+      <article>
+        <section>
+          <h2>Уровень сложности</h2>
+          <form>
+            <input type="checkbox" id="v1" name="vehicle1" value="by_10" checked>
+            <label for="vehicle1"> комплиты по 10</label><br>
+            <input type="checkbox" id="v2" name="vehicle2" value="st_25">
+            <label for="vehicle2"> шаг 25 после 100</label><br>
+            <input type="checkbox" id="v3" name="vehicle3" value="st" checked>
+            <label for="vehicle3"> ставка</label><br>
+            <input type="checkbox" id="v4" name="vehicle4" value="viplata" checked>
+            <label for="vehicle4"> выплата</label><br>
+          </form>
+        </section>
+        <section>
+          <h2>Пример</h2>
+          <div>
+            <p id = "output_multiple">Тут будет пример</p>
+          </div>
+          <div>
+            <p id = "output_multiple_otvet">Здесь будет ответ</p>
+          </div>
+          <br>
+          <button onclick="m_comp()"  class="btn btn-primary" >Следующий пример</button>
+          <button onclick="sow()"  class="btn btn-primary" >Показать ответ</button>
+        </section>
+      </article>
+    </main>
+    <footer>
+      <!--<p>Автор Владимир Кулагин</p>-->
+    </footer>
+    <script src="scripts/complit_tren.js" defer></script>
+  </body>
+</html>
