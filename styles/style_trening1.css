@@ -9,9 +9,10 @@ div {
   	text-align: center;
 }
 button {
-	width: 40%;
+	width: 45%;
 	color: darkred;
 	box-shadow: 8px 8px 5px #444;
 	padding: 8px 12px;
 	border: 1px solid #333;
+	font-size: small;
 }
