@@ -25,6 +25,12 @@ function multiple(){
 }
 function sow(){
 	document.getElementById("output_multiple_otvet").hidden = false
+  ans = document.getElementById("ans").value
+  ansp = document.getElementById("output_multiple_otvet").innerHTML
+  if (Number(ans) == Number(ansp)) 
+  document.getElementById("output_multiple_otvet").style.color = "green" 
+  else
+  document.getElementById("output_multiple_otvet").style.color = "red" 
 }
 
 function getRandomInt(max) {
