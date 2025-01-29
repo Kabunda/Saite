@@ -3,13 +3,6 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Задачки и вопросы про Казино</title>
-    <link rel="stylesheet" href="./styles/style_main.css">
-  
-    <meta property="og:title" content="Заголовок страницы в OG">
-    <meta property="og:description" content="Описание страницы в OG">
-    <meta property="og:image" content="images/logo_boom.png">
-    <meta property="og:url" content="https://example.com/">
   </head>
   <body>
     <header>
@@ -17,21 +10,12 @@
       <p>Тестирование работы с файлами</p>
     </header>
     <main>
-      <!-- The `multiple` attribute lets users select multiple files. -->
-<input type="file" id="file-selector" multiple>
-<script>
-  const fileSelector = document.getElementById('file-selector');
-  fileSelector.addEventListener('change', (event) => {
-    const fileList = event.target.files;
-    console.log(fileList);
-    <<! 
---document.getElementById('lc').innerHTML = fileList;-->>
-  });
-</script>
+      <input type="file" id="file-selector" multiple>
+      <div id="lc">+</div>
     </main>
     <footer>
-      <p id="lc" >Сюда бы я вписал информацию об авторе и ссылки на другие сайты</p>
+      <p>Сюда бы я вписал информацию об авторе и ссылки на другие сайты</p>
     </footer>
-    <!-- сюда можно подключить jquery <script src="scripts/app.js" defer></script> -->
+    <script src="filetestJS.js" defer></script>
   </body>
 </html>
