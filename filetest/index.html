@@ -17,10 +17,19 @@
       <p>Тестирование работы с файлами</p>
     </header>
     <main>
-      
+      <!-- The `multiple` attribute lets users select multiple files. -->
+<input type="file" id="file-selector" multiple>
+<script>
+  const fileSelector = document.getElementById('file-selector');
+  fileSelector.addEventListener('change', (event) => {
+    const fileList = event.target.files;
+    <<!--console.log(fileList);-->>
+    document.getElementById('lc').innerHTML = fileList;
+  });
+</script>
     </main>
     <footer>
-      <p>Сюда бы я вписал информацию об авторе и ссылки на другие сайты</p>
+      <p id="lc" >Сюда бы я вписал информацию об авторе и ссылки на другие сайты</p>
     </footer>
     <!-- сюда можно подключить jquery <script src="scripts/app.js" defer></script> -->
   </body>
