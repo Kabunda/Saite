@@ -23,5 +23,6 @@ control.addEventListener("change", function(event) {
     };
  
     reader.readAsText(files[0]);
+    console.log(reader.result);
 }, false);
 
