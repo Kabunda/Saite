@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Умножение</title>
-    <link rel="stylesheet" href="../styles/style_trening1.css">  
+    <link rel="stylesheet" href="../styles/style_multiple.css">  
     <meta property="og:title" content="Умножение">
     <meta property="og:description" content="Умножение">
   </head>
@@ -20,7 +20,7 @@
     </header>
     <main>
       <article>
-        <section>
+        <section hidden = "true">
           <h2>Уровень сложности</h2>
           <form>
             <input type="checkbox" id="vehicle1" name="vehicle1" value="bj">
@@ -33,18 +33,23 @@
         </section>
         <section>
           <h2>Пример</h2>
-          <div>
-            <p id = "output_multiple">Тут будет пример</p>
+          <div class="parent">
+            <div class="child">
+              <p id = "output_multiple">X * Y</p>
+            </div>
+            <div class="child">
+              <p id = "output_multiple_otvet">Z</p>
+            </div>
           </div>
-          <div>
-            <p id = "output_multiple_otvet">Здесь будет ответ</p>
+
+          <div class="parent">
+            <input type = "number" id = "ans" autofocus>
           </div>
-          <div>
-          	<input type = "number" id = "ans" >
-          </div>
-          <br>
-          <button onclick="multiple()"  class="btn btn-primary" >Следующий пример</button>
-          <button onclick="sow()"  class="btn btn-primary" >Показать ответ</button>
+          <div class="parent">
+            <button onclick="multiple()"  class="btn btn-primary" >Следующий пример</button>
+            <button onclick="sow()"  class="btn btn-primary" >Показать ответ</button>
+        </div>
+
         </section>
       </article>
     </main>

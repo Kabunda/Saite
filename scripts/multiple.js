@@ -22,6 +22,8 @@ function multiple(){
 	document.getElementById("output_multiple").innerHTML = ans
 	document.getElementById("output_multiple_otvet").hidden = true
 	document.getElementById("output_multiple_otvet").innerHTML = fm * lm
+	document.getElementById("ans").value = ""
+	document.getElementById("ans").focus()
 }
 function sow(){
 	document.getElementById("output_multiple_otvet").hidden = false

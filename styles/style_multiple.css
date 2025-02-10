@@ -1,0 +1,23 @@
+.parent {
+  display: flex;
+  justify-content: center;
+  /*border: 2px solid blue;*/
+}
+
+.child {
+  border: 2px solid black;
+  width: 40%;
+  font-size: xx-large;
+}
+button {
+	width: 40%;
+	color: darkred;
+	box-shadow: 8px 8px 5px #444;
+	padding: 8px 12px;
+	border: 1px solid #333;
+	font-size: small;
+}
+input {
+	width: 40%;
+	font-size: xx-large;
+}
