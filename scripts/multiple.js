@@ -3,9 +3,7 @@ function multiple(){
 	m1735 = document.getElementById("vehicle2").checked
 	r20 = document.getElementById("vehicle3").checked
 
-	//console.log (bj,m1735,r20)
-
-	fm = getRandomInt(r20 ? 20 : 10)
+	fm = 4 + getRandomInt(r20 ? 16 : 6)
 	cou = 5
 	lms = [5,8,11,17,35]
 	if (bj) {
@@ -38,3 +36,38 @@ function sow(){
 function getRandomInt(max) {
   return Math.floor(Math.random() * max) + 1;
 }
+
+let timer = document.getElementById('timer');
+let startBtn = document.getElementById('startBtn');
+let pauseBtn = document.getElementById('pauseBtn');
+let resetBtn = document.getElementById('resetBtn');
+let secsec = 0;
+let seconds = 0;
+let minutes = 0;
+let interval;
+
+function updateTime() {
+	secsec++;
+	if (secsec === 100) {
+  	seconds++;
+  	secsec = 0;
+	}
+  
+  if (seconds === 60) {
+    minutes++;
+    seconds = 0;
+  }
+  timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${secsec.toString().padStart(2, '0')}`;
+}
+
+startBtn.addEventListener('click', () => {
+  secsec = 0;
+  seconds = 0;
+  minutes = 0;
+  timer.textContent = '00:00:00';
+  interval = setInterval(updateTime, 10);
+});
+
+pauseBtn.addEventListener('click', () => {
+  clearInterval(interval);
+});

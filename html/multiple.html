@@ -34,6 +34,9 @@
         <section>
           <h2>Пример</h2>
           <div class="parent">
+            <p id="timer">00:00:00</p>
+          </div>
+          <div class="parent">
             <div class="child">
               <p id = "output_multiple">X * Y</p>
             </div>
@@ -41,15 +44,13 @@
               <p id = "output_multiple_otvet">Z</p>
             </div>
           </div>
-
           <div class="parent">
-            <input type = "number" id = "ans" autofocus>
+            <input type = "number" id = "ans" can>
           </div>
           <div class="parent">
-            <button onclick="multiple()"  class="btn btn-primary" >Следующий пример</button>
-            <button onclick="sow()"  class="btn btn-primary" >Показать ответ</button>
-        </div>
-
+            <button id = "startBtn" onclick="multiple()"  class="btn btn-primary" >Следующий пример</button>
+            <button id = "pauseBtn" onclick="sow()"  class="btn btn-primary" >Показать ответ</button>
+          </div>
         </section>
       </article>
     </main>
