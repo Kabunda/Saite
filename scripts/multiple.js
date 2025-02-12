@@ -1,7 +1,26 @@
+let timer = document.getElementById('timer');
+let welcomBtn = document.getElementById('welcomBtn');
+let nextBtn = document.getElementById('nextBtn');
+let controlBtn = document.getElementById('controlBtn');
+let secsec = 0;
+let seconds = 0;
+let minutes = 0;
+let interval;
+
 function multiple(){
+
+	welcomBtn.hidden = true
+	nextBtn.hidden = true
+	controlBtn.hidden = false
 	bj = document.getElementById("vehicle1").checked
 	m1735 = document.getElementById("vehicle2").checked
 	r20 = document.getElementById("vehicle3").checked
+
+	secsec = 0;
+  seconds = 0;
+  minutes = 0;
+  timer.textContent = '00:00:00';
+  interval = setInterval(updateTime, 10);
 
 	fm = 4 + getRandomInt(r20 ? 16 : 6)
 	cou = 5
@@ -24,6 +43,12 @@ function multiple(){
 	document.getElementById("ans").focus()
 }
 function sow(){
+
+	nextBtn.hidden = false
+	controlBtn.hidden = true
+
+	clearInterval(interval);
+
 	document.getElementById("output_multiple_otvet").hidden = false
   ans = document.getElementById("ans").value
   ansp = document.getElementById("output_multiple_otvet").innerHTML
@@ -33,18 +58,16 @@ function sow(){
   document.getElementById("output_multiple_otvet").style.color = "red" 
 }
 
+function TapEnter(){
+	if (nextBtn.hidden)
+		sow()
+	else
+		multiple()
+}
+
 function getRandomInt(max) {
   return Math.floor(Math.random() * max) + 1;
 }
-
-let timer = document.getElementById('timer');
-let startBtn = document.getElementById('startBtn');
-let pauseBtn = document.getElementById('pauseBtn');
-let resetBtn = document.getElementById('resetBtn');
-let secsec = 0;
-let seconds = 0;
-let minutes = 0;
-let interval;
 
 function updateTime() {
 	secsec++;
@@ -59,15 +82,3 @@ function updateTime() {
   }
   timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${secsec.toString().padStart(2, '0')}`;
 }
-
-startBtn.addEventListener('click', () => {
-  secsec = 0;
-  seconds = 0;
-  minutes = 0;
-  timer.textContent = '00:00:00';
-  interval = setInterval(updateTime, 10);
-});
-
-pauseBtn.addEventListener('click', () => {
-  clearInterval(interval);
-});

@@ -45,11 +45,12 @@
             </div>
           </div>
           <div class="parent">
-            <input type = "number" id = "ans" can>
+            <input type = "number" id = "ans" onchange="TapEnter()">
           </div>
           <div class="parent">
-            <button id = "startBtn" onclick="multiple()"  class="btn btn-primary" >Следующий пример</button>
-            <button id = "pauseBtn" onclick="sow()"  class="btn btn-primary" >Показать ответ</button>
+            <button id = "welcomBtn" onclick="multiple()"  class="btn btn-primary" >Начать</button>
+            <button id = "nextBtn" onclick="multiple()"  class="btn btn-primary" hidden = "true">Продолжить</button>
+            <button id = "controlBtn" onclick="sow()"  class="btn btn-primary" hidden = "true">Проверить</button>
           </div>
         </section>
       </article>
