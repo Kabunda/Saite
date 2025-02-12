@@ -35,7 +35,7 @@ function multiple(){
 		cou +=2
 	}
 	lm = lms[getRandomInt(cou)-1]
-	ans = " " + fm + " x " + lm
+	ans = " " + fm + " x " + lm + " ="
 	document.getElementById("output_multiple").innerHTML = ans
 	document.getElementById("output_multiple_otvet").hidden = true
 	document.getElementById("output_multiple_otvet").innerHTML = fm * lm

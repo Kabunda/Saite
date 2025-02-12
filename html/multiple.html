@@ -41,12 +41,16 @@
               <p id = "output_multiple">X * Y</p>
             </div>
             <div class="child">
+              <p>
+                <input type = "number" id = "ans" onchange="TapEnter()">
+              </p>
+            </div>
+
+            <div class="child">
               <p id = "output_multiple_otvet">Z</p>
             </div>
           </div>
-          <div class="parent">
-            <input type = "number" id = "ans" onchange="TapEnter()">
-          </div>
+
           <div class="parent">
             <button id = "welcomBtn" onclick="multiple()"  class="btn btn-primary" >Начать</button>
             <button id = "nextBtn" onclick="multiple()"  class="btn btn-primary" hidden = "true">Продолжить</button>
