@@ -1,14 +1,14 @@
 .parent {
   display: flex;
   justify-content: center;
-  font-size: xx-large;
+  font-size: large;
   text-align: center;
 }
 
 .child {
   border: 2px solid black;
   width: 49%;
-  font-size: xx-large;
+  font-size: large;
 }
 button {
 	width: 40%;
@@ -20,5 +20,5 @@ button {
 }
 input {
 	width: 40%;
-	font-size: xx-large;
+	font-size: large;
 }
