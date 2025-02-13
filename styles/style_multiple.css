@@ -1,4 +1,4 @@
-№.parent {
+.parent {
   display: flex;
   justify-content: center;
   font-size: large;
@@ -11,7 +11,7 @@
   font-size: large;
 }
 button {
-	width: 40%;
+	width: 70%;
 	color: darkred;
 	box-shadow: 8px 8px 5px #444;
 	padding: 8px 12px;
