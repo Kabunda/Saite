@@ -1,4 +1,3 @@
-// Кешируем все DOM-элементы
 const elements = {
     timer: document.getElementById('timer'),
     welcomBtn: document.getElementById('welcomBtn'),
@@ -12,91 +11,65 @@ const elements = {
     vehicle3: document.getElementById('vehicle3')
 };
 
-// Состояние приложения
 let state = {
     secsec: 0,
     seconds: 0,
     minutes: 0,
-    intervalId: null,
-    baseNumbers: [5, 8, 11, 17, 35]
+    intervalId: null
 };
 
-// Константы
-const TIMER_INTERVAL = 10;
+// Инициализация приложения
+function init() {
+    elements.welcomBtn.addEventListener('click', multiple);
+    elements.nextBtn.addEventListener('click', multiple);
+    elements.controlBtn.addEventListener('click', sow);
+    elements.answerInput.addEventListener('change', TapEnter);
+}
 
-// Оптимизированная функция инициализации
 function multiple() {
-    // Обновляем состояние интерфейса
     elements.welcomBtn.hidden = true;
     elements.nextBtn.hidden = true;
     elements.controlBtn.hidden = false;
     
-    // Сбрасываем таймер
     resetTimer();
     
-    // Получаем значения чекбоксов
-    const [bj, m1735, r20] = [
-        elements.vehicle1.checked,
-        elements.vehicle2.checked,
-        elements.vehicle3.checked
-    ];
+    const bj = elements.vehicle1.checked;
+    const m1735 = elements.vehicle2.checked;
+    const r20 = elements.vehicle3.checked;
+
+    const fm = 4 + getRandomInt(r20 ? 16 : 6);
+    let numbers = [5, 8, 11, 17, 35];
     
-    // Генерируем задание
-    const { question, answer } = generateProblem(bj, m1735, r20);
+    if (bj) numbers.push(2.5);
+    if (m1735) numbers.push(17, 35);
     
-    // Обновляем интерфейс
-    elements.outputMultiple.textContent = ` ${question} =`;
+    const lm = numbers[Math.floor(Math.random() * numbers.length)];
+    
+    elements.outputMultiple.textContent = `${fm} × ${lm} =`;
+    elements.outputAnswer.textContent = fm * lm;
     elements.outputAnswer.hidden = true;
-    elements.outputAnswer.textContent = answer;
     elements.answerInput.value = "";
     elements.answerInput.focus();
 }
 
-// Вынесенная логика генерации задачи
-function generateProblem(bj, m1735, r20) {
-    const fm = 4 + getRandomInt(r20 ? 16 : 6);
-    let numbers = [...state.baseNumbers];
-    let count = numbers.length;
-
-    if (bj) {
-        numbers.push(2.5);
-        count++;
-    }
-    if (m1735) {
-        numbers.push(17, 35);
-        count += 2;
-    }
-
-    const lm = numbers[getRandomInt(count) - 1];
-    return {
-        question: `${fm} × ${lm}`,
-        answer: fm * lm
-    };
-}
-
-// Оптимизированная функция проверки
 function sow() {
     elements.nextBtn.hidden = false;
     elements.controlBtn.hidden = true;
     clearInterval(state.intervalId);
     
-    const userAnswer = Number(elements.answerInput.value);
-    const correctAnswer = Number(elements.outputAnswer.textContent);
-    
     elements.outputAnswer.hidden = false;
-    elements.outputAnswer.style.color = userAnswer === correctAnswer ? "green" : "red";
+    const isCorrect = Number(elements.answerInput.value) === Number(elements.outputAnswer.textContent);
+    elements.outputAnswer.style.color = isCorrect ? "green" : "red";
 }
 
-// Улучшенный таймер
 function resetTimer() {
     state.secsec = state.seconds = state.minutes = 0;
     elements.timer.textContent = '00:00:00';
-    state.intervalId = setInterval(updateTime, TIMER_INTERVAL);
+    state.intervalId = setInterval(updateTime, 10);
 }
 
 function updateTime() {
     state.secsec++;
-    
     if (state.secsec === 100) {
         state.seconds++;
         state.secsec = 0;
@@ -105,18 +78,20 @@ function updateTime() {
         state.minutes++;
         state.seconds = 0;
     }
-    
     elements.timer.textContent = 
-        `${state.minutes.toString().padStart(2, '0')}:` +
-        `${state.seconds.toString().padStart(2, '0')}:` +
-        `${state.secsec.toString().padStart(2, '0')}`;
+        `${String(state.minutes).padStart(2, '0')}:` +
+        `${String(state.seconds).padStart(2, '0')}:` +
+        `${String(state.secsec).padStart(2, '0')}`;
 }
 
-// Вспомогательные функции
 function TapEnter() {
-    elements.nextBtn.hidden ? sow() : multiple();
+    if (elements.nextBtn.hidden) sow();
+    else multiple();
 }
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * max) + 1;
 }
+
+// Запуск приложения
+init();

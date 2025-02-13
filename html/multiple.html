@@ -4,84 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тренажёр умножения</title>
-    <link rel="stylesheet" href="../styles/style_multiple.css">
-    <meta name="description" content="Тренажёр для практики умножения с разными уровнями сложности">
-    
-    <!-- Open Graph метатеги -->
-    <meta property="og:title" content="Тренажёр умножения">
-    <meta property="og:description" content="Практикуйте умножение с настраиваемыми уровнями сложности">
-    <meta property="og:image" content="../images/og-image.jpg">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header hidden>
-        <nav aria-label="Основная навигация">
-            <ul>
-                <li><a href="../index.html">Главная</a></li>
-            </ul>
-        </nav>
-        <h1>Тренажёр умножения</h1>
-    </header>
-
     <main>
         <article>
-            <section hidden aria-labelledby="difficulty-heading">
-                <h2 id="difficulty-heading">Настройки сложности</h2>
+            <section hidden>
                 <form>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="multiply25" name="multiply25">
-                        <label for="multiply25">Умножение на 2.5</label>
+                        <input type="checkbox" id="vehicle1" checked>
+                        <label for="vehicle1">Умножение на 2.5</label>
                     </div>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="multiply1735" name="multiply1735" checked>
-                        <label for="multiply1735">Умножение на 17 и 35</label>
+                        <input type="checkbox" id="vehicle2" checked>
+                        <label for="vehicle2">Умножение на 17 и 35</label>
                     </div>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="count20" name="count20" checked>
-                        <label for="count20">Счёт до 20</label>
+                        <input type="checkbox" id="vehicle3" checked>
+                        <label for="vehicle3">Счёт до 20</label>
                     </div>
                 </form>
             </section>
 
-            <section aria-labelledby="practice-section-heading">
-                <h3 id="practice-section-heading">Тренировка</h3>
-                
+            <section>
                 <div class="timer-container">
-                    <p id="timer" role="timer" aria-live="polite">00:00:00</p>
+                    <p id="timer">00:00:00</p>
                 </div>
 
                 <div class="practice-grid">
                     <div class="problem-section">
-                        <p id="output_multiple" aria-live="polite">&nbsp;</p>
+                        <p id="output_multiple">&nbsp;</p>
                     </div>
                     
                     <div class="input-section">
-                        <input type="number" 
-                               id="ans" 
-                               inputmode="numeric"
-                               aria-label="Введите ответ"
-                               autocomplete="off">
+                        <input type="number" id="ans">
                     </div>
 
                     <div class="result-section">
-                        <p id="output_multiple_otvet" 
-                           aria-live="polite"
-                           hidden></p>
+                        <p id="output_multiple_otvet" hidden></p>
                     </div>
                 </div>
 
                 <div class="controls-grid">
-                    <button id="welcomBtn" class="btn btn-primary">Начать</button>
-                    <button id="nextBtn" class="btn btn-primary" hidden>Продолжить</button>
-                    <button id="controlBtn" class="btn btn-primary" hidden>Проверить</button>
+                    <button id="welcomBtn" class="btn">Начать</button>
+                    <button id="nextBtn" class="btn" hidden>Продолжить</button>
+                    <button id="controlBtn" class="btn" hidden>Проверить</button>
                 </div>
             </section>
         </article>
     </main>
-
-    <footer role="contentinfo">
-        <!-- Убрали комментарий для чистоты кода -->
-    </footer>
-
-    <script src="../scripts/multiple.js" defer></script>
+    <script src="script.js"></script>
 </body>
 </html>
