@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <!-- Градиенты и фильтры -->
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4682B4"/>
+      <stop offset="100%" stop-color="#B0E0E6"/>
+    </linearGradient>
+
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="90%" stop-color="#FFD700" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FF4500" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="mountainShadow">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="#3A506A"/>
+    </filter>
+
+    <pattern id="snowTexture" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1" fill="white"/>
+      <circle cx="15" cy="5" r="0.7" fill="white"/>
+    </pattern>
+  </defs>
+
+  <!-- Фон -->
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <circle cx="650" cy="120" r="50" fill="url(#sun)"/>
+
+  <!-- Далёкие горы (3 слоя) -->
+  <g opacity="0.6">
+    <path d="M-50 450 Q 150 180 350 450" fill="#5C7A88"/>
+    <path d="M200 500 Q 400 300 600 500" fill="#4A6672"/>
+  </g>
+
+  <!-- Основной горный хребет -->
+  <g filter="url(#mountainShadow)">
+    <path d="M50 600 L250 100 L450 600" fill="#394D61"/>
+    <path d="M250 100 L200 250 L300 250 Z" fill="url(#snowTexture)"/>
+    <path d="M250 100 L200 250 L300 250 Z" fill="white" opacity="0.3"/>
+  </g>
+
+  <!-- Лес (детализированные ёлки) -->
+  <g transform="translate(0 30)">
+    <!-- Левая группа -->
+    <path d="M120 550 L140 500 Q 160 520 160 500 L180 550" fill="#2F4F2F"/>
+    <path d="M140 500 L130 480 L150 470 L160 490 Z" fill="#3B613B"/>
+    
+    <!-- Правая группа -->
+    <g transform="translate(400 0)">
+      <path d="M100 570 L120 520 Q 140 540 140 520 L160 570" fill="#2F4F2F"/>
+      <path d="M120 520 L110 500 L130 490 L140 510 Z" fill="#3B613B"/>
+    </g>
+  </g>
+
+  <!-- Горная река -->
+  <path d="M0 580 Q 200 560 400 580 T 800 570" fill="#87CEEB" opacity="0.6"/>
+  <path d="M0 585 Q 200 565 400 585 T 800 575" fill="#B0E0E6" opacity="0.4"/>
+
+  <!-- Детали: камни, тропинки -->
+  <g fill="#5A4D41" opacity="0.7">
+    <rect x="300" y="580" width="15" height="30" rx="3"/>
+    <rect x="500" y="570" width="20" height="40" rx="5"/>
+    <path d="M350 590 Q 370 585 380 600" stroke="#6B5C52" stroke-width="3" fill="none"/>
+  </g>
+
+  <!-- Облака с анимацией (просто добавьте это в тег <svg> для анимации) -->
+  <g opacity="0.85">
+    <path d="M50 100 Q 70 80 90 100 T 130 100" fill="white"/>
+    <animateTransform attributeName="transform" type="translate" values="0 0; 5 0; 0 0" dur="10s" repeatCount="indefinite"/>
+  </g>
+</svg>
