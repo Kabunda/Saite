@@ -1,67 +1,87 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Умножение</title>
-    <link rel="stylesheet" href="../styles/style_multiple.css">  
-    <meta property="og:title" content="Умножение">
-    <meta property="og:description" content="Умножение">
-  </head>
-  <body>
-    <header hidden = "true"> 
-     <nav>
-        <ul>
-          <li><a href="../index.html">Главная страница</a></li>
-        </ul>
-      </nav>
-      <h1>Таблица умножения</h1>
-      <p>Здесь можно проверить знания таблицы умножения</p>
+    <title>Тренажёр умножения</title>
+    <link rel="stylesheet" href="../styles/style_multiple.css">
+    <meta name="description" content="Тренажёр для практики умножения с разными уровнями сложности">
+    
+    <!-- Open Graph метатеги -->
+    <meta property="og:title" content="Тренажёр умножения">
+    <meta property="og:description" content="Практикуйте умножение с настраиваемыми уровнями сложности">
+    <meta property="og:image" content="../images/og-image.jpg">
+</head>
+<body>
+    <header hidden>
+        <nav aria-label="Основная навигация">
+            <ul>
+                <li><a href="../index.html">Главная</a></li>
+            </ul>
+        </nav>
+        <h1>Тренажёр умножения</h1>
     </header>
+
     <main>
-      <article>
-        <section hidden = "true">
-          <h2>Уровень сложности</h2>
-          <form>
-            <input type="checkbox" id="vehicle1" name="vehicle1" value="bj">
-            <label for="vehicle1"> умножение на 2.5</label><br>
-            <input type="checkbox" id="vehicle2" name="vehicle2" value="rul" checked>
-            <label for="vehicle2"> умножение на 17 и 35</label><br>
-            <input type="checkbox" id="vehicle3" name="vehicle3" value="hard" checked>
-            <label for="vehicle3"> счет до 20</label>
-          </form>
-        </section>
-        <section>
-          <h3>Умножение</h3>
-          <div class="parent">
-            <p id="timer">00:00:00</p>
-          </div>
-          <div class="parent">
-            <div class="child">
-              <p id = "output_multiple">X * Y</p>
-            </div>
-            <div class="child">
-              <p>
-                <input type = "number" id = "ans" onchange="TapEnter()">
-              </p>
-            </div>
+        <article>
+            <section hidden aria-labelledby="difficulty-heading">
+                <h2 id="difficulty-heading">Настройки сложности</h2>
+                <form>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="multiply25" name="multiply25">
+                        <label for="multiply25">Умножение на 2.5</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="multiply1735" name="multiply1735" checked>
+                        <label for="multiply1735">Умножение на 17 и 35</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="count20" name="count20" checked>
+                        <label for="count20">Счёт до 20</label>
+                    </div>
+                </form>
+            </section>
 
-            <div class="child">
-              <p id = "output_multiple_otvet">Z</p>
-            </div>
-          </div>
+            <section aria-labelledby="practice-section-heading">
+                <h3 id="practice-section-heading">Тренировка</h3>
+                
+                <div class="timer-container">
+                    <p id="timer" role="timer" aria-live="polite">00:00:00</p>
+                </div>
 
-          <div class="parent">
-            <button id = "welcomBtn" onclick="multiple()"  class="btn btn-primary" >Начать</button>
-            <button id = "nextBtn" onclick="multiple()"  class="btn btn-primary" hidden = "true">Продолжить</button>
-            <button id = "controlBtn" onclick="sow()"  class="btn btn-primary" hidden = "true">Проверить</button>
-          </div>
-        </section>
-      </article>
+                <div class="practice-grid">
+                    <div class="problem-section">
+                        <p id="output_multiple" aria-live="polite">&nbsp;</p>
+                    </div>
+                    
+                    <div class="input-section">
+                        <input type="number" 
+                               id="ans" 
+                               inputmode="numeric"
+                               aria-label="Введите ответ"
+                               autocomplete="off">
+                    </div>
+
+                    <div class="result-section">
+                        <p id="output_multiple_otvet" 
+                           aria-live="polite"
+                           hidden></p>
+                    </div>
+                </div>
+
+                <div class="controls-grid">
+                    <button id="welcomBtn" class="btn btn-primary">Начать</button>
+                    <button id="nextBtn" class="btn btn-primary" hidden>Продолжить</button>
+                    <button id="controlBtn" class="btn btn-primary" hidden>Проверить</button>
+                </div>
+            </section>
+        </article>
     </main>
-    <footer>
-      <!--<p>Автор Владимир Кулагин</p>-->
+
+    <footer role="contentinfo">
+        <!-- Убрали комментарий для чистоты кода -->
     </footer>
+
     <script src="../scripts/multiple.js" defer></script>
-  </body>
+</body>
 </html>

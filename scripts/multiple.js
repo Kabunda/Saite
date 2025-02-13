@@ -1,84 +1,122 @@
-let timer = document.getElementById('timer');
-let welcomBtn = document.getElementById('welcomBtn');
-let nextBtn = document.getElementById('nextBtn');
-let controlBtn = document.getElementById('controlBtn');
-let secsec = 0;
-let seconds = 0;
-let minutes = 0;
-let interval;
+// Кешируем все DOM-элементы
+const elements = {
+    timer: document.getElementById('timer'),
+    welcomBtn: document.getElementById('welcomBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    controlBtn: document.getElementById('controlBtn'),
+    outputMultiple: document.getElementById('output_multiple'),
+    outputAnswer: document.getElementById('output_multiple_otvet'),
+    answerInput: document.getElementById('ans'),
+    vehicle1: document.getElementById('vehicle1'),
+    vehicle2: document.getElementById('vehicle2'),
+    vehicle3: document.getElementById('vehicle3')
+};
 
-function multiple(){
+// Состояние приложения
+let state = {
+    secsec: 0,
+    seconds: 0,
+    minutes: 0,
+    intervalId: null,
+    baseNumbers: [5, 8, 11, 17, 35]
+};
 
-	welcomBtn.hidden = true
-	nextBtn.hidden = true
-	controlBtn.hidden = false
-	bj = document.getElementById("vehicle1").checked
-	m1735 = document.getElementById("vehicle2").checked
-	r20 = document.getElementById("vehicle3").checked
+// Константы
+const TIMER_INTERVAL = 10;
 
-	secsec = 0;
-  seconds = 0;
-  minutes = 0;
-  timer.textContent = '00:00:00';
-  interval = setInterval(updateTime, 10);
-
-	fm = 4 + getRandomInt(r20 ? 16 : 6)
-	cou = 5
-	lms = [5,8,11,17,35]
-	if (bj) {
-		lms.push(2.5)
-		cou++
-	}
-	if (m1735) {
-		lms.push(17)
-		lms.push(35)
-		cou +=2
-	}
-	lm = lms[getRandomInt(cou)-1]
-	ans = " " + fm + " x " + lm + " ="
-	document.getElementById("output_multiple").innerHTML = ans
-	document.getElementById("output_multiple_otvet").hidden = true
-	document.getElementById("output_multiple_otvet").innerHTML = fm * lm
-	document.getElementById("ans").value = ""
-	document.getElementById("ans").focus()
-}
-function sow(){
-
-	nextBtn.hidden = false
-	controlBtn.hidden = true
-
-	clearInterval(interval);
-
-	document.getElementById("output_multiple_otvet").hidden = false
-  ans = document.getElementById("ans").value
-  ansp = document.getElementById("output_multiple_otvet").innerHTML
-  if (Number(ans) == Number(ansp)) 
-  document.getElementById("output_multiple_otvet").style.color = "green" 
-  else
-  document.getElementById("output_multiple_otvet").style.color = "red" 
+// Оптимизированная функция инициализации
+function multiple() {
+    // Обновляем состояние интерфейса
+    elements.welcomBtn.hidden = true;
+    elements.nextBtn.hidden = true;
+    elements.controlBtn.hidden = false;
+    
+    // Сбрасываем таймер
+    resetTimer();
+    
+    // Получаем значения чекбоксов
+    const [bj, m1735, r20] = [
+        elements.vehicle1.checked,
+        elements.vehicle2.checked,
+        elements.vehicle3.checked
+    ];
+    
+    // Генерируем задание
+    const { question, answer } = generateProblem(bj, m1735, r20);
+    
+    // Обновляем интерфейс
+    elements.outputMultiple.textContent = ` ${question} =`;
+    elements.outputAnswer.hidden = true;
+    elements.outputAnswer.textContent = answer;
+    elements.answerInput.value = "";
+    elements.answerInput.focus();
 }
 
-function TapEnter(){
-	if (nextBtn.hidden)
-		sow()
-	else
-		multiple()
+// Вынесенная логика генерации задачи
+function generateProblem(bj, m1735, r20) {
+    const fm = 4 + getRandomInt(r20 ? 16 : 6);
+    let numbers = [...state.baseNumbers];
+    let count = numbers.length;
+
+    if (bj) {
+        numbers.push(2.5);
+        count++;
+    }
+    if (m1735) {
+        numbers.push(17, 35);
+        count += 2;
+    }
+
+    const lm = numbers[getRandomInt(count) - 1];
+    return {
+        question: `${fm} × ${lm}`,
+        answer: fm * lm
+    };
 }
 
-function getRandomInt(max) {
-  return Math.floor(Math.random() * max) + 1;
+// Оптимизированная функция проверки
+function sow() {
+    elements.nextBtn.hidden = false;
+    elements.controlBtn.hidden = true;
+    clearInterval(state.intervalId);
+    
+    const userAnswer = Number(elements.answerInput.value);
+    const correctAnswer = Number(elements.outputAnswer.textContent);
+    
+    elements.outputAnswer.hidden = false;
+    elements.outputAnswer.style.color = userAnswer === correctAnswer ? "green" : "red";
+}
+
+// Улучшенный таймер
+function resetTimer() {
+    state.secsec = state.seconds = state.minutes = 0;
+    elements.timer.textContent = '00:00:00';
+    state.intervalId = setInterval(updateTime, TIMER_INTERVAL);
 }
 
 function updateTime() {
-	secsec++;
-	if (secsec === 100) {
-  	seconds++;
-  	secsec = 0;
-	}
-  
-  if (seconds === 60) {
-    minutes++;
-    seconds = 0;
-  }
-  timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${secsec.toString().padStart(2, '0')}`;
+    state.secsec++;
+    
+    if (state.secsec === 100) {
+        state.seconds++;
+        state.secsec = 0;
+    }
+    if (state.seconds === 60) {
+        state.minutes++;
+        state.seconds = 0;
+    }
+    
+    elements.timer.textContent = 
+        `${state.minutes.toString().padStart(2, '0')}:` +
+        `${state.seconds.toString().padStart(2, '0')}:` +
+        `${state.secsec.toString().padStart(2, '0')}`;
+}
+
+// Вспомогательные функции
+function TapEnter() {
+    elements.nextBtn.hidden ? sow() : multiple();
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max) + 1;
 }

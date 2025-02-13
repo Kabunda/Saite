@@ -1,24 +1,89 @@
-.parent {
-  display: flex;
+:root {
+  --primary-color: #8b0000; /* darkred */
+  --border-color: #333;
+  --shadow-color: rgba(68, 68, 68, 0.3);
+  --button-padding: 0.5rem 0.75rem;
+  --transition-speed: 0.2s;
+}
+
+/* Лейаут */
+.practice-grid {
+  display: grid;
+  gap: 1.5rem;
   justify-content: center;
-  font-size: large;
   text-align: center;
 }
 
-.child {
-  border: 2px solid black;
-  width: 30%;
-  font-size: large;
+.problem-section,
+.input-section,
+.result-section {
+  border: 2px solid var(--border-color);
+  padding: 1rem;
+  min-width: min(90%, 20rem);
+  margin: 0 auto;
 }
-button {
-	width: 70%;
-	color: darkred;
-	box-shadow: 8px 8px 5px #444;
-	padding: 8px 12px;
-	border: 1px solid #333;
-	font-size: small;
+
+/* Кнопки */
+.btn {
+  width: min(70%, 15rem);
+  max-width: 100%;
+  padding: var(--button-padding);
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: white;
+  color: var(--primary-color);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 
+    transform var(--transition-speed),
+    box-shadow var(--transition-speed);
 }
-input {
-	width: 90%;
-	font-size: large;
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 4px 4px 3px var(--shadow-color);
+}
+
+.btn:hover {
+  filter: brightness(0.9);
+}
+
+/* Поле ввода */
+.input-section input {
+  width: 100%;
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  text-align: center;
+}
+
+/* Таймер */
+.timer-container {
+  font-size: 1.25rem;
+  margin: 1rem 0;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .practice-grid {
+    gap: 1rem;
+  }
+  
+  .problem-section,
+  .input-section,
+  .result-section {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
 }
