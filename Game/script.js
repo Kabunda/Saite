@@ -57,19 +57,19 @@ class MathSprint {
     generateProblem() {
         const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
         let a, b;
-
+        const m = [5, 11, 8, 17, 35];
         switch(difficulty) {
             case 'easy':
-                a = this.getRandom(2, 10);
+                a = m[this.getRandom(0, 4)];
                 b = this.getRandom(2, 10);
                 break;
             case 'medium':
-                a = this.getRandom(5, 15);
-                b = this.getRandom(5, 15);
+                a = m[this.getRandom(0, 4)];
+                b = this.getRandom(3, 20);
                 break;
             case 'hard':
-                a = this.getRandom(10, 30);
-                b = this.getRandom(10, 30) + (Math.random() > 0.5 ? 0.5 : 0);
+                a = m[this.getRandom(2, 4)];
+                b = this.getRandom(3, 20);
                 break;
         }
 
