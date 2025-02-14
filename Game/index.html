@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Математический спринт</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="stats">
+                <div>Счёт: <span id="score">0</span></div>
+                <div>Рекорд: <span id="highscore">0</span></div>
+                <div>Уровень: <span id="level">1</span></div>
+            </div>
+            <div id="timer" class="timer">01:00</div>
+        </div>
+
+        <div class="game-content">
+            <div class="problem" id="problem">?</div>
+            <input type="number" id="answer" autofocus>
+            <div class="result" id="result"></div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" class="btn start">Старт!</button>
+            <div class="difficulty">
+                <label><input type="radio" name="difficulty" value="easy" checked> Легко</label>
+                <label><input type="radio" name="difficulty" value="medium"> Средне</label>
+                <label><input type="radio" name="difficulty" value="hard"> Сложно</label>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
