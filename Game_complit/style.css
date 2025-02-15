@@ -50,7 +50,7 @@ body {
 }
 
 .problem {
-    font-size: 4rem;
+    font-size: 3rem;
     margin: 2rem 0;
     color: var(--primary-color);
 }
@@ -92,6 +92,13 @@ body {
 }
 
 .difficulty {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.stavka_viplata {
     margin-top: 2rem;
     display: flex;
     gap: 1rem;
