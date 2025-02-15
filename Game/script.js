@@ -124,7 +124,7 @@ class MathSprint {
             this.elements.highscore.textContent = this.state.highscore;
         }
         
-        this.elements.problem.textContent = 'Игра окончена!';
+        this.elements.problem.textContent = 'Всё!';
         this.elements.answer.value = '';
         this.elements.result.textContent = `Ваш результат: ${this.state.score} очков`;
     }
