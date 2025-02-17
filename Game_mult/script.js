@@ -31,7 +31,7 @@ class MathSprint {
 
     init() {
         document.querySelector('.restart').addEventListener('click', () => this.resetGame());
-        this.state.highscore = JSON.parse(localStorage.getItem('highscore')) || { value: 0, date: null };
+        this.state.highscore = { value: 0, date: null };
         this.elements.highscore.textContent = `🏆 ${this.state.highscore.value.toString().padStart(3, '0')}`;
         this.elements.startBtn.addEventListener('click', () => this.startGame());
         this.elements.answer.addEventListener('input', (e) => this.checkAnswer(e));
