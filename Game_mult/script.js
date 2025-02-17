@@ -14,7 +14,7 @@ class MathSprint {
         this.state = {
             timeLeft: 180,
             score: 0,
-            highscore: JSON.parse(localStorage.getItem('highscore')) || { value: 0, date: null },
+            highscore: JSON.parse(localStorage.getItem('highscore')) || { value: 0, date: 0 },
             level: 1,
             intervalId: null,
             isPlaying: false
