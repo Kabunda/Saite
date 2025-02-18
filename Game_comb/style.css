@@ -1,0 +1,220 @@
+/* Основные стили */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-header {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+}
+
+.home-link {
+    color: white;
+    text-decoration: none;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+}
+
+.logo {
+    margin: 0 auto;
+    font-size: 1.5rem;
+}
+
+/* Контейнеры экранов */
+.game-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    margin-top: 60px; /* Отступ под фиксированным хедером */
+}
+
+.start-screen, .game-screen, .end-screen {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 600px;
+    margin: 1rem;
+}
+
+/* Начальный экран */
+.settings {
+    display: flex;
+    gap: 2rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.settings-column {
+    flex: 1;
+    min-width: 250px;
+}
+
+.time-select, .mode, .difficulty {
+    margin-bottom: 1.5rem;
+}
+
+h3 {
+    color: #2c3e50;
+    margin: 0 0 1rem 0;
+}
+
+label {
+    display: block;
+    margin: 0.5rem 0;
+    padding: 0.8rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+label:hover {
+    background: #e9ecef;
+}
+
+input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+#highscore {
+    font-size: 1.2rem;
+    color: #27ae60;
+    margin-top: 1rem;
+}
+
+/* Игровой экран */
+.game-screen {
+    text-align: center;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    color: #34495e;
+}
+
+.timer {
+    font-size: 2rem;
+    color: #e74c3c;
+}
+
+.problem {
+    font-size: 4rem;
+    margin: 2rem 0;
+    color: #2c3e50;
+}
+
+#answer {
+    font-size: 2rem;
+    width: 200px;
+    padding: 1rem;
+    border: 3px solid #3498db;
+    border-radius: 10px;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.result {
+    font-size: 1.5rem;
+    min-height: 2rem;
+}
+
+.correct { color: #27ae60; }
+.wrong { color: #e74c3c; }
+
+/* Экран завершения */
+.end-screen {
+    text-align: center;
+}
+
+.final-stats {
+    margin: 2rem 0;
+    font-size: 1.2rem;
+}
+
+.highlight {
+    color: #3498db;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+#highscore {
+    line-height: 1.4;
+    font-size: 0.9em;
+    white-space: pre-line;
+}
+
+/* Кнопки */
+.btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+}
+
+.btn:hover {
+    background: #2980b9;
+    transform: scale(1.05);
+}
+
+.restart {
+    background: #27ae60;
+}
+
+.restart:hover {
+    background: #219a52;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .game-container {
+        padding: 1rem;
+        margin-top: 50px;
+    }
+
+    .start-screen, .game-screen, .end-screen {
+        padding: 1rem;
+    }
+
+    .problem {
+        font-size: 3rem;
+    }
+
+    #answer {
+        font-size: 1.5rem;
+        width: 160px;
+    }
+
+    .stats {
+        /*flex-direction: column;*/
+        gap: 0.5rem;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
