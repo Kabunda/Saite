@@ -14,6 +14,7 @@ class MathSprint {
         this.state = {
             timeLeft: 180,
             score: 0,
+            boost: 1,
             highscore: JSON.parse(localStorage.getItem('highscore_comp')) || { 
                 value: 0, 
                 date: "не установлен", 
@@ -88,12 +89,15 @@ class MathSprint {
         switch(difficulty) {
             case 'easy':
                 a = multipliers[this.getRandom(0, 3)];
+                this.state.boost = 1;
                 break;
             case 'medium':
                 a = multipliers[this.getRandom(0, 6)];
+                this.state.boost = 2;
                 break;
             case 'hard':
                 a = multipliers[this.getRandom(2, 12)];
+                this.state.boost = 3;
                 break;
         }
         if (mode == "stavka") {
@@ -120,7 +124,7 @@ class MathSprint {
     }
 
     handleCorrectAnswer() {
-        this.state.score += this.state.level * 10;
+        this.state.score += this.state.level * 10 * this.state.boost;
         this.state.score += Math.floor(this.currentAnswer / 10);
         this.state.level++;
         this.updateUI();
