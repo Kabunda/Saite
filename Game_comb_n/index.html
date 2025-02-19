@@ -10,19 +10,20 @@
 
     <header class="game-header">
         <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
-        <h1 class="logo">Умножение</h1>
+        <h1 class="logo">Соседи</h1>
     </header>
 
     <div class="game-container">
         <div class="start-screen" id="startScreen">
-            <h2>Настройка игры</h2>
+            <h2>Правила</h2>
+            <p>Введите 4 числа через пробел</p>
             <div class="settings">
                 <div class="settings-column">
                     <div class="time-select" hidden>
                         <h3>Время:</h3>
                         <label><input type="radio" name="time" value="30">30 сек</label>
-                        <label><input type="radio" name="time" value="60" checked>60 сек</label>
-                        <label><input type="radio" name="time" value="180">3 мин</label>
+                        <label><input type="radio" name="time" value="60">60 сек</label>
+                        <label><input type="radio" name="time" value="180" checked>3 мин</label>
                     </div>
     
                     <div class="mode" hidden>
@@ -35,7 +36,7 @@
                 </div>
                 
                 <div class="settings-column">
-                    <div class="difficulty">
+                    <div class="difficulty" hidden>
                         <h3>Сложность:</h3>
                         <label><input type="radio" name="difficulty" value="easy">все до 10</label>
                         <label><input type="radio" name="difficulty" value="medium" checked>все до 20</label>
@@ -56,7 +57,13 @@
             <div id="timer" class="timer">03:00</div>
             <div class="game-content">
                 <div class="problem" id="problem">?</div>
-                <input type="number" id="answer" autofocus>
+                <input
+                    type="text"
+                    id="answer"
+                    inputmode="numeric"
+                    pattern="[0-9\s,]*"
+                    placeholder="4 числа"
+                    autofocus>
                 <div class="result" id="result"></div>
             </div>
         </div>
