@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>тестирование параметров INPUT</title>
+    <link rel="stylesheet" href="../styles/style_main.css">
+  
+    <meta property="og:title" content="Тестирование клавиатуры">
+    <meta property="og:description" content="Поведение на устройствах при разных параметрах ввода">
+    <meta property="og:url" content="https://example.com/">
+  </head>
+  <body>
+    <header>
+      <h1>Тестовая страница</h1>
+      <p>Здесь тестируется поведение браузеров на различных платформах при обработке параметров INPUT</p>
+      <nav>
+        <ul>
+          <li><a href="https://kabunda.github.io/Saite/"
+            >Вернуться на главную страницу</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+        <section>
+          <h2>Поля ввода</h2>
+          <p>У каждого поля разные параметры</p>       
+          <ul>
+            <li><input type="text" inputmode="numeric" name="">
+              <span>typt = text, inputmode = numeric</span></li>
+            <li><input type="text" inputmode="decimal" name="">
+              <span>typt = text, inputmode = decimal</span></li>
+            <li><input type="text" name="">
+              <span>typt = text, inputmode = not</span></li>
+            <li><input type="tel" inputmode="numeric" name="">
+              <span>typt = tel, inputmode = numeric</span></li>
+            <li><input type="tel" inputmode="decimal" name="">
+              <span>typt = tel, inputmode = decimal</span></li>
+            <li><input type="tel" name="">
+              <span>typt = tel, inputmode = not</span></li>
+            <li><input type="number" inputmode="numeric" name="">
+              <span>typt = number, inputmode = numeric</span></li>
+            <li><input type="number" inputmode="decimal" name="">
+              <span>typt = number, inputmode = decimal</span></li>
+            <li><input type="number" name="">
+              <span>typt = number, inputmode = not</span></li>
+          </ul>
+        </section>
+    </main>
+    <footer>
+      <p>автор Владимир Кулагин</p>
+    </footer>
+  </body>
+</html>
