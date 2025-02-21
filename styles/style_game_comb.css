@@ -42,6 +42,7 @@ body {
     align-items: center;
     padding: 2rem;
     margin-top: 60px; /* Отступ под фиксированным хедером */
+    padding-top: 4rem; /* Учет фиксированного хедера */
 }
 
 .start-screen, .game-screen, .end-screen {
@@ -224,4 +225,49 @@ input[type="radio"] {
 
 .hidden {
     display: none !important;
+}
+
+/* Оптимизация полей ввода */
+.answers-container input {
+    font-size: 1.5rem;
+    padding: 12px;
+    margin: 8px;
+    width: 60px;
+    -webkit-appearance: none; /* Убрать стили iOS */
+}
+
+.answers-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 100%;
+}
+
+.answers-container input {
+    width: 60px;
+    flex: 1 0 auto;
+    max-width: 20%;
+    font-size: 1.2rem !important;
+    text-align: center;
+    padding: 10px !important;
+}
+
+@media (max-width: 480px) {
+    .answers-container input {
+        max-width: 20% !important; /* Равномерное распределение */
+        font-size: 1rem !important;
+        padding: 6px !important;
+        margin: 2px !important;
+    }
+    
+    .problem {
+        font-size: 2.5rem !important;
+        margin: 1rem 0 !important;
+    }
+    
+    .check-btn {
+        width: 90%;
+        margin: 10px auto;
+    }
 }

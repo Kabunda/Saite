@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Математический спринт</title>
+    <link rel="stylesheet" href="../styles/style_game_comb.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="game-header">
+        <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
+        <h1 class="logo">Соседи</h1>
+    </header>
+
+    <div class="game-container">
+        <!-- Начальный экран -->
+        <div class="screen-card" id="startScreen">
+            <h2>Правила</h2>
+            <p>Введите 4 соседних числа от 0 до 36</p>
+            <div class="settings">
+                <div class="settings-column">
+                    <div class="time-select">
+                        <h3>Время:</h3>
+                        <label><input type="radio" name="time" value="180" checked>3 мин</label>
+                        <label><input type="radio" name="time" value="300">5 мин</label>
+                        <label><input type="radio" name="time" value="600">10 мин</label>
+                    </div>
+                </div>
+                
+                <div class="settings-column">
+                    <div id="highscore"></div>
+                </div>
+            </div>
+            <button class="button button--success" id="startBtn">Старт!</button>
+        </div>
+
+        <!-- Игровой экран -->
+        <div class="screen-card game-screen hidden">
+            <div class="stats">
+                <div>Уровень: <span id="level">1</span></div>        
+                <div>Счёт: <span id="score">0</span></div>
+            </div>
+            <div id="timer" class="timer">03:00</div>
+            <div class="game-content">
+                <div class="problem" id="problem">?</div>
+                <div class="answers-container">
+                    <input type="number" class="number-input" pattern="[0-9]*" id="answer1" min="0" max="36" inputmode="numeric" autofocus autocomplete="off">
+                    <input type="number" class="number-input" pattern="[0-9]*" id="answer2" min="0" max="36" inputmode="numeric" autocomplete="off">
+                    <input type="number" class="number-input" pattern="[0-9]*" id="answer3" min="0" max="36" inputmode="numeric" autocomplete="off">
+                    <input type="number" class="number-input" pattern="[0-9]*" id="answer4" min="0" max="36" inputmode="numeric" autocomplete="off">
+                </div>
+                <div class="check-btn-wrapper">
+                    <button class="button button--primary" id="checkButton">Готово</button>
+                </div>
+                <div class="modal hidden" id="hintModal">
+                    <div class="hint-content">
+                        <span class="close-hint">&times;</span>
+                        <p><span id="correctNumbers"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран завершения -->
+        <div class="screen-card end-screen hidden" id="endScreen">
+            <h2>Игра завершена!</h2>
+            <div class="final-stats">
+                <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20">
+                <p>Ваш счёт: <span class="highlight" id="finalScore">0</span></p>
+                <p>Текущий рекорд: <span class="highlight" id="finalHighscore">0</span></p>
+            </div>
+            <button class="btn restart">Новая игра</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
