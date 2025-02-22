@@ -1,6 +1,6 @@
 class MathSprint {
     constructor() {
-                // Инициализация элементов
+// Инициализация элементов
         this.elements = {
             problem: document.getElementById('problem'),
             answers: [
@@ -15,60 +15,64 @@ class MathSprint {
             highscore: document.getElementById('highscore'),
             level: document.getElementById('level'),
             startBtn: document.getElementById('startBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            checkBtn: document.getElementById('checkBtn'),
+            closeHnt: document.getElementById('closeHnt'),
             hintModal: document.getElementById('hintModal'),
             correctNumbers: document.getElementById('correctNumbers')
         };
-
-        this.elements.checkBtn = document.getElementById('checkButton');
-
-        // Состояние игры
+// Состояние игры
         this.state = {
             timeLeft: 180,
             score: 0,
-            highscore: JSON.parse(localStorage.getItem('highscore_nei')) || { 
-                value: 0, 
-                date: "не установлен", 
-                name: "неизвестен" 
-            },
             level: 1,
             intervalId: null,
-            isPlaying: false
+            isPlaying: false,
+            timeoutId: null
         };
-
-        // Экранные блоки
+        this.state.highscore = (() => {
+            try {
+                return JSON.parse(localStorage.getItem('highscore_nei')) || { 
+                    value: 0, 
+                    date: "не установлен", 
+                    name: "неизвестен" 
+                };
+            } catch {
+                return { value: 0, date: "не установлен", name: "неизвестен" };
+            }
+        })();
+// Экранные блоки
         this.screens = {
             start: document.getElementById('startScreen'),
-            game: document.querySelector('.game-screen'),
-            end: document.getElementById('endScreen')
+             game: document.getElementById('gameScreen'),
+              end: document.getElementById('endScreen')
         };
 
         this.init();
     }
 
     init() {
-        // Настройка событий
-        document.querySelector('.restart').addEventListener('click', () => this.resetGame());
+// Настройка событий
+        this.elements.resetBtn.addEventListener('click', () => this.resetGame());
         this.elements.startBtn.addEventListener('click', () => this.startGame());
-        
-        // Обработчики ввода
+        this.elements.checkBtn.addEventListener('click', () => this.processAnswer());
+        this.elements.closeHnt.addEventListener('click', () => this.elements.hintModal.classList.add('hidden'));
+// Обработчики ввода
         this.elements.answers.forEach(input => {
             input.addEventListener('input', (e) => this.handleInput(e));
         });
-
-        // Добавляем обработчики нажатия Enter
+// Добавляем обработчики нажатия Enter
         this.elements.answers.forEach(input => {
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') this.processAnswer();
             });
         });
-
-        document.querySelector('.close-hint').addEventListener('click', () => {
-            this.elements.hintModal.classList.add('hidden');
-        });
-
-        this.elements.checkBtn.addEventListener('click', () => this.processAnswer());
-
         this.updateHighscoreDisplay();
+// Очистка таймера при закрытии        
+//        this.elements.closeHnt.addEventListener('click', () => {
+//            clearTimeout(this.state.timeoutId);
+//            this.elements.hintModal.classList.add('hidden');
+//        });
     }
 
     // Основные методы
@@ -87,41 +91,24 @@ class MathSprint {
     }
 
     handleInput(e) {
-        if (!this.state.isPlaying) return;
-        
-            // Принудительная коррекция значений
-        let value = parseInt(e.target.value) || 0;
-        value = Math.min(36, Math.max(0, value));
-        e.target.value = value; // Убрано условие для 0
-
+        if (!this.state.isPlaying) return; 
         // Автопереход между полями
         const index = this.elements.answers.indexOf(e.target);
         if (e.target.value.length === 2 && index < 3) {
             this.elements.answers[index + 1].focus();
         }
-
-        // Проверка условий для автоматической проверки
-        const isLastField = index === 3;
-        const allFieldsFilled = this.elements.answers.every(input => input.value !== '');
-        const lastFieldValid = !isLastField || (isLastField && e.target.value.length === 2);
-
-        if (allFieldsFilled && lastFieldValid) {
+        if (e.target.value.length === 2 && index === 3) {
             this.processAnswer();
         }
     }
 
     processAnswer() {
-        let userNumbers = this.elements.answers.map(input => parseInt(input.value) || 0)
+        const userNumbers = this.elements.answers.map(input => {
+            const value = parseInt(input.value);
+            return isNaN(value) ? -1 : value; // Невалидные значения станут -1
+        });
         userNumbers.push(this.currentNumber);
         userNumbers.sort((a, b) => a - b);
-
-        const isValid = userNumbers.every(n => n >= 0 && n <= 36);
-        
-        if (!isValid) {
-            this.showResult('Числа от 0 до 36!', 'wrong');
-            return;
-        }
-
         const sortedCorrect = [...this.correctNumbers].sort((a, b) => a - b);
         const isCorrect = JSON.stringify(userNumbers) === JSON.stringify(sortedCorrect);
         isCorrect ? this.handleCorrectAnswer() : this.handleWrongAnswer();
@@ -185,12 +172,11 @@ class MathSprint {
     showResult(text, className) {
         this.elements.correctNumbers.textContent = this.correctNumbers.join(' ');
         this.elements.hintModal.classList.remove('hidden');
-        const content = this.elements.hintModal.querySelector('.hint-content');
-        content.style.backgroundColor = className === 'correct' ? '#4CAF50' : '#f44336';
-        setTimeout(() => {
+        this.elements.hintModal.classList.add(className);
+        this.state.timeoutId = setTimeout(() => {
+            this.elements.hintModal.classList.remove(className);
             this.elements.hintModal.classList.add('hidden');
-        }, 5000);
-
+        }, 3000);
     }
 
     updateUI() {
@@ -207,47 +193,57 @@ class MathSprint {
         document.getElementById('finalHighscore').textContent = this.state.highscore.value;
     }
 
-    resetGame() {
+    async resetGame() {
         clearInterval(this.state.intervalId);
-        
-        // Сохраняем финальный счет перед сбросом
         const finalScore = this.state.score;
-        
-        // Сбрасываем состояние
-        this.state.score = 0;
-        this.state.level = 1;
-        this.state.isPlaying = false;
-        this.updateUI();
-
-        // Получаем имя игрока
         const playerName = document.getElementById('playerName').value.trim() || "Аноним";
-        
-        // Проверяем и обновляем рекорд
+
         if (finalScore > this.state.highscore.value) {
             const recordData = {
                 value: finalScore,
-                date: new Date().toLocaleString('ru-RU', {
-                    day: 'numeric',
-                    month: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }),
-                name: playerName
+                name: playerName,
+                date: new Date().toLocaleString("ru-RU")
             };
-                    
-                localStorage.setItem('highscore_nei', JSON.stringify(recordData));
-                this.state.highscore = recordData;
-                
-                // Обновляем отображение рекорда
-                this.elements.highscore.innerHTML = 
-                    `🏆 Рекорд: ${recordData.value} <br>
-                    📛 Имя: ${recordData.name} <br>
-                    📅 Дата: ${recordData.date}`;
+
+            try {
+                await window.firestore.addDoc(
+                    window.firestore.collection(window.db, "records"), 
+                    recordData
+                );
+                await this.fetchGlobalHighscore();
+            } catch (error) {
+                console.error("Ошибка сохранения:", error);
             }
+        }
+
+        this.state.score = 0;
+        this.state.level = 1;
+        this.state.isPlaying = false;
+        this.updateUI();    
         this.screens.end.classList.add('hidden');
         this.screens.start.classList.remove('hidden');
-        this.elements.timer.textContent = '03:00';
+    }
+
+    async fetchGlobalHighscore() {
+        try {
+            const recordsRef = window.firestore.collection(window.db, "records");
+            const q = window.firestore.query(
+                recordsRef, 
+                window.firestore.orderBy("value", "desc"), 
+                window.firestore.limit(1)
+            );
+            const snapshot = await window.firestore.getDocs(q);
+
+            if (!snapshot.empty) {
+                const record = snapshot.docs[0].data();
+                this.state.highscore = record;
+            } else {
+                this.state.highscore = { value: 0, name: "неизвестен", date: "не установлен" };
+            }
+            this.updateHighscoreDisplay();
+        } catch (error) {
+            console.error("Ошибка загрузки рекорда:", error);
+        }
     }
 
     getRandom(min, max) {
