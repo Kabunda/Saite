@@ -1,3 +1,5 @@
+import { db, collection, addDoc, getDocs, query, orderBy, limit } from './firebase.js';
+
 class MathSprint {
     constructor() {
 // Инициализация элементов
@@ -17,12 +19,13 @@ class MathSprint {
             startBtn: document.getElementById('startBtn'),
             resetBtn: document.getElementById('resetBtn'),
             checkBtn: document.getElementById('checkBtn'),
-            closeHnt: document.getElementById('closeHnt'),
+            endBtn: document.getElementById('endBtn'),
             hintModal: document.getElementById('hintModal'),
             correctNumbers: document.getElementById('correctNumbers')
         };
 // Состояние игры
         this.state = {
+            highscores: [],
             timeLeft: 180,
             score: 0,
             level: 1,
@@ -30,17 +33,6 @@ class MathSprint {
             isPlaying: false,
             timeoutId: null
         };
-        this.state.highscore = (() => {
-            try {
-                return JSON.parse(localStorage.getItem('highscore_nei')) || { 
-                    value: 0, 
-                    date: "не установлен", 
-                    name: "неизвестен" 
-                };
-            } catch {
-                return { value: 0, date: "не установлен", name: "неизвестен" };
-            }
-        })();
 // Экранные блоки
         this.screens = {
             start: document.getElementById('startScreen'),
@@ -56,7 +48,7 @@ class MathSprint {
         this.elements.resetBtn.addEventListener('click', () => this.resetGame());
         this.elements.startBtn.addEventListener('click', () => this.startGame());
         this.elements.checkBtn.addEventListener('click', () => this.processAnswer());
-        this.elements.closeHnt.addEventListener('click', () => this.elements.hintModal.classList.add('hidden'));
+        this.elements.endBtn.addEventListener('click', () => this.gameOver());
 // Обработчики ввода
         this.elements.answers.forEach(input => {
             input.addEventListener('input', (e) => this.handleInput(e));
@@ -100,13 +92,18 @@ class MathSprint {
     processAnswer() {
         const userNumbers = this.elements.answers.map(input => {
             const value = parseInt(input.value);
-            return isNaN(value) ? -1 : value; // Невалидные значения станут -1
+            return isNaN(value) ? -1 : value;
         });
-        userNumbers.push(this.currentNumber);
-        userNumbers.sort((a, b) => a - b);
-        const sortedCorrect = [...this.correctNumbers].sort((a, b) => a - b);
-        const isCorrect = JSON.stringify(userNumbers) === JSON.stringify(sortedCorrect);
-        isCorrect ? this.handleCorrectAnswer() : this.handleWrongAnswer();
+        
+        // Проверка абсолютно правильного порядка
+        const isCorrectAbs = JSON.stringify(userNumbers) === JSON.stringify(this.correctNumbers);
+        
+        // Проверка наличия всех чисел (без учета порядка)
+        const sortedUser = [...userNumbers, this.currentNumber].sort((a, b) => a - b);
+        const sortedCorrect = [...this.correctNumbers, this.currentNumber].sort((a, b) => a - b);
+        const isCorrect = JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect);
+        
+        isCorrect ? this.handleCorrectAnswer(isCorrectAbs) : this.handleWrongAnswer();
     }
 
     // Вспомогательные методы
@@ -116,17 +113,24 @@ class MathSprint {
         this.state.level = 1;
         this.elements.answers.forEach(input => input.value = '');
         this.updateUI();
-
-        //document.getElementById('playerName').value = ''; // Очистка имени
-        this.elements.answers.forEach(input => input.value = ''); // Очистка полей
     }
 
     updateHighscoreDisplay() {
-        this.elements.highscore.innerHTML = this.state.highscore.value > 0 
-            ? `🏆 Рекорд: ${this.state.highscore.value}<br>
-               📛 Имя: ${this.state.highscore.name}<br>
-               📅 Дата: ${this.state.highscore.date}`
-            : "🏆 Рекорд не установлен";
+        const list = document.getElementById('highscoreList');
+        list.innerHTML = ""; // Очищаем список
+        if (this.state.highscores?.length > 0) {
+            this.state.highscores.forEach((record, index) => {
+                const li = document.createElement('div');
+                li.innerHTML = `
+                    <div id = "hs_nam">${record.name}</div> 
+                    <div id = "hs_val">${record.value}</div> 
+                    <div id = "hs_dat">${record.date}</div>
+                `;
+                list.appendChild(li);
+            });
+        } else {
+            list.innerHTML = "<li>Рекорды не найдены</li>";
+        }
     }
 
     startTimer() {
@@ -143,13 +147,15 @@ class MathSprint {
     generateProblem() {
         this.currentNumber = this.getRandom(0, 36);
         this.elements.problem.textContent = this.currentNumber;
-        this.correctNumbers = this.getNeighbors(this.currentNumber);
+        this.correctNumbers = this.getNeighbors(this.currentNumber, 4);
         this.elements.answers.forEach(input => input.value = '');
         this.elements.answers[0].focus({preventScroll: true}); // Фикс скролла на iOS
     }
 
-    handleCorrectAnswer() {
-        this.state.score += this.state.level * 50;
+    handleCorrectAnswer(isCorrectAbs) {
+        const basePoints = this.state.level * 50;
+        // +50% бонус за правильный порядок
+        this.state.score += isCorrectAbs ? Math.floor(basePoints * 1.5) : basePoints;
         this.state.level++;
         this.updateUI();
         this.showResult(this.currentNumber, 'correct');
@@ -165,13 +171,14 @@ class MathSprint {
     }
 
     showResult(text, className) {
-        this.elements.correctNumbers.textContent = this.correctNumbers.join(' ');
+        const fullNeighbors = this.getNeighbors(this.currentNumber, 5); // 5 чисел с центральным
+        this.elements.correctNumbers.textContent = fullNeighbors.join(' ');
         this.elements.hintModal.classList.remove('hidden');
         this.elements.hintModal.classList.add(className);
         this.state.timeoutId = setTimeout(() => {
             this.elements.hintModal.classList.remove(className);
             this.elements.hintModal.classList.add('hidden');
-        }, 3000);
+        }, 2500);
     }
 
     updateUI() {
@@ -185,15 +192,13 @@ class MathSprint {
         this.screens.game.classList.add('hidden');
         this.screens.end.classList.remove('hidden');
         document.getElementById('finalScore').textContent = this.state.score;
-        document.getElementById('finalHighscore').textContent = this.state.highscore.value;
+        document.getElementById('finalHighscore').textContent = this.state.highscores[0]?.value || 0;
     }
 
     async resetGame() {
         clearInterval(this.state.intervalId);
         const finalScore = this.state.score;
         const playerName = document.getElementById('playerName').value.trim() || "Аноним";
-
-        if (finalScore > this.state.highscore.value) {
             const recordData = {
                 value: finalScore,
                 name: playerName,
@@ -201,16 +206,14 @@ class MathSprint {
             };
 
             try {
-                await window.firestore.addDoc(
-                    window.firestore.collection(window.db, "records"), 
+                await addDoc(
+                    collection(db, "records"), 
                     recordData
                 );
                 await this.fetchGlobalHighscore();
             } catch (error) {
                 console.error("Ошибка сохранения:", error);
             }
-        }
-
         this.state.score = 0;
         this.state.level = 1;
         this.state.isPlaying = false;
@@ -221,20 +224,17 @@ class MathSprint {
 
     async fetchGlobalHighscore() {
         try {
-            const recordsRef = window.firestore.collection(window.db, "records");
-            const q = window.firestore.query(
+            const recordsRef = collection(db, "records");
+            const q = query(
                 recordsRef, 
-                window.firestore.orderBy("value", "desc"), 
-                window.firestore.limit(1)
+                orderBy("value", "desc"), 
+                limit(10)
             );
-            const snapshot = await window.firestore.getDocs(q);
-
-            if (!snapshot.empty) {
-                const record = snapshot.docs[0].data();
-                this.state.highscore = record;
-            } else {
-                this.state.highscore = { value: 0, name: "неизвестен", date: "не установлен" };
-            }
+            const snapshot = await getDocs(q);
+            this.state.highscores = []; // Теперь храним массив
+            snapshot.forEach(doc => {
+                this.state.highscores.push(doc.data());
+            });
             this.updateHighscoreDisplay();
         } catch (error) {
             console.error("Ошибка загрузки рекорда:", error);
@@ -245,8 +245,7 @@ class MathSprint {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    getNeighbors(num) {
-        // Расположение чисел на рулетке по секторам
+    getNeighbors(num, format) {
         const wheelLayout = [
             0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36,
             11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9,
@@ -255,10 +254,15 @@ class MathSprint {
         
         const index = wheelLayout.indexOf(num);
         const neighbors = [];
-        for(let i = -2; i <= 2; i++) {
-            let neighborIndex = (index + i + wheelLayout.length) % wheelLayout.length;
+        
+        // Для формата 4: два предыдущих и два следующих (без центрального)
+        const range = (format === 4) ? [-2, -1, 1, 2] : [-2, -1, 0, 1, 2];
+        
+        range.forEach(i => {
+            const neighborIndex = (index + i + wheelLayout.length) % wheelLayout.length;
             neighbors.push(wheelLayout[neighborIndex]);
-        }
+        });
+        
         return neighbors;
     }
 

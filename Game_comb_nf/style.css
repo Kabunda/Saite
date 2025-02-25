@@ -1,0 +1,308 @@
+/* Базовые сбросы и цветовая палитра */
+:root {
+    --primary: #2A2D34;    /* Темно-синий */
+    --accent: green;        /* Синий */
+    --secondary: #009DDC;  /* Голубой */
+    --light: #F8F8F8;      /* Светло-серый */
+    --danger: #E83F4E;     /* Красный */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--light);
+    color: var(--primary);
+    min-height: 100vh;
+    padding-top: 80px; /* Отступ под фиксированный хедер */
+}
+
+/* Фиксированный заголовок */
+.game-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--primary);
+    padding: 1px 2px;
+    box-shadow: 0 px 1px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.home-link {
+    color: var(--light);
+    text-decoration: none;
+    transition: opacity 0.3s;
+}
+
+.home-link:hover {
+    opacity: 0.8;
+}
+
+.logo {
+    color: var(--light);
+    font-size: 1rem;
+    letter-spacing: 1px;
+}
+
+/* Основной контейнер */
+.game-container {
+    max-width: 600px; /*ширина главного экрана*/
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 25px;
+    position: relative;
+}
+
+/* Стили стартового экрана */
+.start-screen {
+    text-align: left;
+    padding: 30px 20px;
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 12px;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.start-screen h2 {
+    color: var(--primary);
+    font-size: 2.2rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.start-screen p {
+    font-size: 1.1rem;
+    color: #5a5a5a;
+    margin-bottom: 2rem;
+}
+
+.time-select {
+    background: rgba(42,45,52,0.03);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 25px 0;
+}
+
+.time-select h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.time-select label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 15px;
+    padding: 10px 15px;
+    background: rgba(0,157,220,0.1);
+    border-radius: 6px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.time-select label:hover {
+    background: rgba(0,157,220,0.2);
+    transform: translateY(-2px);
+}
+
+.time-select input[type="radio"] {
+    margin-right: 8px;
+    accent-color: var(--accent);
+}
+
+#startBtn {
+    width: 100%;
+    max-width: 280px;
+    font-size: 1.5rem;
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(145deg, var(--accent), #008000);
+    box-shadow: 0 4px 15px rgba(0,157,220,0.2);
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .start-screen {
+        padding: 20px 15px;
+    }
+    
+    .time-select label {
+        margin: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    #startBtn {
+        font-size: 1rem;
+        padding: 14px;
+    }
+}
+
+/* Контейнер с полями ввода и числом */
+.answers-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    margin: 25px 0;
+}
+
+.number-input {
+    order: 1; /* Первые два поля слева */
+    width: 55px;
+    height: 55px;
+    margin: 5px;
+    font-size: 2rem;
+    border: 3px solid var(--secondary);
+    border-radius: 10px;
+    color: var(--primary);
+    transition: all 0.2s;
+    text-align: center;
+}
+
+#answer3 {
+    order: 3; /* Последние два поля справа */
+}
+
+#answer4 {
+    order: 4;
+}
+
+.number-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(242,100,48,0.2);
+    transform: scale(1.05);
+}
+
+.problem {
+    order: 2; /* Центральный элемент */
+    margin: 0 15px;
+    font-size: 2.5rem;
+    color: var(--primary);
+    min-width: 60px;
+    text-align: center;
+}
+
+/* Кнопки */
+.button {
+    background: var(--accent);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(242,100,48,0.3);
+}
+
+/* Стиль для кнопки выхода */
+.button-exit {
+    width: 45px;
+    height: 45px;
+    background: var(--danger);
+    box-shadow: 0 4px 15px rgba(232,63,78,0.2);
+}
+
+.button-exit:hover {
+    box-shadow: 0 4px 12px rgba(232,63,78,0.3);
+}
+
+/* Таймер и статистика */
+.timer {
+    font-size: 2rem;
+    color: var(--danger);
+    font-weight: 700;
+    margin: 20px 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    background: rgba(42,45,52,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+/* Модальные окна */
+.modal-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(42,45,52,0);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 2000;
+    padding-top: 20%;
+}
+
+.hint-content {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef); /* Градиентный фон */
+    border: 3px solid var(--primary); /* Акцентная рамка */
+    padding: 25px;
+    border-radius: 12px;
+    max-width: 300px;
+    position: relative;
+    font-size: 2rem;
+}
+
+.correct {
+    color: darkgreen;
+}
+
+.wrong {
+    color: darkred;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    body {
+        padding: 70px 15px 15px;
+    }
+
+    .answers-container {
+        gap: 5px;
+    }
+    
+    .number-input {
+        width: 45px;
+        height: 45px;
+        font-size: 1.5rem;
+    }
+
+    .problem {
+        font-size: 2rem;
+        margin: 0 8px;
+    } 
+    
+    .game-container {
+        padding: 20px;
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
