@@ -70,10 +70,12 @@ class MathSprint {
         this.toggleScreens('game');
         this.startTimer();
         this.generateProblem();
-        this.saveGameSession({ 
-        start_time: new Date().toISOString(), 
-        status: "started" 
-    });
+        
+        //this.saveGameSession({ 
+        //    start_time: new Date().toISOString(), 
+        //    status: "started" 
+        //});
+        
     }
 
     toggleScreens(screenName) {
