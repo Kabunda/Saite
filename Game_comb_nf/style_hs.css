@@ -35,18 +35,18 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-#hs_nam {
+.hs_nam {
     font-weight: 600;
     color: #34495e;
 }
 
-#hs_val {
+.hs_val {
     text-align: center;
     font-weight: bold;
     color: #27ae60;
 }
 
-#hs_dat {
+.hs_dat {
     text-align: right;
     font-size: 0.9em;
     color: #7f8c8d;
@@ -59,11 +59,11 @@
         padding: 10px;
     }
     
-    #hs_dat {
+    .hs_dat {
         display: none;
     }
     
-    #hs_val {
+    .hs_val {
         text-align: right;
     }
 }

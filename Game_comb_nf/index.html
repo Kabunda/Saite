@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style_hs.css">
     <link rel="stylesheet" href="style_end.css">
+    <link rel="stylesheet" href="style_btn.css">
     <meta property="og:title" content="Соседи">
     <meta property="og:description" content="Игра-упражнение на знание содей.">
-    <meta property="og:image" content="../images/logo_boom.png">
+    <meta property="og:image" content="./images/logo_boom.png">
     <meta property="og:url" content="https://kabunda.github.io">
 </head>
 <body>
@@ -17,9 +18,9 @@
         <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
         <h1 class="logo">Соседи</h1>
     </header>
-    <div class="game-container">
+    <main class="game-container">
     <!-- Начальный экран -->
-        <div class="start-screen" id="startScreen">
+        <section class="start-screen" id="startScreen">
             <h3>Правила</h3>
             <div>Введите соседей числа в любом порядке. Очков будет больше, если ввести их по часовой стрелке.</div>
             <button class="button" id="startBtn">Старт!</button>
@@ -33,9 +34,9 @@
                 <h3>Топ-10 рекордов:</h3>
                 <div id="highscoreList"></div>                
             </div>    
-        </div>
+        </section>
     <!-- Игровой экран -->
-        <div class="game-screen hidden" id="gameScreen">
+        <section class="game-screen hidden" id="gameScreen">
             <button class="button button-exit" id="endBtn" hidden>X</button> 
             <div class="stats">
                 <div>Уровень: <span id="level">1</span></div>        
@@ -52,15 +53,15 @@
                 </div>
                 <button class="button" id="checkBtn">Готово</button>
             </div>
-        </div>
+        </section>
     <!-- Экран сообщений -->
-        <div class="modal-screen hidden" id="hintModal">
+        <section class="modal-screen hidden" id="hintModal">
             <div class="hint-content" id="closeHnt">
                 <div id="correctNumbers"></div>
             </div>
-        </div>
+        </section>
     <!-- Экран завершения -->
-        <div class="end-screen hidden" id="endScreen">
+        <section class="end-screen hidden" id="endScreen">
             <h2>Игра завершена!</h2>
             <div class="final-stats">
                 <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20">
@@ -68,8 +69,8 @@
                 <p>Текущий рекорд: <span class="highlight" id="finalHighscore">0</span></p>
             </div>
             <button class="button" id="resetBtn">Подтвердить</button>
-        </div>
-    </div>
+        </section>
+    </main>
     <script src="firebase.js" type="module"></script>
     <script src="script.js" type="module"></script>
 </body>

@@ -70,6 +70,10 @@ class MathSprint {
         this.toggleScreens('game');
         this.startTimer();
         this.generateProblem();
+        this.saveGameSession({ 
+        start_time: new Date().toISOString(), 
+        status: "started" 
+    });
     }
 
     toggleScreens(screenName) {
@@ -116,21 +120,28 @@ class MathSprint {
     }
 
     updateHighscoreDisplay() {
-        const list = document.getElementById('highscoreList');
-        list.innerHTML = ""; // Очищаем список
-        if (this.state.highscores?.length > 0) {
-            this.state.highscores.forEach((record, index) => {
-                const li = document.createElement('div');
-                li.innerHTML = `
-                    <div id = "hs_nam">${record.name}</div> 
-                    <div id = "hs_val">${record.value}</div> 
-                    <div id = "hs_dat">${record.date}</div>
-                `;
-                list.appendChild(li);
-            });
-        } else {
-            list.innerHTML = "<li>Рекорды не найдены</li>";
-        }
+      const list = document.getElementById('highscoreList');
+      list.innerHTML = "";
+
+      this.state.highscores.forEach((record) => {
+        const li = document.createElement('div');
+
+        // Создаем элементы безопасно
+        const nameDiv = document.createElement('div');
+        nameDiv.className = "hs_nam";
+        nameDiv.textContent = record.name; // textContent экранирует HTML
+
+        const valueDiv = document.createElement('div');
+        valueDiv.className = "hs_val";
+        valueDiv.textContent = record.value;
+
+        const dateDiv = document.createElement('div');
+        dateDiv.className = "hs_dat";
+        dateDiv.textContent = record.date;
+
+        li.append(nameDiv, valueDiv, dateDiv);
+        list.appendChild(li);
+      });
     }
 
     startTimer() {
@@ -147,7 +158,7 @@ class MathSprint {
     generateProblem() {
         this.currentNumber = this.getRandom(0, 36);
         this.elements.problem.textContent = this.currentNumber;
-        this.correctNumbers = this.getNeighbors(this.currentNumber, 4);
+        this.correctNumbers = this.getNeighbors(this.currentNumber);
         this.elements.answers.forEach(input => input.value = '');
         this.elements.answers[0].focus({preventScroll: true}); // Фикс скролла на iOS
     }
@@ -171,7 +182,7 @@ class MathSprint {
     }
 
     showResult(text, className) {
-        const fullNeighbors = this.getNeighbors(this.currentNumber, 5); // 5 чисел с центральным
+        const fullNeighbors = this.getNeighbors(this.currentNumber, true); // 5 чисел с центральным
         this.elements.correctNumbers.textContent = fullNeighbors.join(' ');
         this.elements.hintModal.classList.remove('hidden');
         this.elements.hintModal.classList.add(className);
@@ -191,6 +202,7 @@ class MathSprint {
         this.state.isPlaying = false;
         this.screens.game.classList.add('hidden');
         this.screens.end.classList.remove('hidden');
+        document.getElementById('playerName').focus();
         document.getElementById('finalScore').textContent = this.state.score;
         document.getElementById('finalHighscore').textContent = this.state.highscores[0]?.value || 0;
     }
@@ -199,9 +211,10 @@ class MathSprint {
         clearInterval(this.state.intervalId);
         const finalScore = this.state.score;
         const playerName = document.getElementById('playerName').value.trim() || "Аноним";
+        const sanitizedName = playerName.replace(/<[^>]*>?/gm, ""); // Удаление HTML-тегов
             const recordData = {
                 value: finalScore,
-                name: playerName,
+                name: sanitizedName,
                 date: new Date().toLocaleString("ru-RU")
             };
 
@@ -245,7 +258,7 @@ class MathSprint {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    getNeighbors(num, format) {
+    getNeighbors(num, includeCentral = false) {
         const wheelLayout = [
             0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36,
             11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9,
@@ -256,7 +269,7 @@ class MathSprint {
         const neighbors = [];
         
         // Для формата 4: два предыдущих и два следующих (без центрального)
-        const range = (format === 4) ? [-2, -1, 1, 2] : [-2, -1, 0, 1, 2];
+        const range = includeCentral ? [-2, -1, 0, 1, 2] : [-2, -1, 1, 2];
         
         range.forEach(i => {
             const neighborIndex = (index + i + wheelLayout.length) % wheelLayout.length;
@@ -264,6 +277,63 @@ class MathSprint {
         });
         
         return neighbors;
+    }
+
+    async saveGameSession(data) {
+        try {
+            const { browser, os } = this.getBrowserInfo();
+            data.browser = browser;
+            data.os = os;
+            data.ip = await this.getPublicIP();
+            await addDoc(collection(db, "game_sessions"), data);
+        } catch (error) {
+            console.error("Ошибка логирования:", error);
+        }
+    }
+
+    getBrowserInfo() {
+        const ua = navigator.userAgent;
+        let browser = "Неизвестен";
+        let version = "";
+        let os = "Неизвестна";
+
+        // Определяем браузер
+        if (ua.indexOf("Chrome") > -1) {
+            browser = "Chrome";
+            version = ua.match(/Chrome\/(\d+)/i)[1];
+        } else if (ua.indexOf("Firefox") > -1) {
+            browser = "Firefox";
+            version = ua.match(/Firefox\/(\d+)/i)[1];
+        } else if (ua.indexOf("Edg") > -1) {
+            browser = "Edge";
+            version = ua.match(/Edg\/(\d+)/i)[1];
+        } else if (ua.indexOf("Safari") > -1) {
+            browser = "Safari";
+            version = ua.match(/Version\/(\d+)/i)[1];
+        }
+
+        // Определяем ОС
+        const platform = navigator.platform;
+        if (platform.startsWith("Win")) os = "Windows";
+        else if (platform.startsWith("Mac")) os = "macOS";
+        else if (platform.startsWith("Linux")) os = "Linux";
+        else if (platform.startsWith("Android")) os = "Android";
+        else if (platform.startsWith("iOS")) os = "iOS";
+
+        return {
+            browser: `${browser} ${version}`,
+            os
+        };
+    }
+
+    async getPublicIP() {
+        try {
+            const response = await fetch("https://api.ipify.org?format=json");
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            return "Не определен";
+        }
     }
 
 }
