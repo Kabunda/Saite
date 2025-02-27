@@ -1,7 +1,7 @@
 /* Базовые сбросы и цветовая палитра */
 :root {
     --primary: #2A2D34;    /* Темно-синий */
-    --accent: #27ae60;      /* Зеленый кнопки */
+    --accent: #27ae60; /* Зеленый вместо blue */
     --secondary: #009DDC;  /* Голубой */
     --light: #F8F8F8;      /* Светло-серый */
     --danger: #E83F4E;     /* Красный */
@@ -48,7 +48,7 @@ body {
 
 .logo {
     color: var(--light);
-    font-size: 1.8rem;
+    font-size: 1rem;
     letter-spacing: 1px;
 }
 
@@ -142,30 +142,17 @@ body {
     margin: 25px 0;
 }
 
-/* Для всех браузеров на движке WebKit (Chrome, Safari, Edge) */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-/* Для Firefox */
-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
 .number-input {
     order: 1; /* Первые два поля слева */
     width: clamp(45px, 10vw, 55px);
     height: clamp(45px, 10vw, 55px);
     margin: 5px;
-    font-size: 1.8rem;
-    border: 3px solid var(--light);
+    font-size: 2rem;
+    border: 3px solid var(--secondary);
     border-radius: 10px;
     color: var(--primary);
     transition: all 0.2s;
     text-align: center;
-    caret-color: transparent; /* Скрываем курсор */
 }
 
 #answer3 {
@@ -177,8 +164,8 @@ input[type="number"] {
 }
 
 .number-input:focus {
-    border-color: var(--secondary);
-    box-shadow: 0 0 8px var(--secondary);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(242,100,48,0.2);
     transform: scale(1.05);
 }
 
@@ -193,7 +180,7 @@ input[type="number"] {
 
 /* Таймер и статистика */
 .timer {
-    font-size: 3rem;
+    font-size: 2rem;
     color: var(--danger);
     font-weight: 700;
     margin: 20px 0;
@@ -250,18 +237,18 @@ input[type="number"] {
     }
 
     .answers-container {
-        gap: 0px;
+        gap: 5px;
     }
     
     .number-input {
         width: 45px;
-        height: 55px;
-        font-size: 1.7rem;
+        height: 45px;
+        font-size: 1.5rem;
     }
 
     .problem {
-        font-size: 1.7rem;
-        margin: 0 5px;
+        font-size: 1.8rem;
+        margin: 0 8px;
     } 
     
     .game-container {
@@ -270,35 +257,6 @@ input[type="number"] {
     
     .logo {
         font-size: 1.5rem;
-    }
-}
-
-/* Адаптивность */
-@media (max-width: 320px) {
-    body {
-        padding: 50px 10px 10px;
-    }
-
-    .timer {
-        font-size: 2rem;
-        color: var(--danger);
-        font-weight: 600;
-        margin: 6px 0;
-    }
-
-    .number-input {
-        width: 35px;
-        height: 45px;
-        font-size: 1.5rem;
-    }
-
-    .problem {
-        min-width: 20px;
-        font-size: 1.5rem;
-    } 
-    
-    .game-container {
-        padding: 10px;
     }
 }
 

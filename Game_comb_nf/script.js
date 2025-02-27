@@ -2,7 +2,7 @@ import { db, collection, addDoc, getDocs, query, orderBy, limit } from './fireba
 
 class MathSprint {
     constructor() {
-// Инициализация элементов
+            // Инициализация элементов
         this.elements = {
             problem: document.getElementById('problem'),
             answers: [
@@ -23,7 +23,7 @@ class MathSprint {
             hintModal: document.getElementById('hintModal'),
             correctNumbers: document.getElementById('correctNumbers')
         };
-// Состояние игры
+            // Состояние игры
         this.state = {
             highscores: [],
             timeLeft: 180,
@@ -31,9 +31,10 @@ class MathSprint {
             level: 1,
             intervalId: null,
             isPlaying: false,
+            isTimeout: false,
             timeoutId: null
         };
-// Экранные блоки
+            // Экранные блоки
         this.screens = {
             start: document.getElementById('startScreen'),
              game: document.getElementById('gameScreen'),
@@ -44,16 +45,16 @@ class MathSprint {
     }
 
     init() {
-// Настройка событий
+            // Настройка событий
         this.elements.resetBtn.addEventListener('click', () => this.resetGame());
         this.elements.startBtn.addEventListener('click', () => this.startGame());
         this.elements.checkBtn.addEventListener('click', () => this.processAnswer());
         this.elements.endBtn.addEventListener('click', () => this.gameOver());
-// Обработчики ввода
+            // Обработчики ввода
         this.elements.answers.forEach(input => {
             input.addEventListener('input', (e) => this.handleInput(e));
         });
-// Добавляем обработчики нажатия Enter
+            // Добавляем обработчики нажатия Enter
         this.elements.answers.forEach(input => {
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') this.processAnswer();
@@ -62,7 +63,6 @@ class MathSprint {
         this.fetchGlobalHighscore();
     }
 
-    // Основные методы
     startGame() {
         const selectedTime = parseInt(document.querySelector('input[name="time"]:checked').value);
         this.state.timeLeft = selectedTime;
@@ -70,12 +70,6 @@ class MathSprint {
         this.toggleScreens('game');
         this.startTimer();
         this.generateProblem();
-        
-        //this.saveGameSession({ 
-        //    start_time: new Date().toISOString(), 
-        //    status: "started" 
-        //});
-        
     }
 
     toggleScreens(screenName) {
@@ -84,15 +78,55 @@ class MathSprint {
     }
 
     handleInput(e) {
-        if (!this.state.isPlaying) return; 
-        // Автопереход между полями
-        const index = this.elements.answers.indexOf(e.target);
-        if (e.target.value.length === 2 && index < 3) {
-            this.elements.answers[index + 1].focus();
+        if (!this.state.isPlaying) return;
+
+        const currentInput = e.target;
+        const index = this.elements.answers.indexOf(currentInput);
+        const inputValue = currentInput.value;
+
+        // Ограничиваем ввод двумя цифрами
+        if (inputValue.length > 2) {
+            currentInput.value = inputValue.slice(0, 2);
+            return;
         }
-        if (e.target.value.length === 2 && index === 3) {
-            this.processAnswer();
+
+        // Автопереход только при добавлении символов
+        if (inputValue.length === 2) {
+            let nextIndex = -1;
+
+            // Ищем следующее поле, начиная с текущего (включая текущее)
+            for (let i = index; i < this.elements.answers.length; i++) {
+                if (i === index) continue; // Пропускаем текущее поле
+                if (this.elements.answers[i].value.length < 2) {
+                    nextIndex = i;
+                    break;
+                }
+            }
+
+            // Если не нашли - проверяем с начала
+            if (nextIndex === -1) {
+                for (let i = 0; i < index; i++) {
+                    if (this.elements.answers[i].value.length < 2) {
+                        nextIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (nextIndex !== -1) {
+                this.elements.answers[nextIndex].focus();
+            } else {
+                // Все поля заполнены - отправляем ответ
+                if (this.elements.answers.every(a => a.value.length === 2)) {
+                    this.processAnswer();
+                }
+            }
         }
+
+        /*// Автоматический бэкспейс
+        if (inputValue.length === 0 && index > 0) {
+            this.elements.answers[index - 1].focus();
+        }*/
     }
 
     processAnswer() {
@@ -110,9 +144,9 @@ class MathSprint {
         const isCorrect = JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect);
         
         isCorrect ? this.handleCorrectAnswer(isCorrectAbs) : this.handleWrongAnswer();
+        if (this.state.isTimeout) this.gameOver();
     }
 
-    // Вспомогательные методы
     resetGameState() {
         this.state.isPlaying = true;
         this.state.score = 0;
@@ -133,9 +167,10 @@ class MathSprint {
         nameDiv.className = "hs_nam";
         nameDiv.textContent = record.name; // textContent экранирует HTML
 
+        const levelDisplay = record.level ? record.level : "空";
         const valueDiv = document.createElement('div');
         valueDiv.className = "hs_val";
-        valueDiv.textContent = record.value;
+        valueDiv.textContent = `${record.value} ${levelDisplay}`;
 
         const dateDiv = document.createElement('div');
         dateDiv.className = "hs_dat";
@@ -147,28 +182,35 @@ class MathSprint {
     }
 
     startTimer() {
+        this.state.isTimeout = false;
         this.state.intervalId = setInterval(() => {
             this.state.timeLeft--;
             this.elements.timer.textContent = 
                 `${Math.floor(this.state.timeLeft / 60).toString().padStart(2, '0')}:` +
                 `${(this.state.timeLeft % 60).toString().padStart(2, '0')}`;
-
-            if (this.state.timeLeft <= 0) this.gameOver();
+            if (this.state.timeLeft <= 0) {
+                clearInterval(this.state.intervalId);
+                this.state.isTimeout = true;
+            }
         }, 1000);
     }
 
     generateProblem() {
+        if (this.state.isTimeout) return;
         this.currentNumber = this.getRandom(0, 36);
         this.elements.problem.textContent = this.currentNumber;
         this.correctNumbers = this.getNeighbors(this.currentNumber);
         this.elements.answers.forEach(input => input.value = '');
-        this.elements.answers[0].focus({preventScroll: true}); // Фикс скролла на iOS
+        this.elements.answers[0].focus();
     }
 
     handleCorrectAnswer(isCorrectAbs) {
-        const basePoints = this.state.level * 50;
+        let basePoints = this.state.level * 50;
         // +50% бонус за правильный порядок
-        this.state.score += isCorrectAbs ? Math.floor(basePoints * 1.5) : basePoints;
+        basePoints = isCorrectAbs ? Math.floor(basePoints * 1.5) : basePoints;
+        // половина за ответ по истечении времени
+        basePoints = this.state.isTimeout ? Math.floor(basePoints * 0.5) : basePoints;
+        this.state.score += basePoints;
         this.state.level++;
         this.updateUI();
         this.showResult(this.currentNumber, 'correct');
@@ -212,9 +254,11 @@ class MathSprint {
     async resetGame() {
         clearInterval(this.state.intervalId);
         const finalScore = this.state.score;
+        const finalLevel = this.state.level;
         const playerName = document.getElementById('playerName').value.trim() || "Аноним";
         const sanitizedName = playerName.replace(/<[^>]*>?/gm, ""); // Удаление HTML-тегов
             const recordData = {
+                level: finalLevel,
                 value: finalScore,
                 name: sanitizedName,
                 date: new Date().toLocaleString("ru-RU")
@@ -280,64 +324,6 @@ class MathSprint {
         
         return neighbors;
     }
-
-    async saveGameSession(data) {
-        try {
-            const { browser, os } = this.getBrowserInfo();
-            data.browser = browser;
-            data.os = os;
-            data.ip = await this.getPublicIP();
-            await addDoc(collection(db, "game_sessions"), data);
-        } catch (error) {
-            console.error("Ошибка логирования:", error);
-        }
-    }
-
-    getBrowserInfo() {
-        const ua = navigator.userAgent;
-        let browser = "Неизвестен";
-        let version = "";
-        let os = "Неизвестна";
-
-        // Определяем браузер
-        if (ua.indexOf("Chrome") > -1) {
-            browser = "Chrome";
-            version = ua.match(/Chrome\/(\d+)/i)[1];
-        } else if (ua.indexOf("Firefox") > -1) {
-            browser = "Firefox";
-            version = ua.match(/Firefox\/(\d+)/i)[1];
-        } else if (ua.indexOf("Edg") > -1) {
-            browser = "Edge";
-            version = ua.match(/Edg\/(\d+)/i)[1];
-        } else if (ua.indexOf("Safari") > -1) {
-            browser = "Safari";
-            version = ua.match(/Version\/(\d+)/i)[1];
-        }
-
-        // Определяем ОС
-        const platform = navigator.platform;
-        if (platform.startsWith("Win")) os = "Windows";
-        else if (platform.startsWith("Mac")) os = "macOS";
-        else if (platform.startsWith("Linux")) os = "Linux";
-        else if (platform.startsWith("Android")) os = "Android";
-        else if (platform.startsWith("iOS")) os = "iOS";
-
-        return {
-            browser: `${browser} ${version}`,
-            os
-        };
-    }
-
-    async getPublicIP() {
-        try {
-            const response = await fetch("https://api.ipify.org?format=json");
-            const data = await response.json();
-            return data.ip;
-        } catch (error) {
-            return "Не определен";
-        }
-    }
-
 }
 
 new MathSprint();
