@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Математический спринт</title>
+    <link rel="stylesheet" href="../styles/style_game_comb.css">
+</head>
+<body>
+
+    <header class="game-header">
+        <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
+        <h1 class="logo">Комплиты</h1>
+    </header>
+
+    <div class="game-container">
+        <div class="start-screen" id="startScreen">
+            <h2>Настройка игры</h2>
+            <div class="settings">
+                <div class="settings-column">
+                    <div class="time-select" hidden>
+                        <h3>Время:</h3>
+                        <label><input type="radio" name="time" value="30">30 сек</label>
+                        <label><input type="radio" name="time" value="60" checked>60 сек</label>
+                        <label><input type="radio" name="time" value="180">3 мин</label>
+                    </div>
+    
+                    <div class="mode">
+                        <h3>Режим:</h3>
+                        <label><input type="radio" name="mode" value="stavka" checked>Ставка</label>
+                        <label><input type="radio" name="mode" value="viplata">Выплата</label>
+                    </div>
+
+
+                </div>
+                
+                <div class="settings-column">
+                    <div class="difficulty">
+                        <h3>Сложность:</h3>
+                        <label><input type="radio" name="difficulty" value="easy">10, 100, 200, 300</label>
+                        <label><input type="radio" name="difficulty" value="medium" checked>еще 25, 50, 75</label>
+                        <label><input type="radio" name="difficulty" value="hard">... 125, 275 ...</label>
+                    </div>
+                    <div id="highscore"></div>
+                </div>
+            </div>
+
+            <button id="startBtn" class="btn">Старт!</button>
+        </div>
+
+        <div class="game-screen hidden">
+            <div class="stats">
+                <div>Уровень: <span id="level">1</span></div>        
+                <div>Счёт: <span id="score">0</span></div>
+            </div>
+            <div id="timer" class="timer">03:00</div>
+            <div class="game-content">
+                <div class="problem" id="problem">?</div>
+                <input type="number" id="answer" autofocus>
+                <div class="result" id="result"></div>
+            </div>
+        </div>
+
+        <div class="end-screen hidden" id="endScreen">
+            <h2>Игра завершена!</h2>
+            <div class="final-stats">
+                <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20">
+                <p>Ваш счёт: <span class="highlight" id="finalScore">0</span></p>
+                <p>Текущий рекорд: <span class="highlight" id="finalHighscore">0</span></p>
+            </div>
+            <button class="btn restart">Новая игра</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

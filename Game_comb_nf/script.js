@@ -226,8 +226,11 @@ class MathSprint {
     }
 
     showResult(text, className) {
+        clearTimeout(this.state.timeoutId);
         const fullNeighbors = this.getNeighbors(this.currentNumber, true); // 5 чисел с центральным
         this.elements.correctNumbers.textContent = fullNeighbors.join(' ');
+        this.elements.hintModal.classList.remove('correct');
+        this.elements.hintModal.classList.remove('wrong');
         this.elements.hintModal.classList.remove('hidden');
         this.elements.hintModal.classList.add(className);
         this.state.timeoutId = setTimeout(() => {

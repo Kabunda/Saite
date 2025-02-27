@@ -1,0 +1,50 @@
+/* Контейнер с полями ввода и числом */
+.answers-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    margin: 25px 0;
+}
+
+/* Для всех браузеров на движке WebKit (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Для Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.number-input {
+    order: 1; /* Первые два поля слева */
+    width: clamp(100px, 30vw, 250px);
+    height: clamp(45px, 10vw, 55px);
+    margin: 5px;
+    font-size: 1.8rem;
+    border: 3px solid var(--light);
+    border-radius: 10px;
+    color: var(--primary);
+    transition: all 0.2s;
+    text-align: center;
+    caret-color: transparent; /* Скрываем курсор */
+}
+
+.number-input:focus {
+    border-color: var(--secondary);
+    box-shadow: 0 0 8px var(--secondary);
+    transform: scale(1.05);
+}
+
+.problem {
+    order: 2; /* Центральный элемент */
+    margin: 0 15px;
+    font-size: 2.5rem;
+    color: var(--primary);
+    min-width: 60px;
+    text-align: center;
+}

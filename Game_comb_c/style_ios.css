@@ -1,0 +1,37 @@
+@media (max-width: 480px) {
+	.game-container {
+		padding: 0;
+	}
+
+	.stats {
+		padding: 0;
+		margin-bottom: 0;
+	}
+
+	.timer {
+		margin: 0;
+		font-size: 2rem;
+	}
+
+	.problem {
+		font-size: 1.7rem;
+	}
+
+	.answers-container {
+		margin: 0;
+		font-size: 1.7rem;
+	}
+
+	.button {
+		margin-top: 0;
+		font-size: 1ren;
+	}
+
+	.modal-screen {
+		padding-top: 10%;
+	}
+
+	.hint-content {
+		padding: 10px 25px;
+	}
+}

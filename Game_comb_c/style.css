@@ -1,217 +1,221 @@
-/* Основные стили */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: #f0f2f5;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+/* Базовые сбросы и цветовая палитра */
+:root {
+    --primary: #2A2D34;    /* Темно-синий */
+    --accent: #27ae60;      /* Зеленый кнопки */
+    --secondary: #009DDC;  /* Голубой */
+    --light: #F8F8F8;      /* Светло-серый */
+    --danger: #E83F4E;     /* Красный */
 }
 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--light);
+    color: var(--primary);
+    min-height: 100vh;
+    padding-top: 80px; /* Отступ под фиксированный хедер */
+}
+
+/* Фиксированный заголовок */
 .game-header {
-    background: #2c3e50;
-    color: white;
-    padding: 1rem;
     position: fixed;
-    width: 100%;
     top: 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    left: 0;
+    right: 0;
+    background: var(--primary);
+    padding: 10px 20px;
+    box-shadow: 0 px 1px rgba(0,0,0,0.1);
+    z-index: 1000;
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .home-link {
-    color: white;
+    color: var(--light);
     text-decoration: none;
-    margin-right: 1rem;
-    font-size: 1.2rem;
+    transition: opacity 0.3s;
+}
+
+.home-link:hover {
+    opacity: 0.8;
 }
 
 .logo {
-    margin: 0 auto;
-    font-size: 1.5rem;
+    color: var(--light);
+    font-size: 1.8rem;
+    letter-spacing: 1px;
 }
 
-/* Контейнеры экранов */
+/* Основной контейнер */
 .game-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 2rem;
-    margin-top: 60px; /* Отступ под фиксированным хедером */
-}
-
-.start-screen, .game-screen, .end-screen {
+    max-width: 600px; /*ширина главного экрана*/
+    margin: 0 auto;
     background: white;
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    width: 90%;
-    max-width: 600px;
-    margin: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 25px;
+    position: relative;
 }
 
-/* Начальный экран */
-.settings {
-    display: flex;
-    gap: 2rem;
-    margin: 2rem 0;
-    flex-wrap: wrap;
+/* Стили стартового экрана */
+.start-screen {
+    text-align: left;
+    padding: 30px 20px;
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 12px;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.05);
 }
 
-.settings-column {
-    flex: 1;
-    min-width: 250px;
-}
-
-.time-select, .mode, .difficulty {
+.start-screen h2 {
+    color: var(--primary);
+    font-size: 2.2rem;
     margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
-h3 {
-    color: #2c3e50;
-    margin: 0 0 1rem 0;
+.start-screen p {
+    font-size: 1.1rem;
+    color: #5a5a5a;
+    margin-bottom: 2rem;
 }
 
-label {
-    display: block;
-    margin: 0.5rem 0;
-    padding: 0.8rem;
-    border-radius: 8px;
-    background: #f8f9fa;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-label:hover {
-    background: #e9ecef;
-}
-
-input[type="radio"] {
-    margin-right: 0.5rem;
-}
-
-#highscore {
-    font-size: 1.2rem;
-    color: #27ae60;
-    margin-top: 1rem;
-}
-
-/* Игровой экран */
-.game-screen {
-    text-align: center;
-}
-
-.stats {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    font-weight: bold;
-    color: #34495e;
-}
-
-.timer {
-    font-size: 2rem;
-    color: #e74c3c;
-}
-
-.problem {
-    font-size: 4rem;
-    margin: 2rem 0;
-    color: #2c3e50;
-}
-
-#answer {
-    font-size: 2rem;
-    width: 200px;
-    padding: 1rem;
-    border: 3px solid #3498db;
+.time-select {
+    background: rgba(42,45,52,0.03);
+    padding: 20px;
     border-radius: 10px;
-    text-align: center;
-    margin: 1rem 0;
+    margin: 25px 0;
 }
 
-.result {
-    font-size: 1.5rem;
-    min-height: 2rem;
+.time-select h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-weight: 600;
 }
 
-.correct { color: #27ae60; }
-.wrong { color: #e74c3c; }
-
-/* Экран завершения */
-.end-screen {
-    text-align: center;
-}
-
-.final-stats {
-    margin: 2rem 0;
-    font-size: 1.2rem;
-}
-
-.highlight {
-    color: #3498db;
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-#highscore {
-    line-height: 1.4;
-    font-size: 0.9em;
-    white-space: pre-line;
-}
-
-/* Кнопки */
-.btn {
-    background: #3498db;
-    color: white;
-    border: none;
-    padding: 1rem 3rem;
-    font-size: 1.2rem;
-    border-radius: 25px;
+.time-select label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 15px;
+    padding: 10px 15px;
+    background: rgba(0,157,220,0.1);
+    border-radius: 6px;
+    transition: all 0.3s;
     cursor: pointer;
-    transition: transform 0.2s, background 0.3s;
 }
 
-.btn:hover {
-    background: #2980b9;
-    transform: scale(1.05);
+.time-select label:hover {
+    background: rgba(0,157,220,0.2);
+    transform: translateY(-2px);
 }
 
-.restart {
-    background: #27ae60;
-}
-
-.restart:hover {
-    background: #219a52;
+.time-select input[type="radio"] {
+    margin-right: 8px;
+    accent-color: var(--accent);
 }
 
 /* Адаптивность */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
+    .start-screen {
+        padding: 20px 15px;
+    }
+    
+    .time-select label {
+        margin: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+
+
+/* Таймер и статистика */
+.timer {
+    font-size: 3rem;
+    color: var(--danger);
+    font-weight: 700;
+    margin: 20px 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    background: rgba(42,45,52,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+/* Модальные окна */
+.modal-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(42,45,52,0);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 2000;
+    padding-top: 100px;
+}
+
+.hint-content {
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef); /* Градиентный фон */
+    border: 3px solid var(--primary); /* Акцентная рамка */
+    padding: 25px;
+    border-radius: 12px;
+    max-width: 300px;
+    position: relative;
+    font-size: 2rem;
+}
+
+.correct {
+    color: darkgreen;
+}
+
+.wrong {
+    color: darkred;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    body {
+        padding: 70px 15px 15px;
+    }
+    
     .game-container {
-        padding: 1rem;
-        margin-top: 50px;
+        padding: 20px;
     }
-
-    .start-screen, .game-screen, .end-screen {
-        padding: 1rem;
-    }
-
-    .problem {
-        font-size: 3rem;
-    }
-
-    #answer {
+    
+    .logo {
         font-size: 1.5rem;
-        width: 160px;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 320px) {
+    body {
+        padding: 50px 10px 10px;
     }
 
-    .stats {
-        /*flex-direction: column;*/
-        gap: 0.5rem;
+    .timer {
+        font-size: 2rem;
+        color: var(--danger);
+        font-weight: 600;
+        margin: 6px 0;
+    }
+
+    .game-container {
+        padding: 10px;
     }
 }
 

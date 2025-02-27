@@ -1,149 +1,191 @@
+import { db, collection, addDoc, getDocs, query, orderBy, limit } from './firebase.js';
+
 class MathSprint {
     constructor() {
+            // Инициализация элементов
         this.elements = {
             problem: document.getElementById('problem'),
-            answer: document.getElementById('answer'),
+            answers: [
+                document.getElementById('answer1'),
+                document.getElementById('answer2')
+            ],
             result: document.getElementById('result'),
             timer: document.getElementById('timer'),
             score: document.getElementById('score'),
             highscore: document.getElementById('highscore'),
             level: document.getElementById('level'),
-            startBtn: document.getElementById('startBtn')
+            startBtn: document.getElementById('startBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            checkBtn: document.getElementById('checkBtn'),
+            endBtn: document.getElementById('endBtn'),
+            hintModal: document.getElementById('hintModal'),
+            correctNumbers: document.getElementById('correctNumbers')
         };
-        this.elements.timeSelect = document.querySelector('input[name="time"]:checked');
+            // Состояние игры
         this.state = {
+            highscores: [],
             timeLeft: 180,
             score: 0,
-            boost: 1,
-            highscore: JSON.parse(localStorage.getItem('highscore_comp')) || { 
-                value: 0, 
-                date: "не установлен", 
-                name: "неизвестен" 
-            },
             level: 1,
             intervalId: null,
-            isPlaying: false
+            isPlaying: false,
+            isTimeout: false,
+            timeoutId: null
         };
-
+            // Экранные блоки
         this.screens = {
             start: document.getElementById('startScreen'),
-            game: document.querySelector('.game-screen'),
-            end: document.getElementById('endScreen')
+             game: document.getElementById('gameScreen'),
+              end: document.getElementById('endScreen')
         };
 
         this.init();
     }
 
     init() {
-        document.querySelector('.restart').addEventListener('click', () => this.resetGame());
-        // Обновляем отображение рекорда при загрузке
-        this.elements.highscore.innerHTML = this.state.highscore.value > 0 
-            ? `🏆 Рекорд: ${this.state.highscore.value} <br>
-               📛 Имя: ${this.state.highscore.name} <br>
-               📅 Дата: ${this.state.highscore.date}`
-            : "🏆 Рекорд не установлен";
+            // Настройка событий
+        this.elements.resetBtn.addEventListener('click', () => this.resetGame());
         this.elements.startBtn.addEventListener('click', () => this.startGame());
-        this.elements.answer.addEventListener('input', (e) => this.checkAnswer(e));
+        this.elements.checkBtn.addEventListener('click', () => this.processAnswer());
+        this.elements.endBtn.addEventListener('click', () => this.gameOver());
+            // Обработчики ввода
+        this.elements.answers.forEach(input => {
+            input.addEventListener('input', (e) => this.handleInput(e));
+        });
+            // Добавляем обработчики нажатия Enter
+        this.elements.answers.forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.processAnswer();
+            });
+        });
+        this.fetchGlobalHighscore();
     }
 
     startGame() {
-
-        // Получение выбранного времени
-            const selectedTime = parseInt(document.querySelector('input[name="time"]:checked').value);
-        this.screens.start.classList.add('hidden');
-        this.screens.game.classList.remove('hidden');
-        if (this.state.isPlaying) return;
-        
-        this.state.isPlaying = true;
+        const selectedTime = parseInt(document.querySelector('input[name="time"]:checked').value);
         this.state.timeLeft = selectedTime;
+        this.resetGameState();
+        this.toggleScreens('game');
+        this.startTimer();
+        this.generateProblem();
+    }
+
+    toggleScreens(screenName) {
+        Object.values(this.screens).forEach(screen => screen.classList.add('hidden'));
+        this.screens[screenName].classList.remove('hidden');
+    }
+
+    handleInput(e) {
+        if (!this.state.isPlaying) return;
+        if(e.target.value < 0) e.target.value = '';
+    }
+
+    processAnswer() {
+        const userNumbers = this.elements.answers.map(input => {
+            const value = parseInt(input.value);
+            return isNaN(value) ? -1 : value;
+        });
+        var isCorrect = false;
+        if (userNumbers[0] == this.currentStavka && userNumbers[1] == this.currentViplata) 
+            isCorrect = true;
+        
+        isCorrect ? this.handleCorrectAnswer() : this.handleWrongAnswer();
+        if (this.state.isTimeout) this.gameOver();
+    }
+
+    resetGameState() {
+        this.state.isPlaying = true;
         this.state.score = 0;
         this.state.level = 1;
-        
-                    // Обновление отображения таймера
-        this.elements.timer.textContent = 
-            `${Math.floor(selectedTime / 60).toString().padStart(2, '0')}:` +
-            `${(selectedTime % 60).toString().padStart(2, '0')}`;
-
+        this.elements.answers.forEach(input => input.value = '');
         this.updateUI();
-        this.generateProblem();
-        this.startTimer();
+    }
+
+    updateHighscoreDisplay() {
+      const list = document.getElementById('highscoreList');
+      list.innerHTML = "";
+
+      this.state.highscores.forEach((record) => {
+        const li = document.createElement('div');
+
+        // Создаем элементы безопасно
+        const nameDiv = document.createElement('div');
+        nameDiv.className = "hs_nam";
+        nameDiv.textContent = record.name; // textContent экранирует HTML
+
+        const levelDisplay = record.level ? record.level : "空";
+        const valueDiv = document.createElement('div');
+        valueDiv.className = "hs_val";
+        valueDiv.textContent = `${record.value} ${levelDisplay}`;
+
+        const dateDiv = document.createElement('div');
+        dateDiv.className = "hs_dat";
+        dateDiv.textContent = record.date;
+
+        li.append(nameDiv, valueDiv, dateDiv);
+        list.appendChild(li);
+      });
     }
 
     startTimer() {
+        this.state.isTimeout = false;
         this.state.intervalId = setInterval(() => {
             this.state.timeLeft--;
             this.elements.timer.textContent = 
                 `${Math.floor(this.state.timeLeft / 60).toString().padStart(2, '0')}:` +
                 `${(this.state.timeLeft % 60).toString().padStart(2, '0')}`;
-
-            if (this.state.timeLeft <= 0) this.gameOver();
+            if (this.state.timeLeft <= 0) {
+                clearInterval(this.state.intervalId);
+                this.state.isTimeout = true;
+            }
         }, 1000);
     }
 
     generateProblem() {
-        const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
-        const mode = document.querySelector('input[name="mode"]:checked').value;
-        let a, b, c;
-        const multipliers = [10, 100, 200, 300, 25, 50, 75, 125, 150, 175, 225, 250, 275];
-        b = this.getRandom(0, 36);
-        switch(difficulty) {
-            case 'easy':
-                a = multipliers[this.getRandom(0, 3)];
-                this.state.boost = 1;
-                break;
-            case 'medium':
-                a = multipliers[this.getRandom(0, 6)];
-                this.state.boost = 2;
-                break;
-            case 'hard':
-                a = multipliers[this.getRandom(2, 12)];
-                this.state.boost = 3;
-                break;
-        }
-        if (mode == "stavka") {
-            c = this.c_stavka(b);
-        }   else {
-            c = this.c_coplit(b);
-        }
+        if (this.state.isTimeout) return;
 
-        this.currentAnswer = a * c;
-        this.elements.problem.textContent = `${b} по ${a}`;
-        this.elements.answer.value = '';
-        this.elements.answer.focus();
-    }
+        const multipliers = [10, 100, 200, 300, 25, 50, 75, 150, 250];
+        const nomer = this.getRandom(0, 36);
+        const nominal = multipliers[this.getRandom(0, 8)];
 
-    checkAnswer(e) {
-        if (!this.state.isPlaying) return;
-        const userAnswer = parseFloat(e.target.value);
+        this.currentStavka = this.c_stavka(nomer) * nominal;
+        this.currentViplata = this.c_coplit(nomer) * nominal;
 
-        if (parseInt(userAnswer) === this.currentAnswer) {
-            this.handleCorrectAnswer();
-        } else if (userAnswer.toString().length >= this.currentAnswer.toString().length) {
-            this.handleWrongAnswer();
-        }
+        this.elements.problem.textContent = `${nomer} по ${nominal}`;
+        this.elements.answers.forEach(input => input.value = '');
+        this.elements.answers[0].focus();
     }
 
     handleCorrectAnswer() {
-        this.state.score += this.state.level * 10 * this.state.boost;
-        this.state.score += Math.floor(this.currentAnswer / 10);
+        let basePoints = this.state.level * this.currentStavka;
+        // половина за ответ по истечении времени
+        basePoints = this.state.isTimeout ? Math.floor(basePoints * 0.5) : basePoints;
+        this.state.score += basePoints;
         this.state.level++;
         this.updateUI();
-        this.showResult('✓ Верно!', 'correct');
-        setTimeout(() => this.generateProblem(), 300);
+        this.showResult('Верно!', 'correct');
+        this.generateProblem();
     }
 
     handleWrongAnswer() {
-        this.state.score = Math.max(0, this.state.score - 5);
+        this.state.score = Math.max(0, this.state.score - 500);
         this.state.level = Math.max(1, this.state.level - 1);
         this.updateUI();
-        this.showResult('✕ Неверно!', 'wrong');
-        setTimeout(() => this.generateProblem(), 300);
+        this.showResult(`${this.currentStavka} ${this.currentViplata}`, 'wrong');
+        this.generateProblem();
     }
 
     showResult(text, className) {
-        this.elements.result.textContent = text;
-        this.elements.result.className = className;
-        this.elements.answer.value = '';
+        clearTimeout(this.state.timeoutId);
+        this.elements.correctNumbers.textContent = text;
+        this.elements.hintModal.classList.remove('correct');
+        this.elements.hintModal.classList.remove('wrong');
+        this.elements.hintModal.classList.remove('hidden');
+        this.elements.hintModal.classList.add(className);
+        this.state.timeoutId = setTimeout(() => {
+            this.elements.hintModal.classList.remove(className);
+            this.elements.hintModal.classList.add('hidden');
+        }, 2500);
     }
 
     updateUI() {
@@ -156,51 +198,58 @@ class MathSprint {
         this.state.isPlaying = false;
         this.screens.game.classList.add('hidden');
         this.screens.end.classList.remove('hidden');
+        document.getElementById('playerName').focus();
         document.getElementById('finalScore').textContent = this.state.score;
-        document.getElementById('finalHighscore').textContent = this.state.highscore.value;
+        document.getElementById('finalHighscore').textContent = this.state.highscores[0]?.value || 0;
     }
 
-    resetGame() {
+    async resetGame() {
         clearInterval(this.state.intervalId);
-        
-        // Сохраняем финальный счет перед сбросом
         const finalScore = this.state.score;
-        
-        // Сбрасываем состояние
+        const finalLevel = this.state.level;
+        const playerName = document.getElementById('playerName').value.trim() || "Аноним";
+        const sanitizedName = playerName.replace(/<[^>]*>?/gm, ""); // Удаление HTML-тегов
+            const recordData = {
+                level: finalLevel,
+                value: finalScore,
+                name: sanitizedName,
+                date: new Date().toLocaleString("ru-RU")
+            };
+
+            try {
+                await addDoc(
+                    collection(db, "records_complit"), 
+                    recordData
+                );
+                await this.fetchGlobalHighscore();
+            } catch (error) {
+                console.error("Ошибка сохранения:", error);
+            }
         this.state.score = 0;
         this.state.level = 1;
         this.state.isPlaying = false;
-        this.updateUI();
-
-        // Получаем имя игрока
-        const playerName = document.getElementById('playerName').value.trim() || "Аноним";
-        
-        // Проверяем и обновляем рекорд
-        if (finalScore > this.state.highscore.value) {
-            const recordData = {
-                value: finalScore,
-                date: new Date().toLocaleString('ru-RU', {
-                    day: 'numeric',
-                    month: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }),
-                name: playerName
-            };
-                    
-                localStorage.setItem('highscore_comp', JSON.stringify(recordData));
-                this.state.highscore = recordData;
-                
-                // Обновляем отображение рекорда
-                this.elements.highscore.innerHTML = 
-                    `🏆 Рекорд: ${recordData.value} <br>
-                    📛 Имя: ${recordData.name} <br>
-                    📅 Дата: ${recordData.date}`;
-            }
+        this.updateUI();    
         this.screens.end.classList.add('hidden');
         this.screens.start.classList.remove('hidden');
-        this.elements.timer.textContent = '03:00';
+    }
+
+    async fetchGlobalHighscore() {
+        try {
+            const recordsRef = collection(db, "records_complit");
+            const q = query(
+                recordsRef, 
+                orderBy("value", "desc"), 
+                limit(10)
+            );
+            const snapshot = await getDocs(q);
+            this.state.highscores = []; // Теперь храним массив
+            snapshot.forEach(doc => {
+                this.state.highscores.push(doc.data());
+            });
+            this.updateHighscoreDisplay();
+        } catch (error) {
+            console.error("Ошибка загрузки рекорда:", error);
+        }
     }
 
     getRandom(min, max) {
@@ -208,6 +257,9 @@ class MathSprint {
     }
 
     c_coplit(num) {
+        if(num >=4 && num <=33) {
+            return (num - 5) % 3 === 0 ? 392 : 294;
+        }
         const rules = {
             0: 235,
             1: 297,
@@ -217,7 +269,7 @@ class MathSprint {
             35: 264,
             36: 198
         };
-        return rules[num] || ((num - 5) % 3 === 0 ? 392 : 294);
+        return rules[num];
     }
 
     c_stavka(num) {
