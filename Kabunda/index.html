@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Консоль Kabunda</title>
+    <link rel="stylesheet" href="style.css">
+    <meta property="og:title" content="Консоль">
+    <meta property="og:description" content="Анализ работы сайта">
+    <meta property="og:image" content="../images/logo_boom.png">
+    <meta property="og:url" content="https://kabunda.github.io">
+</head>
+<body>
+    <header class="header">
+        <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
+        <h1 class="logo">Консоль</h1>
+    </header>
+        <button class="button" id="neiborsBtn">Соседи</button>
+        <button class="button" id="multiplBtn">Умножение</button>
+        <button class="button" id="complitBtn">Комплиты</button>     
+    <main class="console-container">
+        <div id="highscoreN">
+        	<h3>Соседи:</h3>
+        	<div id="hsListNeibors"></div>                
+        </div>   
+        <div id="highscoreM">
+        	<h3>Умножение:</h3>
+        	<div id="hsListMultipl"></div>                
+        </div> 
+        <div id="highscoreC">
+        	<h3>Комплиты:</h3>
+        	<div id="hsListComplit"></div>                
+        </div>
+    </main>
+    <script src="firebase.js" type="module"></script>
+    <script src="script.js" type="module"></script>
+</body>
+</html>
