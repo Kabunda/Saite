@@ -129,7 +129,19 @@ class MathSprint {
 
         const dateDiv = document.createElement('div');
         dateDiv.className = "hs_dat";
-        dateDiv.textContent = record.date;
+        if (record.date?.toDate) { // Проверяем, является ли date Timestamp
+            const date = record.date.toDate(); // Конвертируем в объект Date
+            dateDiv.textContent = date.toLocaleString("ru-RU", {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else {
+            // Если date уже строка (для старых записей)
+            dateDiv.textContent = record.date || "Дата не указана";
+        }
 
         li.append(nameDiv, valueDiv, dateDiv);
         list.appendChild(li);
