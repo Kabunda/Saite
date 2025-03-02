@@ -1,4 +1,4 @@
-import { db, collection, addDoc, getDocs, query, orderBy, limit } from './firebase.js';
+import { db, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from './firebase.js';
 
 class MathSprint {
     constructor() {
@@ -213,7 +213,7 @@ class MathSprint {
                 level: finalLevel,
                 value: finalScore,
                 name: sanitizedName,
-                date: new Date().toLocaleString("ru-RU")
+                date: serverTimestamp()
             };
 
             try {

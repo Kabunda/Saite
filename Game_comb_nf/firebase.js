@@ -6,7 +6,8 @@ import {
     getDocs,
     query,
     orderBy,
-    limit
+    limit,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
 // Конфигурация Firebase (замените на свою!)
@@ -25,4 +26,4 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Экспорт для использования в других модулях
-export { db, collection, addDoc, getDocs, query, orderBy, limit };
+export { db, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp };
