@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Спринт комплитов</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style_hs.css">
+    <meta property="og:title" content="Комплиты">
+    <meta property="og:description" content="Игра-упражнение на знание комплитов.">
+    <script src="firebase.js" type="module" defer></script>
+    <script src="core.js" type="module"></script>
+    <script src="game-complit.js" type="module"></script>
+    <script src="game-multiple.js" type="module"></script>
+    <script src="game-neighbors.js" type="module"></script>
+    <script src="script.js" type="module"></script>
+</head>
+<body>
+    <header class="game-header">
+        <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
+        <h1 class="logo" id="nazvanie">Комплиты</h1>
+    </header>
+    <main class="game-container">
+    <!-- Начальный экран -->
+        <section id="startScreen">
+            <h3>Правила</h3>
+            <div id="rules">Указан номер и номинал комплита, необходимо определить ставку на комплит и выплату.</div>
+            <button class="button" id="startBtn">Старт!</button>
+            <div class="game-select">
+                <h3>Игра:</h3>
+                <label><input type="radio" name="game" value="multiple" checked>Умножение</label>
+                <label><input type="radio" name="game" value="neighbors">Соседи</label>
+                <label><input type="radio" name="game" value="complit">Комплиты</label>
+            </div>   
+            <div id="highscore">
+                <h3>Топ-5 рекордов:</h3>
+                <div id="highscoreList"></div>                
+            </div>    
+        </section>
+    <!-- Игровой экран -->
+        <section class="hidden" id="gameScreen">
+            <div class="stats">
+                <div>Этап: <span id="level"></span></div>        
+                <div>Счёт: <span id="score"></span></div>
+            </div>
+            <div id="timer" class="timer">03:00</div>
+            <div class="game-content" id="gameContent">
+                <!-- Динамически заменяется содержимое -->
+            </div>
+            <div class ="hintContainer" id="message"></div>
+            <button class="button" id="checkBtn">Готово</button>
+        </section>
+    <!-- Экран завершения -->
+        <section class="hidden" id="endScreen">
+            <h2>Игра завершена!</h2>
+            <div class="endGame">
+                <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20">
+                <p>Ваш счёт: <span class="highlight" id="finalScore">0</span></p>
+                <p>Рекорд: <span class="highlight" id="finalHighscore">0</span></p>
+            </div>
+            <button class="button" id="resetBtn">Подтвердить</button>
+        </section>
+    </main>
+</body>
+</html>

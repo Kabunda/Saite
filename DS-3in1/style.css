@@ -1,0 +1,202 @@
+/* Базовые сбросы и цветовая палитра */
+:root {
+    --primary: #032168;         /* Темно-синий */
+    --accent: #04612b;          /* Зеленый кнопки */
+    --secondary: #009DDC;       /* Голубой */
+    --light: #F8F8F8;           /* Светло-серый */
+    --danger: #cc1a29;          /* Красный */
+    --bshadow: rgba(0,0,0,0.1); /* тень */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--light);
+    color: var(--primary);
+    min-height: 100vh;
+    padding-top: 47px; /* Отступ под фиксированный хедер */
+}
+
+/* Фиксированный заголовок */
+.game-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--primary);
+    padding: 5px 10px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.home-link {
+    color: var(--light);
+    text-decoration: none;
+    transition: opacity 0.3s;
+}
+
+.home-link:hover {
+    opacity: 0.8;
+}
+
+.logo {
+    color: var(--light);
+}
+
+/* Основной контейнер */
+.game-container {
+    max-width: 600px; /*ширина главного экрана*/
+    margin: 5px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0px 10px 20px 0px rgba(0,0,0,0.1);
+    padding: 10px;
+    position: relative;
+}
+
+/* Стили стартового экрана */
+section {
+    min-height: 250px;
+    text-align: left;
+    padding: 15px 10px;
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 12px;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.05);
+    animation: slideIn 0.4s ease-out;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.correct {
+    color: darkgreen;
+}
+
+.wrong {
+    color: darkred;
+}
+
+.empty {
+    color: var(--light);
+}
+
+/* Таймер и статистика */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    background: rgba(42,45,52,0.05);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.timer {
+    font-size: 3rem;
+    color: var(--danger);
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(156, 6, 6, 0.3);
+}
+
+/* Контейнер с полями ввода и заданием */
+.answers-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.problem {
+    order: 2; /* Центральный элемент */
+    font-size: 2rem;
+    min-height: 40px;
+    text-align: center;
+}
+
+.number-input {
+    order: 1; /* Первые два поля слева */
+    width: 30%;
+    height: 40px;
+    font-size: 1.5rem;
+    border: 3px solid var(--light);
+    border-radius: 10px;
+    color: var(--primary);
+    transition: all 0.2s;
+    text-align: center;
+    caret-color: transparent; /* Скрываем курсор */
+}
+
+.number-input:focus {
+    border-color: var(--secondary);
+    box-shadow: 0 0 8px var(--secondary);
+    transform: scale(1.05);
+}
+
+/* Для всех браузеров на движке WebKit (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Для Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.hintContainer {
+    /*font-size: 2rem;*/
+    min-height: 30px;
+    text-align: center;
+}
+
+.button {
+    width: 50%;
+    padding: 5px;
+    background: linear-gradient(145deg, var(--accent), #0b7c0b);
+    box-shadow: 0 4px 15px rgba(0,157,220,0.2);
+    color: var(--light);
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(242,100,48,0.3);
+}
+
+/*экран завершения игры*/
+.endGame {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,157,220,0.2);
+}
+
+#playerName {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid var(--secondary);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+#playerName:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(0,157,220,0.2);
+}
+
+.highlight {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.3em;
+}
