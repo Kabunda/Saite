@@ -72,6 +72,16 @@ section {
     animation: slideIn 0.4s ease-out;
 }
 
+game-select {
+    display: flex;
+    flex-direction: column;
+}
+
+.game-select label {
+    display: block;         /* Каждая метка с радиокнопкой на новой строке */
+    margin: 8px;
+}
+
 .hidden {
     display: none !important;
 }

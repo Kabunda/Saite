@@ -54,7 +54,13 @@ export class NeighborsGame {
             );
             
         const points = isOrderCorrect ? 200 : (isCorrect ? 100 : 0);
-        this.core.handleAnswer(isCorrect, points);
+        // Формируем сообщение с правильными номерами
+        const [left1, left2, right1, right2] = this.currentProblem;
+        const target = this.problemElement.textContent;
+        const message = `${left1} ${left2} ${target} ${right1} ${right2}`;
+
+
+        this.core.handleAnswer(isCorrect, points, message);
     }
 
     destroy() {

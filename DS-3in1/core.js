@@ -29,7 +29,7 @@ export class GameCore {
         };
 
         this.state = {
-            timeLeft: 180,
+            timeLeft: 0,
             score: 0,
             level: 1,
             intervalId: null,
@@ -38,6 +38,21 @@ export class GameCore {
         };
 
         this.initEventListeners();
+        // Загружаем сохраненное имя из localStorage
+        const savedName = localStorage.getItem('playerName');
+        if (savedName) {
+            this.elements.playerName.value = savedName;
+        }
+        // Сохраняем имя при вводе
+        this.elements.playerName.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^a-zA-Zа-яА-Я0-9 ]/g, '');
+            const name = e.target.value.trim().slice(0, 20);
+            if (name) {
+                localStorage.setItem('playerName', name);
+            } else {
+                localStorage.removeItem('playerName'); // Очищаем, если поле пустое
+            }
+        });
     }
 
     initEventListeners() {
@@ -46,6 +61,7 @@ export class GameCore {
         document.querySelectorAll('input[name="game"]').forEach(radio => {
             radio.addEventListener('change', (e) => this.switchGame(e.target.value));
         });
+        this.elements.timer.addEventListener('click', () => this.handleTimerClick());
     }
 
     switchGame(gameMode) {
@@ -58,7 +74,7 @@ export class GameCore {
     }
 
     startGame() {
-        this.state = { timeLeft: 180, score: 0, level: 1, intervalId: null, isPlaying: true };
+        this.state = { timeLeft: 60, score: 0, level: 1, intervalId: null, isPlaying: true };
         this.toggleScreens('game');
         this.startTimer();
         this.currentGame.generateProblem();
@@ -122,8 +138,18 @@ export class GameCore {
               }
           }, 1000);
     }
+
+    handleTimerClick() {
+        if (this.state.isPlaying) {
+            clearInterval(this.state.intervalId);
+            this.state.timeLeft = 0; // Останавливаем таймер
+            this.state.isPlaying = false;
+            this.elements.timer.textContent = '∞'
+        }
+    }
     
-    handleAnswer(isCorrect, points = 100) {
+    handleAnswer(isCorrect, points = 111, message = 'пусто') {
+        console.log(isCorrect,points,message)
         if (isCorrect) {
             let basePoints = this.state.level * points;
             // половина за ответ по истечении времени
@@ -131,12 +157,12 @@ export class GameCore {
             this.state.score += basePoints;
             this.state.level++;
             this.updateUI();
-            this.showResult(`+${points}`, 'correct');
+            this.showResult(`+${basePoints}`, 'correct');
         } else {
-            this.state.score = Math.max(0, this.state.score - 500);
+            this.state.score = Math.max(0, this.state.score - 10);
             this.state.level = Math.max(1, this.state.level - 1);
             this.updateUI();
-            this.showResult('Ошибка', 'wrong');   
+            this.showResult(message, 'wrong');   
         }
         this.currentGame.generateProblem();
         if (this.state.isTimeout) this.gameOver();
@@ -152,7 +178,7 @@ export class GameCore {
         this.state.timeoutId = setTimeout(() => {
             this.elements.result.classList.remove(className);
             this.elements.result.classList.add('empty');
-        }, 2500);
+        }, 4500);
     }
 
     updateUI() {
@@ -160,40 +186,39 @@ export class GameCore {
         this.elements.level.textContent = this.state.level;
     }
 
-    gameOver() {
-        clearInterval(this.state.intervalId);
-        this.state.isPlaying = false;
+    async gameOver() {
+        clearInterval(this.state.intervalId);  
         this.toggleScreens('end');
-        document.getElementById('playerName').focus();
         document.getElementById('finalScore').textContent = this.state.score;
-        document.getElementById('finalHighscore').textContent = this.state.highscores[0]?.value || 0;
-    }
-
-    async resetGame() {
-        clearInterval(this.state.intervalId);
         const finalScore = this.state.score;
         const finalLevel = this.state.level;
         const playerName = document.getElementById('playerName').value.trim() || "Аноним";
         let sanitizedName = playerName.slice(0, 20).replace(/[^a-zA-Zа-яА-Я0-9 ]/g, "");
-        if (!sanitizedName) sanitizedName = "Аноним";
-        const recordData = {
-            level: finalLevel,
-            value: finalScore,
-            name: sanitizedName,
-            date: serverTimestamp()
-        };
-        const collectionName = {
-            multiple: 'records_mult',
-            neighbors: 'records_neighbors',
-            complit: 'records_complit'
-        }[this.currentGameMode];
-        try {
-            await addDoc(collection(db, collectionName), recordData);
-            await this.fetchGlobalHighscore(this.currentGameMode);
-        } catch (error) {
-            console.error("Ошибка сохранения:", error);
-            this.showResult('Ошибка соединения', 'wrong');
+        if (this.state.isPlaying) {
+            if (!sanitizedName) sanitizedName = "Аноним";
+            const recordData = {
+                level: finalLevel,
+                value: finalScore,
+                name: sanitizedName,
+                date: serverTimestamp()
+            };
+            const collectionName = {
+                multiple: 'records_mult',
+                neighbors: 'records_neighbors',
+                complit: 'records_complit'
+            }[this.currentGameMode];
+            try {
+                await addDoc(collection(db, collectionName), recordData);
+                await this.fetchGlobalHighscore(this.currentGameMode);
+            } catch (error) {
+                console.error("Ошибка сохранения:", error);
+                this.showResult('Ошибка соединения', 'wrong');
+            }
         }
+        this.state.isPlaying = false;
+    }
+
+    resetGame() {
         this.state.score = 0;
         this.state.level = 1;
         this.state.isPlaying = false;

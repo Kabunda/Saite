@@ -4,6 +4,8 @@ export class ComplitGame {
     constructor(core) {
         this.core = core;
         this.nominals = [10, 100, 200, 300, 25, 50, 75];
+        this.hardElem = [10,   1,   2,   2, 48, 48, 48];
+        this.koef = 1;
     }
 
     init() {
@@ -23,7 +25,9 @@ export class ComplitGame {
     }
 
     generateProblem() {
-        const nominal = this.nominals[this.core.getRandom(0, 6)];
+        const idNom = this.core.getRandom(0, 6);
+        this.koef = this.hardElem[idNom];
+        const nominal = this.nominals[idNom];
         const number = this.core.getRandom(0, 36);
         this.currentProblem = this.calculateComplit(number, nominal);
         this.problemElement.textContent = `${number} по ${nominal}`;
@@ -41,8 +45,13 @@ export class ComplitGame {
         const isCorrect = 
             parseInt(stavka) === this.currentProblem.stavka &&
             parseInt(viplata) === this.currentProblem.viplata;
-        const points = 100;
-        this.core.handleAnswer(isCorrect, points);
+        const points = this.currentProblem.stavka
+            * this.koef
+            * [...`${Math.abs(this.currentProblem.viplata)}`].reduce((a, c) => a + +c, 0);
+        const message = this.problemElement.textContent
+            + ' с ' + this.currentProblem.stavka
+            + ' в ' + this.currentProblem.viplata;
+        this.core.handleAnswer(isCorrect, points, message);
     }
 
     calculateComplit(number, nominal) {

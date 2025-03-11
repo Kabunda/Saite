@@ -13,7 +13,7 @@ export class MultGame {
         this.answerInput = document.getElementById('mult-answer');
         this.core.elements.checkBtn.onclick = () => this.checkAnswer();
         this.core.elements.nazvanie.textContent = "Умножение";
-        this.core.elements.rules.textContent = "Введите результат умножения.";
+        this.core.elements.rules.textContent = "Введите результат умножения двух чисел, за каждый последующий правильный ответ начисляется больше очков.";
     }
 
     generateProblem() {
@@ -32,7 +32,9 @@ export class MultGame {
             return;
         };
         const isCorrect = parseInt(this.answerInput.value) === this.currentProblem;
-        this.core.handleAnswer(isCorrect);
+        const points = this.currentProblem;
+        const message = this.problemElement.textContent + ' = ' + this.currentProblem;
+        this.core.handleAnswer(isCorrect, points, message);
     }
 
     destroy() {
