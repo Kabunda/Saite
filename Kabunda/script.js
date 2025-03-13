@@ -1,101 +1,108 @@
-import { db, collection, addDoc, getDocs, query, orderBy, limit } from './firebase.js';
+import { db, collection, getDocs, query, orderBy, limit } from './firebase.js';
+
+// Константы для типов игр
+const GAME_TYPES = {
+  NEIGHBORS: 'neighbors',
+  MULTIPLY: 'multiply',
+  COMPLIMENTS: 'compliments',
+  NONAMEGAME: 'nonamegame'
+};
 
 class Console {
-	constructor() {
-		this.elements = {
-			highscoreN: document.getElementById('hsListNeibors'),
-			highscoreM: document.getElementById('hsListMultipl'),
-			highscoreC: document.getElementById('hsListComplit'),
-			neiborsBtn: document.getElementById('neiborsBtn'),
-            multiplBtn: document.getElementById('multiplBtn')
-		};
-		this.state = {
-			buffer: [],
-			isFlag: false
-		};
-		this.init();
-	}
+  constructor() {
+    this.elements = {
+      lists: {
+        [GAME_TYPES.NEIGHBORS]: document.getElementById('hsListNeibors'),
+        [GAME_TYPES.MULTIPLY]: document.getElementById('hsListMultipl'),
+        [GAME_TYPES.COMPLIMENTS]: document.getElementById('hsListComplit'),
+		[GAME_TYPES.NONAMEGAME]: document.getElementById('hsListNoName')
+      },
+      buttons: {
+        [GAME_TYPES.NEIGHBORS]: document.getElementById('neiborsBtn'),
+        [GAME_TYPES.MULTIPLY]: document.getElementById('multiplBtn'),
+        [GAME_TYPES.COMPLIMENTS]: document.getElementById('complitBtn'),
+		[GAME_TYPES.NONAMEGAME]: document.getElementById('nonameBtn')
+      }
+    };
+    
+    this.collections = {
+		[GAME_TYPES.NEIGHBORS]: 'records_neighbors',
+		[GAME_TYPES.MULTIPLY]: 'records_mult',
+		[GAME_TYPES.COMPLIMENTS]: 'records_complit',
+		[GAME_TYPES.NONAMEGAME]: 'records'
+    };
 
-	init() {
-		this.elements.neiborsBtn.addEventListener('click', () => this.load('neibors'));
-        this.elements.multiplBtn.addEventListener('click', () => this.load('multipl'));
-	}
+    this.state = {
+      buffer: []
+    };
+    
+    this.init();
+  }
 
-	async load(game) {
-		let name = '';
-		this.state.isFlag = false;
-		if (game == 'neibors') {
-			name = 'records';
-			this.state.isFlag = true;
-		}
-		if (game == 'multipl') {
-			name = 'records_mult';
-			this.state.isFlag = true;
-		}
-
-		if (this.state.isFlag == false) {
-			console.log('Некорректный адрес базы');
-			return;
-		}
-
-		try {
-            const recordsRef = collection(db, name);
-            const q = query(
-                recordsRef, 
-                orderBy("date", "desc"), 
-                limit(15)
-            );
-            const snapshot = await getDocs(q);
-            this.state.buffer = []; // Теперь храним массив
-            snapshot.forEach(doc => {
-                this.state.buffer.push(doc.data());
-            });
-            this.Display(game);
-        } catch (error) {
-            console.error("Ошибка загрузки рекорда:", error);
+  init() {
+    // Назначаем обработчики кнопок
+    Object.entries(this.elements.buttons).forEach(([gameType, button]) => {
+      button.addEventListener('click', () => this.load(gameType));
+    });
+    
+    // Автозагрузка всех разделов
+    Object.keys(GAME_TYPES).forEach(gameKey => {
+        const gameType = GAME_TYPES[gameKey];
+        if (this.collections[gameType]) {
+            this.load(gameType);
         }
-	}
+    });
+  }
 
-	Display(game) {
-		let list;
-		this.state.isFlag = false;
-		if (game == 'neibors') {
-			list = this.elements.highscoreN;
-			this.state.isFlag = true;
-		}
-		if (game == 'multipl') {
-			list = this.elements.highscoreM;
-			this.state.isFlag = true;
-		}
-
-		if (this.state.isFlag == false) {
-			console.log('Некорректный тип игры');
-			return;
-		}
-
-      	list.innerHTML = "";
-
-      	this.state.buffer.forEach((record) => {
-	        const li = document.createElement('div');
-
-	        // Создаем элементы безопасно
-	        const nameDiv = document.createElement('div');
-	        nameDiv.className = "hs_nam";
-	        nameDiv.textContent = record.name; // textContent экранирует HTML
-
-	        const levelDisplay = record.level ? record.level : "空";
-	        const valueDiv = document.createElement('div');
-	        valueDiv.className = "hs_val";
-	        valueDiv.textContent = `${record.value} ${levelDisplay}`;
-
-	        const dateDiv = document.createElement('div');
-	        dateDiv.className = "hs_dat";
-	        dateDiv.textContent = record.date;
-
-	        li.append(nameDiv, valueDiv, dateDiv);
-	        list.appendChild(li);
-      	});
+  async load(gameType) {
+    try {
+      const collectionName = this.collections[gameType];
+      if (!collectionName) throw new Error('Неизвестный тип игры');
+      
+      const recordsRef = collection(db, collectionName);
+      const q = query(recordsRef, orderBy("date", "desc"), limit(15));
+      const snapshot = await getDocs(q);
+      
+      this.state.buffer = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        date: doc.data().date?.toDate() || new Date()
+      }));
+      
+      this.display(gameType);
+    } catch (error) {
+      console.error(`Ошибка загрузки ${gameType}:`, error);
+      this.elements.lists[gameType].innerHTML = `<div class="error">${error.message}</div>`;
     }
+  }
+
+  display(gameType) {
+    const list = this.elements.lists[gameType];
+    if (!list) return;
+
+    list.innerHTML = this.state.buffer.map(record => `
+      <div class="record">
+        <div class="record-header">
+          <span class="name">${record.name}</span>
+          <span class="date">${this.formatDate(record.date)}</span>
+        </div>
+        <div class="record-body">
+          <span class="value">${record.value || 0}</span>
+          ${record.level ? `<span class="level">Уровень: ${record.level}</span>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  formatDate(date) {
+    return date.toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 }
 
 new Console();
