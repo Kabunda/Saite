@@ -80,6 +80,7 @@ export class GameCore {
         this.toggleScreens('game');
         this.startTimer();
         this.currentGame.generateProblem();
+        this.setFocusToInput();
     }
 
     toggleScreens(screenName) {
@@ -149,6 +150,13 @@ export class GameCore {
             this.elements.timer.textContent = '--:--'
         }
     }
+
+    setFocusToInput() {
+        setTimeout(() => {
+            const firstInput = this.elements.gameContent.querySelector('input');
+            if (firstInput) firstInput.focus();
+        }, 10);
+    }
     
     handleAnswer(isCorrect, points = 111, message = 'пусто', answer = 'введено') {
         console.log(isCorrect,points,message);
@@ -177,6 +185,7 @@ export class GameCore {
 
         this.currentGame.generateProblem();
         if (this.state.isTimeout) this.gameOver();
+        this.setFocusToInput();
     }
 
     showResult(text, className) {

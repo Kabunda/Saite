@@ -33,6 +33,9 @@ export class ComplitGame {
         this.problemElement.textContent = `${number} по ${nominal}`;
         this.stavkaInput.value = '';
         this.viplataInput.value = '';
+        // Установите порядок табуляции
+        this.stavkaInput.tabIndex = 1;
+        this.viplataInput.tabIndex = 2;
     }
 
     checkAnswer() {
