@@ -76,7 +76,7 @@ export class GameCore {
 
     startGame() {
         this.answerHistory = []; // Очищаем историю
-        this.state = { timeLeft: 60, score: 0, level: 1, intervalId: null, isPlaying: true };
+        this.state = { timeLeft: 180, score: 0, level: 1, intervalId: null, isPlaying: true };
         this.toggleScreens('game');
         this.startTimer();
         this.currentGame.generateProblem();
