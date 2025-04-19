@@ -37,9 +37,10 @@ export class NeighborsGame {
         });
         
         // Нормализация и проверка уникальности значений
-        const uniqueAnswers = [...new Set(userAnswers)];
-        if (uniqueAnswers.length !== 4 || uniqueAnswers.some(a => a === null)) {
-            this.core.showResult('Некорректный ввод', 'wrong');
+        const hasNull = userAnswers.some(a => a === null);
+        const hasDuplicates = new Set(userAnswers).size !== 4;
+        if (hasNull || hasDuplicates) {
+            this.core.showResult('Некорректный ввод: пустые поля или повторы', 'wrong');
             return;
         }
     
@@ -53,14 +54,14 @@ export class NeighborsGame {
                 parseInt(input.value) === this.currentProblem[i]
             );
             
-        const points = isOrderCorrect ? 200 : (isCorrect ? 100 : 0);
+        const points = isOrderCorrect ? 500 : (isCorrect ? 400 : 0);
         // Формируем сообщение с правильными номерами
         const [left1, left2, right1, right2] = this.currentProblem;
         const target = this.problemElement.textContent;
         const message = `${left1} ${left2} ${target} ${right1} ${right2}`;
+        const answer = userAnswers.join(' '); // пробуем склеить
 
-
-        this.core.handleAnswer(isCorrect, points, message);
+        this.core.handleAnswer(isCorrect, points, message, answer);
     }
 
     destroy() {

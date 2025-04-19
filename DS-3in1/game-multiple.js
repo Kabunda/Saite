@@ -17,11 +17,23 @@ export class MultGame {
     }
 
     generateProblem() {
-        const mnogitel = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
-        const a = mnogitel[this.core.getRandom(0, 9)];
-        const b = this.core.getRandom(3, 20);
-        this.currentProblem = a * b;
-        this.problemElement.textContent = `${a} × ${b}`;
+        if (this.core.state.collabMode) {
+            const unsolved = this.core.collabManager.session.problems
+                .find(p => !p.solved);
+            if (!unsolved) {
+                this.core.gameOver();
+                return;
+            }
+            
+            this.currentProblem = unsolved.answer;
+            this.problemElement.textContent = unsolved.question;
+        } else {
+            const mnogitel = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
+            const a = mnogitel[this.core.getRandom(0, 9)];
+            const b = this.core.getRandom(3, 20);
+            this.currentProblem = a * b;
+            this.problemElement.textContent = `${a} × ${b}`;       
+        }
         this.answerInput.value = '';
     }
 
@@ -31,10 +43,23 @@ export class MultGame {
             this.core.showResult('Некорректный ввод', 'wrong');
             return;
         };
-        const isCorrect = parseInt(this.answerInput.value) === this.currentProblem;
-        const points = this.currentProblem;
-        const message = this.problemElement.textContent + ' = ' + this.currentProblem;
-        this.core.handleAnswer(isCorrect, points, message);
+        const isCorrect = userInput === this.currentProblem;
+        const points = this.currentProblem * 5;
+        const message = isCorrect ? 'Верно!' : this.problemElement.textContent + ' = ' + this.currentProblem;
+        const answer = this.problemElement.textContent + ' = ' + userInput;
+        this.core.handleAnswer(isCorrect, points, message, answer);
+        if (this.core.state.collabMode) {
+            // Обновляем статус в Firestore
+            const index = this.core.collabManager.session.problems.findIndex(p => 
+                p.question === this.problemElement.textContent
+              );
+            const userId = this.core.elements.playerName.value.trim().slice(0, 20) || 'guest';
+            updateDoc(this.core.collabManager.sessionRef, {
+                [`problems.${index}.solved`]: true,
+                [`players.${userId}.progress`]: increment(1),
+                [`players.${userId}.time`]: new Date()
+            });
+        }
     }
 
     destroy() {

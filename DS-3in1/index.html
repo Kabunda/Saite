@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="style_hs.css">
     <meta property="og:title" content="Спринт">
     <meta property="og:description" content="Игра-тренажер для развития профессиональных навыков.">
+    <meta property="og:image" content="../images/logo_boom.png">
     <script src="firebase.js" type="module" defer></script>
     <script src="core.js" type="module"></script>
     <script src="game-complit.js" type="module"></script>
@@ -36,7 +37,11 @@
                 <label><input type="radio" name="game" value="multiple" checked>Умножение</label>
                 <label><input type="radio" name="game" value="neighbors">Соседи</label>
                 <label><input type="radio" name="game" value="complit">Комплиты</label>
-            </div>   
+            </div>  
+            <div class="collab-buttons">
+                <button class="button" id="createSession">Создать сессию</button>
+                <button class="button" id="joinSession">Присоединиться</button>
+            </div>
             <div id="highscore">
                 <h3>Топ-5 рекордов:</h3>
                 <div id="highscoreList"></div>                
@@ -48,6 +53,7 @@
                 <div>Этап: <span id="level"></span></div>        
                 <div>Счёт: <span id="score"></span></div>
             </div>
+            <div id="opponentProgress" class="opponent-progress"></div>
             <div id="timer" class="timer">--:--</div>
             <div class="game-content" id="gameContent">
                 <!-- Динамически заменяется содержимое -->
@@ -60,8 +66,12 @@
             <h2>Игра завершена!</h2>
             <div class="endGame">
                 <p>Ваш счёт: <span class="highlight" id="finalScore">0</span></p>
+                <div class="answers-history">
+                    <h3>История ответов:</h3>
+                    <ul id="answersList"></ul>
+                </div>
             </div>
-            <button class="button" id="resetBtn">Подтвердить</button>
+            <button class="button" id="resetBtn">Хорошо!</button>
         </section>
     </main>
 </body>

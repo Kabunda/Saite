@@ -33,6 +33,9 @@ export class ComplitGame {
         this.problemElement.textContent = `${number} по ${nominal}`;
         this.stavkaInput.value = '';
         this.viplataInput.value = '';
+        // Установите порядок табуляции
+        this.stavkaInput.tabIndex = 1;
+        this.viplataInput.tabIndex = 2;
     }
 
     checkAnswer() {
@@ -46,12 +49,15 @@ export class ComplitGame {
             parseInt(stavka) === this.currentProblem.stavka &&
             parseInt(viplata) === this.currentProblem.viplata;
         const points = this.currentProblem.stavka
+            * 5
             * this.koef
             * [...`${Math.abs(this.currentProblem.viplata)}`].reduce((a, c) => a + +c, 0);
-        const message = this.problemElement.textContent
+        const message = isCorrect ? 'Верно!' :
+            this.problemElement.textContent
             + ' с ' + this.currentProblem.stavka
             + ' в ' + this.currentProblem.viplata;
-        this.core.handleAnswer(isCorrect, points, message);
+        const answer = stavka + '-' + viplata;
+        this.core.handleAnswer(isCorrect, points, message, answer);
     }
 
     calculateComplit(number, nominal) {
