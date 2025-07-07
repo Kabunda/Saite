@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Методичка для начинающего дилера американской рулетки</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #dc2626;
+            --accent: #059669;
+            --light: #f3f4f6;
+            --dark: #111827;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8fafc;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), #0c2041);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        header::after {
+            content: "";
+            position: absolute;
+            bottom: -80px;
+            right: -30px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .last-update {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        
+        .toc-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid var(--primary);
+        }
+        
+        .toc-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .toc-card {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .toc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toc-card h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toc-card ul {
+            padding-left: 20px;
+        }
+        
+        .toc-card li {
+            margin-bottom: 5px;
+        }
+        
+        .toc-card a {
+            color: #4b5563;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .toc-card a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        
+        .module {
+            background-color: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .module-number {
+            background-color: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .module-title {
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .content-section {
+            margin-bottom: 2rem;
+        }
+        
+        h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-left: 10px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .visual-guide {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .visual-card {
+            flex: 1;
+            min-width: 300px;
+            background: var(--light);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .visual-card img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+            background: #ddd;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+        }
+        
+        .warning-box {
+            background-color: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .critical-box {
+            background-color: #fee2e2;
+            border-left: 4px solid var(--secondary);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .success-box {
+            background-color: #d1fae5;
+            border-left: 4px solid var(--success);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .checklist {
+            margin: 1.5rem 0;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 5px;
+        }
+        
+        .checklist-item input {
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            text-align: left;
+            padding: 12px 15px;
+        }
+        
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        .interactive-area {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .test-question {
+            background: white;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+        
+        .test-answer {
+            background: #f0fdf4;
+            padding: 15px;
+            margin-top: 5px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .test-question.active + .test-answer {
+            display: block;
+        }
+        
+        .step-by-step {
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            counter-reset: step;
+        }
+        
+        .step {
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+        
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .term {
+            border-bottom: 1px dashed var(--primary);
+            cursor: help;
+            position: relative;
+        }
+        
+        .term:hover::after {
+            content: attr(data-definition);
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: var(--dark);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            width: 250px;
+            z-index: 100;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .roulette-table {
+            background: #0a7e36;
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table-grid {
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            width: 90%;
+            height: 80%;
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 3px;
+        }
+        
+        .table-cell {
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .table-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 2px var(--warning);
+        }
+        
+        .zero-cell {
+            background: #10b981;
+            color: white;
+            grid-row: span 4;
+        }
+        
+        .outside-bet {
+            background: #d1fae5;
+        }
+        
+        .betting-areas {
+            position: absolute;
+            right: 5%;
+            top: 10%;
+            width: 25%;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .bet-area {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .bet-area:hover {
+            background: #fde68a;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 2rem;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0c2041;
+        }
+        
+        @media (max-width: 768px) {
+            .visual-guide {
+                flex-direction: column;
+            }
+            
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1><i class="fas fa-dice"></i> Методичка для начинающего дилера американской рулетки</h1>
+            <p class="subtitle">Полное руководство по процедурам, ставкам и безопасности игры</p>
+            <div class="last-update">
+                <i class="fas fa-sync-alt"></i> Последнее обновление: 6 июля 2025 г.
+            </div>
+        </div>
+    </header>
+    
+    <div class="toc-container">
+        <div class="toc-title">
+            <i class="fas fa-bookmark"></i>
+            <h2>Содержание обучения</h2>
+        </div>
+        <div class="toc-grid">
+            <div class="toc-card">
+                <h3><i class="fas fa-dice-one"></i> Модуль 1: Основы</h3>
+                <ul>
+                    <li><a href="#module1">Суть игры и терминология</a></li>
+                    <li><a href="#module1">Цикл игры</a></li>
+                    <li><a href="#module1">Открытие/закрытие стола</a></li>
+                </ul>
+            </div>
+            <div class="toc-card">
+                <h3><i class="fas fa-dice-two"></i> Модуль 2: Работа с фишками</h3>
+                <ul>
+                    <li><a href="#module2">Зоны стола</a></li>
+                    <li><a href="#module2">Обменные процедуры</a></li>
+                    <li><a href="#module2">Безопасность операций</a></li>
+                </ul>
+            </div>
+            <div class="toc-card">
+                <h3><i class="fas fa-dice-three"></i> Модуль 3: Ставки и выплаты</h3>
+                <ul>
+                    <li><a href="#module3">Виды ставок</a></li>
+                    <li><a href="#module3">Правила расположения</a></li>
+                    <li><a href="#module3">Процедура выплат</a></li>
+                </ul>
+            </div>
+            <div class="toc-card">
+                <h3><i class="fas fa-dice-four"></i> Модуль 4: Процедура игры</h3>
+                <ul>
+                    <li><a href="#module4">Процедура спинов</a></li>
+                    <li><a href="#module4">Ситуация "No Spin"</a></li>
+                    <li><a href="#module4">После падения шарика</a></li>
+                </ul>
+            </div>
+            <div class="toc-card">
+                <h3><i class="fas fa-dice-five"></i> Модуль 5: Безопасность</h3>
+                <ul>
+                    <li><a href="#module5">Контроль игры</a></li>
+                    <li><a href="#module5">Работа в команде</a></li>
+                    <li><a href="#module5">Критические риски</a></li>
+                </ul>
+            </div>
+            <div class="toc-card">
+                <h3><i class="fas fa-dice-six"></i> Дополнительно</h3>
+                <ul>
+                    <li><a href="#resources">Ресурсы</a></li>
+                    <li><a href="#tests">Тесты и проверки</a></li>
+                    <li><a href="#cheatsheet">Шпаргалка на первый день</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="module" id="module1">
+        <div class="module-header">
+            <div class="module-number">1</div>
+            <h2 class="module-title">Основы игры в рулетку</h2>
+        </div>
+        
+        <div class="content-section">
+            <h3>Цикл игры</h3>
+            <div class="step-by-step">
+                <div class="step">Дилер: "Делайте ваши ставки, пожалуйста."</div>
+                <div class="step">Игроки делают ставки (кэш или цветные фишки)</div>
+                <div class="step">Дилер запускает спин (вращает колесо и запускает шарик)</div>
+                <div class="step">Дилер закрывает ставки примерно за три оборота до падения шарика</div>
+                <div class="step">Шарик падает в номер</div>
+                <div class="step">Дилер объявляет выигрышный номер, ставит маркер ("долли")</div>
+                <div class="step">Зачистка поля и оплата выигрышных ставок</div>
+                <div class="step">Цикл повторяется</div>
+            </div>
+            
+            <div class="visual-guide">
+                <div class="visual-card">
+                    <h4><i class="fas fa-cogs"></i> Устройство колеса</h4>
+                    <p>Американская рулетка: 37 номеров (0 и 1-36)</p>
+                    <ul>
+                        <li>Чередующиеся красный/черный сектора</li>
+                        <li>0 - зеленый</li>
+                    </ul>
+                    <img src="placeholder-wheel.png" alt="Схема колеса рулетки">
+                </div>
+                <div class="visual-card">
+                    <h4><i class="fas fa-border-all"></i> Поле для ставок</h4>
+                    <ul>
+                        <li>Номера 0-36</li>
+                        <li>3 дюжины (по 12 номеров)</li>
+                        <li>3 колонки (по 12 номеров)</li>
+                        <li>Равные шансы: красное/черное, чет/нечет</li>
+                    </ul>
+                    <img src="placeholder-table.png" alt="Схема игрового стола">
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h3>Ключевые термины</h3>
+            <div class="interactive-area">
+                <p><span class="term" data-definition="Стандартные фишки казино разного номинала">Кэш</span>: Стандартные фишки казино.</p>
+                <p><span class="term" data-definition="Персональные фишки игрока определенного цвета">Цвет</span>: Фишки игрока определенного цвета.</p>
+                <p><span class="term" data-definition="Прозрачный маркер для отметки выигравшего номера">Долли</span>: Маркер выигравшего номера.</p>
+                <p><span class="term" data-definition="Процесс вращения колеса и запуска шарика">Спин</span>: Запуск игры.</p>
+                <p><span class="term" data-definition="Область для маркеров устных ставок">Трек</span>: Зона устных ставок.</p>
+                <p><span class="term" data-definition="Контролер процесса игры">Инспектор</span>: Главный помощник дилера.</p>
+            </div>
+        </div>
+        
+        <div class="test-question">
+            <h4><i class="fas fa-question-circle"></i> Вопрос: Сколько номеров в американской рулетке?</h4>
+        </div>
+        <div class="test-answer">
+            <p><i class="fas fa-check-circle"></i> <strong>Ответ:</strong> Американская рулетка содержит 37 номеров: 0 и 1-36. Европейская версия - 37 номеров, французская - тоже 37, но с особыми правилами.</p>
+        </div>
+    </div>
+    
+    <div class="module" id="module2">
+        <div class="module-header">
+            <div class="module-number">2</div>
+            <h2 class="module-title">Работа с фишками</h2>
+        </div>
+        
+        <div class="content-section">
+            <h3>Зоны стола</h3>
+            <div class="roulette-table">
+                <div class="table-grid">
+                    <div class="table-cell zero-cell">0</div>
+                    <div class="table-cell">1</div>
+                    <div class="table-cell">2</div>
+                    <div class="table-cell">3</div>
+                    <div class="table-cell">4</div>
+                    <div class="table-cell">5</div>
+                    <div class="table-cell">6</div>
+                    <div class="table-cell">7</div>
+                    <div class="table-cell">8</div>
+                    <div class="table-cell">9</div>
+                    <div class="table-cell">10</div>
+                    <div class="table-cell">11</div>
+                    <div class="table-cell">12</div>
+                    <div class="table-cell">13</div>
+                    <div class="table-cell">14</div>
+                    <div class="table-cell">15</div>
+                    <div class="table-cell">16</div>
+                    <div class="table-cell">17</div>
+                    <div class="table-cell">18</div>
+                    <div class="table-cell">19</div>
+                    <div class="table-cell">20</div>
+                    <div class="table-cell">21</div>
+                    <div class="table-cell">22</div>
+                    <div class="table-cell">23</div>
+                    <div class="table-cell">24</div>
+                    <div class="table-cell">25</div>
+                    <div class="table-cell">26</div>
+                    <div class="table-cell">27</div>
+                    <div class="table-cell">28</div>
+                    <div class="table-cell">29</div>
+                    <div class="table-cell">30</div>
+                    <div class="table-cell">31</div>
+                    <div class="table-cell">32</div>
+                    <div class="table-cell">33</div>
+                    <div class="table-cell">34</div>
+                    <div class="table-cell">35</div>
+                    <div class="table-cell">36</div>
+                </div>
+                
+                <div class="betting-areas">
+                    <div class="bet-area outside-bet">1-18</div>
+                    <div class="bet-area outside-bet">ЧЁТ</div>
+                    <div class="bet-area outside-bet">КРАС</div>
+                    <div class="bet-area outside-bet">ЧЕРН</div>
+                    <div class="bet-area outside-bet">НЕЧЁТ</div>
+                    <div class="bet-area outside-bet">19-36</div>
+                    <div class="bet-area">1-12</div>
+                    <div class="bet-area">13-24</div>
+                    <div class="bet-area">25-36</div>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <p><i class="fas fa-exclamation-triangle"></i> <strong>Внимание:</strong> Всегда демонстрируйте жест "Чистые руки" перед и после операций с фишками!</p>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h3>Процедуры обмена</h3>
+            <div class="step-by-step">
+                <div class="step">Положить кэш на нижнюю ступень обменного куба</div>
+                <div class="step">Разложить стопкой для подсчета</div>
+                <div class="step">Объявить сумму обмена и номинал цвета ("Обмен 100 на салатовый по 2")</div>
+                <div class="step">Поставить маркер на новый цвет</div>
+                <div class="step">Выдвинуть цвет в исходящую зону</div>
+                <div class="step">Подтвердить обмен и отвезти цвет гостю</div>
+                <div class="step">Кэш убрать во флот</div>
+            </div>
+            
+            <div class="critical-box">
+                <p><i class="fas fa-radiation"></i> <strong>Критический риск:</strong> При обмене Цвет → Цвет всегда полностью забирайте старый цвет перед выдачей нового!</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="module" id="module3">
+        <div class="module-header">
+            <div class="module-number">3</div>
+            <h2 class="module-title">Ставки и выплаты</h2>
+        </div>
+        
+        <div class="content-section">
+            <h3>Виды ставок</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Тип ставки</th>
+                        <th>Описание</th>
+                        <th>Коэффициент</th>
+                        <th>Пример</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Стрейтап</td>
+                        <td>Ставка на один номер</td>
+                        <td>35:1</td>
+                        <td>Только номер 17</td>
+                    </tr>
+                    <tr>
+                        <td>Сплит</td>
+                        <td>Ставка на 2 номера</td>
+                        <td>17:1</td>
+                        <td>17 и 20</td>
+                    </tr>
+                    <tr>
+                        <td>Каре</td>
+                        <td>Ставка на 4 номера</td>
+                        <td>8:1</td>
+                        <td>Угол 17-18-20-21</td>
+                    </tr>
+                    <tr>
+                        <td>Дюжина</td>
+                        <td>Ставка на 12 номеров</td>
+                        <td>2:1</td>
+                        <td>Первая дюжина (1-12)</td>
+                    </tr>
+                    <tr>
+                        <td>Равные шансы</td>
+                        <td>Красное/чёрное, Чёт/нечет</td>
+                        <td>1:1</td>
+                        <td>Все красные номера</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="content-section">
+            <h3>Порядок выплат</h3>
+            <div class="step-by-step">
+                <div class="step">Внешние ставки (Outside): Колонки → Большие/Нечет/3-я дюжина → Черное/Красное/2-я дюжина → Четные/Малые/1-я дюжина</div>
+                <div class="step">Внутренние ставки (Inside): Сикслайны → Стриты → Каре → Сплиты → Номера</div>
+                <div class="step">От дальней ставки к ближней по расположению к инспектору</div>
+            </div>
+            
+            <div class="critical-box">
+                <p><i class="fas fa-radiation"></i> <strong>Критический риск:</strong> НИКОГДА не восстанавливайте ставку после зачистки без указаний инспектора!</p>
+            </div>
+        </div>
+        
+        <div class="test-question">
+            <h4><i class="fas fa-question-circle"></i> Вопрос: Какой коэффициент выплаты для ставки на угол (каре) из 4 номеров?</h4>
+        </div>
+        <div class="test-answer">
+            <p><i class="fas fa-check-circle"></i> <strong>Ответ:</strong> Ставка на 4 номера (каре) имеет коэффициент выплаты 8:1. Например, при ставке 10€ вы получите 80€ плюс возврат ставки.</p>
+        </div>
+    </div>
+    
+    <div class="module" id="module4">
+        <div class="module-header">
+            <div class="module-number">4</div>
+            <h2 class="module-title">Процедура игры</h2>
+        </div>
+        
+        <div class="content-section">
+            <h3>Ситуация "Нет спина" (No Spin)</h3>
+            <div class="warning-box">
+                <p><i class="fas fa-exclamation-triangle"></i> Решение принимает только инспектор!</p>
+            </div>
+            
+            <div class="checklist">
+                <p><strong>Причины объявления "No Spin":</strong></p>
+                <div class="checklist-item">
+                    <input type="checkbox" id="reason1">
+                    <label for="reason1">Шарик вылетел из барабана</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="reason2">
+                    <label for="reason2">Шарик вращается менее трех кругов</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="reason3">
+                    <label for="reason3">Шарик завис над номером более чем на три круга</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="reason4">
+                    <label for="reason4">Игроки рассыпали ставки</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="reason5">
+                    <label for="reason5">Попадание постороннего предмета в барабан</label>
+                </div>
+            </div>
+            
+            <div class="step-by-step">
+                <div class="step">Кладем шарик в предыдущий номер</div>
+                <div class="step">Анонс: "Извините! Нет спина. Последний номер [X]"</div>
+                <div class="step">Барабан закручивается в противоположную сторону</div>
+                <div class="step">После полного оборота → новый спин</div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h3>После падения шарика</h3>
+            <div class="step-by-step">
+                <div class="step">Пауза → посмотреть номер → убедиться, что инспектор видит номер</div>
+                <div class="step">Объявить выигрышный номер ("11 черное")</div>
+                <div class="step">Поставить долли в номер (внешней рукой, ладонь вверх)</div>
+                <div class="step">Проверить правильность установки долли</div>
+                <div class="step">Показать номер на треке (если есть устные ставки)</div>
+                <div class="step">Выставить устные ставки (если есть)</div>
+                <div class="step">Зачистить поле</div>
+                <div class="step">Произвести выплаты в установленном порядке</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="module" id="module5">
+        <div class="module-header">
+            <div class="module-number">5</div>
+            <h2 class="module-title">Безопасность и контроль</h2>
+        </div>
+        
+        <div class="content-section">
+            <h3>Принципы работы</h3>
+            <div class="success-box">
+                <p><i class="fas fa-star"></i> <strong>Качество важнее скорости!</strong> Лучше сделать медленнее, но без ошибок.</p>
+            </div>
+            
+            <div class="checklist">
+                <p><strong>Обязательные действия:</strong></p>
+                <div class="checklist-item">
+                    <input type="checkbox" id="action1">
+                    <label for="action1">Всегда объявляйте каждое действие, ставку, обмен, выплату</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="action2">
+                    <label for="action2">Все устные ставки должны дублироваться дилером и инспектором</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="action3">
+                    <label for="action3">Контролируйте закрытие ставок ("Ставок больше нет" + блок руками)</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="action4">
+                    <label for="action4">Демонстрируйте чистые руки перед ключевыми операциями</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="action5">
+                    <label for="action5">Знайте лимиты своего стола (мин/макс ставок)</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h3>Эскалация ситуаций</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ситуация</th>
+                        <th>Действие дилера</th>
+                        <th>Действие инспектора</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ставка > максимума</td>
+                        <td>Принять в рамках лимита</td>
+                        <td>Утвердить превышение</td>
+                    </tr>
+                    <tr>
+                        <td>Шарик завис >3 кругов</td>
+                        <td>Объявить "no spin"</td>
+                        <td>Подтвердить решение</td>
+                    </tr>
+                    <tr>
+                        <td>Спорная ставка после спина</td>
+                        <td>Не трогать!</td>
+                        <td>Принять решение</td>
+                    </tr>
+                    <tr>
+                        <td>Обмен > 100€</td>
+                        <td>Объявить сумму</td>
+                        <td>Проконтролировать операцию</td>
+                    </tr>
+                    <tr>
+                        <td>Чаевые > 100€</td>
+                        <td>Объявить сумму</td>
+                        <td>Зафиксировать</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="module" id="resources">
+        <div class="module-header">
+            <div class="module-number"><i class="fas fa-graduation-cap"></i></div>
+            <h2 class="module-title">Дополнительные ресурсы</h2>
+        </div>
+        
+        <div class="content-section">
+            <h3>Шпаргалка на первый день</h3>
+            <div class="step-by-step">
+                <div class="step">Проверь лимиты стола (мин/макс)</div>
+                <div class="step">Убедись в наличии всех фишек и оборудования</div>
+                <div class="step">Проверь направление вращения колеса</div>
+                <div class="step">Запомни порядок выплат: внешние → внутренние</div>
+                <div class="step">Всегда объявляй действия громко и четко</div>
+                <div class="step">При сомнениях - стоп, спроси инспектора</div>
+                <div class="step">Демонстрируй чистые руки перед операциями</div>
+                <div class="step">Контролируй закрытие ставок (блок руками)</div>
+            </div>
+        </div>
+        
+        <div class="content-section">
+            <h3>Проверь свои знания</h3>
+            <div class="test-question">
+                <h4><i class="fas fa-question-circle"></i> Вопрос: Что делать, если игрок пытается сделать ставку после команды "Ставок больше нет"?</h4>
+            </div>
+            <div class="test-answer">
+                <p><i class="fas fa-check-circle"></i> <strong>Ответ:</strong> Ставку необходимо вернуть игроку со словами: "Ставки закрыты, ставка не принимается". Никогда не принимайте ставки после закрытия!</p>
+            </div>
+            
+            <div class="test-question">
+                <h4><i class="fas fa-question-circle"></i> Вопрос: Как правильно объявить устную ставку "Соседи 10"?</h4>
+            </div>
+            <div class="test-answer">
+                <p><i class="fas fa-check-circle"></i> <strong>Ответ:</strong> Дилер должен продублировать: "Ставка на соседей 10: 5, 10, 24. [Цвет игрока] [Сумма]!" и убедиться, что инспектор слышит объявление.</p>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Методичка для начинающего дилера американской рулетки v2.1</p>
+        <p>© 2025 Казино "Рояль". Все права защищены.</p>
+        <div style="margin-top: 20px;">
+            <a href="#" class="btn"><i class="fas fa-print"></i> Версия для печати</a>
+            <a href="#" class="btn"><i class="fas fa-download"></i> Скачать PDF</a>
+            <a href="#" class="btn"><i class="fas fa-video"></i> Видеоинструкции</a>
+        </div>
+    </footer>
+
+    <script>
+        // Раскрытие ответов на вопросы
+        const questions = document.querySelectorAll('.test-question');
+        questions.forEach(question => {
+            question.addEventListener('click', () => {
+                question.classList.toggle('active');
+            });
+        });
+        
+        // Имитация интерактивных элементов стола
+        const tableCells = document.querySelectorAll('.table-cell, .bet-area');
+        tableCells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                // Сбрасываем выделение у всех ячеек
+                tableCells.forEach(c => c.style.boxShadow = 'none');
+                // Выделяем выбранную ячейку
+                cell.style.boxShadow = '0 0 0 3px #f59e0b';
+                
+                // В реальном приложении здесь будет логика размещения ставки
+                setTimeout(() => {
+                    cell.style.boxShadow = 'none';
+                }, 1000);
+            });
+        });
+        
+        // Обработка чек-листов
+        const checkboxes = document.querySelectorAll('.checklist-item input');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                if (this.checked) {
+                    label.style.textDecoration = 'line-through';
+                    label.style.color = '#6b7280';
+                } else {
+                    label.style.textDecoration = 'none';
+                    label.style.color = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
