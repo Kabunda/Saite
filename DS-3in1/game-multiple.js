@@ -17,23 +17,11 @@ export class MultGame {
     }
 
     generateProblem() {
-        if (this.core.state.collabMode) {
-            const unsolved = this.core.collabManager.session.problems
-                .find(p => !p.solved);
-            if (!unsolved) {
-                this.core.gameOver();
-                return;
-            }
-            
-            this.currentProblem = unsolved.answer;
-            this.problemElement.textContent = unsolved.question;
-        } else {
-            const mnogitel = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
-            const a = mnogitel[this.core.getRandom(0, 9)];
-            const b = this.core.getRandom(3, 20);
-            this.currentProblem = a * b;
-            this.problemElement.textContent = `${a} × ${b}`;       
-        }
+        const mnogitel = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
+        const a = mnogitel[this.core.getRandom(0, 9)];
+        const b = this.core.getRandom(3, 20);
+        this.currentProblem = a * b;
+        this.problemElement.textContent = `${a} × ${b}`;       
         this.answerInput.value = '';
     }
 

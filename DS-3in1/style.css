@@ -120,7 +120,7 @@ section {
 }
 
 .timer {
-    font-size: 3rem;
+    font-size: 2rem;
     color: var(--danger);
     font-weight: 700;
     text-shadow: 2px 2px 4px rgba(156, 6, 6, 0.3);

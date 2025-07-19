@@ -166,6 +166,9 @@ export class GameCore {
             level: 1,
             intervalId: null,
             isPlaying: false,
+            totalQuestions: 20, // Добавить
+            currentQuestion: 0,  // Добавить
+            startTime: 0,        // Добавить
             highscores: []
         };
 
@@ -193,8 +196,6 @@ export class GameCore {
         document.querySelectorAll('input[name="game"]').forEach(radio => {
             radio.addEventListener('change', (e) => this.switchGame(e.target.value));
         });
-        this.elements.timer.addEventListener('click', () => this.handleTimerClick());
-        // В GameCore.initEventListeners()
         document.getElementById('createSession').addEventListener('click', () => {
             this.collabManager.createSession();
         });
@@ -213,12 +214,24 @@ export class GameCore {
         this.fetchGlobalHighscore(gameMode);
     }
 
-    startGame() {
+    async startGame() {
         this.answerHistory = []; // Очищаем историю
-        this.state = { timeLeft: 180, score: 0, level: 1, intervalId: null, isPlaying: true };
+        this.state = {
+            timeLeft: 0, // Больше не используется
+            score: 0,
+            level: 1,
+            intervalId: null,
+            isPlaying: true,
+            totalQuestions: 20, // Количество вопросов
+            currentQuestion: 0, // Текущий вопрос
+            startTime: Date.now(), // Время начала игры
+            isTimeout: false
+        };
         this.toggleScreens('game');
-        this.startTimer();
+        //this.startTimer();
         this.currentGame.generateProblem();
+        this.state.currentQuestion = 1; // Начинаем с первого вопроса
+        this.updateUI();
         this.setFocusToInput();
     }
 
@@ -266,20 +279,6 @@ export class GameCore {
           list.appendChild(li);
         });
     }
-  
-    startTimer() {
-          this.state.isTimeout = false;
-          this.state.intervalId = setInterval(() => {
-              this.state.timeLeft--;
-              this.elements.timer.textContent = 
-                  `${Math.floor(this.state.timeLeft / 60).toString().padStart(2, '0')}:` +
-                  `${(this.state.timeLeft % 60).toString().padStart(2, '0')}`;
-              if (this.state.timeLeft <= 0) {
-                  clearInterval(this.state.intervalId);
-                  this.state.isTimeout = true;
-              }
-          }, 1000);
-    }
 
     handleTimerClick() {
         if (this.state.isPlaying) {
@@ -302,8 +301,6 @@ export class GameCore {
         console.log(answer);
         if (isCorrect) {
             let basePoints = this.state.level * points;
-            // половина за ответ по истечении времени
-            basePoints = this.state.isTimeout ? Math.floor(basePoints * 0.5) : basePoints;
             this.state.score += basePoints;
             this.state.level++;
             this.updateUI();
@@ -316,14 +313,23 @@ export class GameCore {
         }
         // Добавляем запись в лог истории
         this.answerHistory.push({
+            numQues: this.state.currentQuestion,
             answer: answer,     //  это введенный ответ
             correct: isCorrect, //  стиль отображения
             message: message,   //  сообщение системы
             timestamp: new Date().toLocaleTimeString()
         });
 
+            // Увеличиваем счетчик вопросов
+        this.state.currentQuestion++;
+        
+        // Проверяем завершение игры
+        if (this.state.currentQuestion > this.state.totalQuestions) {
+            this.gameOver();
+            return;
+        }
+
         this.currentGame.generateProblem();
-        if (this.state.isTimeout) this.gameOver();
         this.setFocusToInput();
     }
 
@@ -343,12 +349,26 @@ export class GameCore {
     updateUI() {
         this.elements.score.textContent = this.state.score;
         this.elements.level.textContent = this.state.level;
+            // Заменить отображение таймера на счетчик вопросов
+        if (this.elements.questionCounter) {
+            this.elements.questionCounter.textContent = 
+                this.getQuestionCounter();
+        }
+
     }
 
     async gameOver() {
+        // Рассчитываем общее время
+        const totalTime = Date.now() - this.state.startTime;
         clearInterval(this.state.intervalId);  
         this.toggleScreens('end');
         document.getElementById('finalScore').textContent = this.state.score;
+
+            // Добавляем вывод времени
+        const seconds = Math.floor(totalTime / 1000);
+        const milliseconds = totalTime % 1000;
+        this.elements.finalTime.textContent = 
+            `${seconds}.${milliseconds.toString().padStart(3, '0')} сек`;
         const finalScore = this.state.score;
         const finalLevel = this.state.level;
         const playerName = document.getElementById('playerName').value.trim() || "Аноним";
@@ -418,4 +438,10 @@ export class GameCore {
     getRandom(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
+
+        // Добавить новый метод в GameCore
+    getQuestionCounter() {
+        return `${this.state.currentQuestion}/${this.state.totalQuestions}`;
+    }
+
 }
