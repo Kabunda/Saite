@@ -1,57 +1,147 @@
-import { GameCore } from './core.js';
-
-export class MultGame {
-    constructor(core) {
-        this.core = core;
+// game-multiple.js
+class MultipleGame {
+    constructor() {
+        this.questions = [];
+        this.currentQuestionIndex = 0;
+        this.correctAnswers = 0;
+        this.startTime = 0;
+        this.endTime = 0;
+        this.answersHistory = [];
+        this.timerInterval = null;
+        this.elapsedTime = 0;
     }
 
     init() {
-        this.core.elements.gameContent.innerHTML = `
-            <div class="problem" id="mult-problem"></div>
-            <input type="number" class="number-input" id="mult-answer">`;
-        this.problemElement = document.getElementById('mult-problem');
-        this.answerInput = document.getElementById('mult-answer');
-        this.core.elements.checkBtn.onclick = () => this.checkAnswer();
-        this.core.elements.nazvanie.textContent = "Умножение";
-        this.core.elements.rules.textContent = "Введите результат умножения двух чисел, за каждый последующий правильный ответ начисляется больше очков.";
+        this.questions = [];
+        this.currentQuestionIndex = 0;
+        this.correctAnswers = 0;
+        this.answersHistory = [];
+        this.elapsedTime = 0;
+        
+        // Генерация 20 вопросов на умножение (числа от 2 до 9)
+        for (let i = 0; i < 20; i++) {
+            const a = Math.floor(Math.random() * 8) + 2;
+            const b = Math.floor(Math.random() * 8) + 2;
+            this.questions.push({
+                question: `${a} × ${b}`,
+                correctAnswer: a * b
+            });
+        }
+        
+        // Обновляем счетчик вопросов
+        document.getElementById('questionCounter').textContent = '1/20';
+        document.getElementById('score').textContent = '0';
     }
 
-    generateProblem() {
-        const mnogitel = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
-        const a = mnogitel[this.core.getRandom(0, 9)];
-        const b = this.core.getRandom(3, 20);
-        this.currentProblem = a * b;
-        this.problemElement.textContent = `${a} × ${b}`;       
-        this.answerInput.value = '';
+    start() {
+        this.startTime = Date.now();
+        
+        // Запускаем таймер
+        this.timerInterval = setInterval(() => {
+            this.elapsedTime = (Date.now() - this.startTime) / 1000;
+            document.getElementById('level').textContent = this.formatTime(this.elapsedTime);
+        }, 100);
+        
+        this.showQuestion();
+    }
+
+    showQuestion() {
+        if (this.currentQuestionIndex >= this.questions.length) {
+            this.finishGame();
+            return;
+        }
+
+        const question = this.questions[this.currentQuestionIndex];
+        const questionElement = `
+            <div class="question">${question.question} = ?</div>
+            <input type="number" id="answerInput" class="answer-input" placeholder="Ваш ответ">
+        `;
+        
+        document.getElementById('gameContent').innerHTML = questionElement;
+        document.getElementById('questionCounter').textContent = 
+            `${this.currentQuestionIndex + 1}/20`;
+        
+        // Фокус на поле ввода
+        setTimeout(() => {
+            const input = document.getElementById('answerInput');
+            if (input) {
+                input.focus();
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('checkBtn').click();
+                    }
+                });
+            }
+        }, 100);
     }
 
     checkAnswer() {
-        const userInput = parseInt(this.answerInput.value);
-        if (isNaN(userInput)) {
-            this.core.showResult('Некорректный ввод', 'wrong');
-            return;
-        };
-        const isCorrect = userInput === this.currentProblem;
-        const points = this.currentProblem * 5;
-        const message = isCorrect ? 'Верно!' : this.problemElement.textContent + ' = ' + this.currentProblem;
-        const answer = this.problemElement.textContent + ' = ' + userInput;
-        this.core.handleAnswer(isCorrect, points, message, answer);
-        if (this.core.state.collabMode) {
-            // Обновляем статус в Firestore
-            const index = this.core.collabManager.session.problems.findIndex(p => 
-                p.question === this.problemElement.textContent
-              );
-            const userId = this.core.elements.playerName.value.trim().slice(0, 20) || 'guest';
-            updateDoc(this.core.collabManager.sessionRef, {
-                [`problems.${index}.solved`]: true,
-                [`players.${userId}.progress`]: increment(1),
-                [`players.${userId}.time`]: new Date()
-            });
+        const input = document.getElementById('answerInput');
+        const userAnswer = parseInt(input.value);
+        
+        if (isNaN(userAnswer)) {
+            this.showMessage("Введите число!", "error");
+            return false;
         }
+
+        const currentQuestion = this.questions[this.currentQuestionIndex];
+        const isCorrect = userAnswer === currentQuestion.correctAnswer;
+        
+        // Сохраняем историю ответов
+        this.answersHistory.push({
+            question: currentQuestion.question,
+            userAnswer: userAnswer,
+            correctAnswer: currentQuestion.correctAnswer,
+            isCorrect: isCorrect
+        });
+
+        if (isCorrect) {
+            this.correctAnswers++;
+            this.showMessage("Правильно!", "success");
+        } else {
+            this.showMessage(`Неверно! Правильный ответ: ${currentQuestion.correctAnswer}`, "error");
+        }
+
+        this.currentQuestionIndex++;
+        
+        // Обновляем счет
+        document.getElementById('score').textContent = this.correctAnswers;
+        
+        // Показываем следующий вопрос после задержки
+        setTimeout(() => {
+            this.showQuestion();
+        }, 1500);
+        
+        return isCorrect;
     }
 
-    destroy() {
-        this.core.elements.gameContent.innerHTML = '';
-        this.core.elements.checkBtn.onclick = null;
+    showMessage(text, type) {
+        const messageElement = document.getElementById('message');
+        messageElement.textContent = text;
+        messageElement.className = `hintContainer ${type}`;
+    }
+
+    finishGame() {
+        clearInterval(this.timerInterval);
+        this.endTime = Date.now();
+        const totalTime = (this.endTime - this.startTime) / 1000; // в секундах
+        
+        // Сохраняем результаты
+        if (typeof saveResult === 'function') {
+            const playerName = document.getElementById('playerName').value || 'Аноним';
+            saveResult(playerName, totalTime, this.correctAnswers, 'multiple');
+        }
+        
+        // Показываем экран завершения
+        showEndScreen(totalTime, this.answersHistory);
+    }
+
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 }
+
+// Создаем экземпляр игры
+const multipleGame = new MultipleGame();
