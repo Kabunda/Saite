@@ -10,35 +10,26 @@
     <meta property="og:description" content="Игра-тренажер для развития профессиональных навыков.">
     <meta property="og:image" content="../images/logo_boom.png">
     <script src="firebase.js" type="module" defer></script>
-    <script src="core.js" type="module"></script>
     <script src="game-multiple.js" type="module"></script>
 </head>
 <body>
     <header class="game-header">
         <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
-        <h1 class="logo" id="nazvanie">-название-</h1>
+        <h1 class="logo" id="nazvanie">Счетчик</h1>
     </header>
     <main class="game-container">
     <!-- Начальный экран -->
         <section id="startScreen">
             <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20">
             <h3>Правила</h3>
-            <br>
-            <p>Если нажать на таймер, то он будет отключен.</p>
-            <br>
-            <div id="rules">-правила-</div>
-            <br>
+            <p>Ответь на 20 вопросов</p>
             <button class="button" id="startBtn">Старт!</button>
             <div class="game-select">
-                <h3>Выбор игры:</h3>
-                <label><input type="radio" name="game" value="multiple" checked>Умножение</label>
-                <label><input type="radio" name="game" value="neighbors">Соседи</label>
-                <label><input type="radio" name="game" value="complit">Комплиты</label>
+                <h3>Выбор сложности</h3>
+                <label><input type="radio" name="game" value="easy">Легкие</label>
+                <label><input type="radio" name="game" value="midle" checked>Средние</label>
+                <label><input type="radio" name="game" value="hard">Сложные</label>
             </div>  
-            <div class="collab-buttons">
-                <button class="button" id="createSession">Создать сессию</button>
-                <button class="button" id="joinSession">Присоединиться</button>
-            </div>
             <div id="highscore">
                 <h3>Топ-5 рекордов:</h3>
                 <div id="highscoreList"></div>                

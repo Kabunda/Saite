@@ -15,7 +15,7 @@ import {
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-// Конфигурация Firebase (замените на свою!)
+// Конфигурация Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyASzuGAuC5ME8rCV6ZRTDDlIdQYXZSekiw",
     authDomain: "neiborssprint.firebaseapp.com",
