@@ -29,31 +29,36 @@ const messageElement = document.getElementById('message');
 const finalTimeElement = document.getElementById('finalTime');
 const answersListElement = document.getElementById('answersList');
 const highscoreListElement = document.getElementById('highscoreList');
+const nameErrorElement = document.getElementById('nameError');
 
 // Генерация примеров на умножение
 function generateQuestions(difficulty) {
   const questions = [];
+  const multiplier = [];
   let min, max;
   
   // Устанавливаем диапазон чисел в зависимости от сложности
   switch(difficulty) {
     case 'easy':
-      min = 1;
-      max = 5;
+      min = 2;
+      max = 20;
+      multiplier = [5,8,11,17];
       break;
     case 'hard':
-      min = 6;
-      max = 15;
+      min = 2;
+      max = 20;
+      multiplier = [17,35];
       break;
     default: // midle
       min = 2;
-      max = 9;
+      max = 20;
+      multiplier = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
   }
   
   // Генерируем 20 случайных примеров
   for (let i = 0; i < 20; i++) {
+    const b = multiplier[getRandom(0, length(multiplier))];
     const a = Math.floor(Math.random() * (max - min + 1)) + min;
-    const b = Math.floor(Math.random() * (max - min + 1)) + min;
     questions.push({
       question: `${a} × ${b} = ?`,
       correctAnswer: a * b
@@ -219,6 +224,12 @@ function handleDifficultyChange() {
   }
 }
 
+playerNameInput.addEventListener('input', () => {
+  if (playerNameInput.value.trim()) {
+    nameErrorElement.style.display = 'none';
+  }
+});
+
 // Инициализация игры
 function initGame() {
   // Загрузка рекордов по умолчанию
@@ -226,7 +237,16 @@ function initGame() {
   
   // Обработчик кнопки "Старт"
   startBtn.addEventListener('click', () => {
-    playerName = playerNameInput.value.trim() || 'Аноним';
+    playerName = playerNameInput.value.trim();
+
+    // Проверка на пустое имя
+    if (!playerName) {
+      nameErrorElement.style.display = 'block';
+      return;
+    }
+    
+    // Скрываем ошибку если имя введено
+    nameErrorElement.style.display = 'none';
     
     // Получаем выбранную сложность
     const difficultyRadios = document.getElementsByName('game');
