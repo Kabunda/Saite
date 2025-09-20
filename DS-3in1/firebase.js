@@ -56,7 +56,16 @@ async function getHighscores(difficulty, limitCount = 5) {
     const querySnapshot = await getDocs(q);
     const results = [];
     querySnapshot.forEach((doc) => {
-      results.push({ id: doc.id, ...doc.data() });
+      const data = doc.data();
+      // Преобразуем Firestore timestamp в обычную дату, если нужно
+      const timestamp = data.timestamp ? data.timestamp.toDate().getTime() : Date.now();
+      results.push({ 
+        id: doc.id, 
+        name: data.playerName, 
+        score: data.score, 
+        time: data.time,
+        timestamp: timestamp
+      });
     });
     return results;
   } catch (error) {

@@ -1,8 +1,7 @@
 // game-multiple.js
 
-// Импорт Firebase функций (предполагая, что firebase.js уже настроен)
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-import { app } from './firebase.js';
+// Импорт Firebase функций
+import { saveGameResult, getHighscores } from './firebase.js';
 
 // Инициализация переменных
 let startTime;
@@ -13,7 +12,6 @@ let answersHistory = [];
 let playerName = "";
 let gameDifficulty = "midle";
 let questions = [];
-let db;
 
 // Получение элементов DOM
 const startScreen = document.getElementById('startScreen');
@@ -83,7 +81,8 @@ function displayQuestion() {
   
   // Фокус на поле ввода
   setTimeout(() => {
-    document.getElementById('answerInput').focus();
+    const answerInput = document.getElementById('answerInput');
+    if (answerInput) answerInput.focus();
   }, 100);
 }
 
@@ -154,7 +153,7 @@ function endGame() {
   const totalSeconds = Math.floor((endTime - startTime) / 1000);
   
   // Сохраняем результат в Firebase
-  saveResult(playerName, score, totalSeconds, gameDifficulty);
+  saveGameResult(playerName, score, totalSeconds, gameDifficulty);
   
   // Показываем итоги
   finalTimeElement.textContent = formatTime(totalSeconds);
@@ -177,52 +176,6 @@ function endGame() {
   endScreen.classList.remove('hidden');
 }
 
-// Сохранение результата в Firebase
-function saveResult(name, score, time, difficulty) {
-  if (!db) return;
-  
-  const resultId = Date.now().toString();
-  const resultRef = ref(db, `results/${difficulty}/${resultId}`);
-  
-  set(resultRef, {
-    name: name,
-    score: score,
-    time: time,
-    timestamp: Date.now()
-  });
-}
-
-// Загрузка рекордов из Firebase
-function loadHighscores() {
-  if (!db) return;
-  
-  // Для каждой сложности
-  ['easy', 'midle', 'hard'].forEach(difficulty => {
-    const scoresRef = ref(db, `results/${difficulty}`);
-    onValue(scoresRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-      
-      // Преобразуем в массив и сортируем
-      const results = [];
-      for (let id in data) {
-        results.push({...data[id], id});
-      }
-      
-      // Сортируем по очкам (по убыванию) и времени (по возрастанию)
-      results.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return a.time - b.time;
-      });
-      
-      // Показываем топ-5 для каждой сложности
-      if (difficulty === 'midle') { // По умолчанию показываем среднюю сложность
-        displayHighscores(results.slice(0, 5));
-      }
-    });
-  });
-}
-
 // Отображение таблицы рекордов
 function displayHighscores(scores) {
   highscoreListElement.innerHTML = '';
@@ -232,28 +185,44 @@ function displayHighscores(scores) {
     return;
   }
   
-  scores.forEach((score, index) => {
+  scores.forEach((item, index) => {
     const div = document.createElement('div');
     div.className = 'highscore-item';
     div.innerHTML = `
       <span class="rank">${index + 1}.</span>
-      <span class="name">${score.name}</span>
-      <span class="score">${score.score}/20</span>
-      <span class="time">${formatTime(score.time)}</span>
+      <span class="name">${item.name}</span>
+      <span class="score">${item.score}/20</span>
+      <span class="time">${formatTime(item.time)}</span>
     `;
     highscoreListElement.appendChild(div);
   });
 }
 
+// Загрузка рекордов из Firebase
+async function loadHighscores(difficulty = 'midle') {
+  try {
+    const scores = await getHighscores(difficulty, 5);
+    displayHighscores(scores);
+  } catch (error) {
+    console.error("Ошибка при загрузке рекордов:", error);
+  }
+}
+
+// Обработчик изменения сложности
+function handleDifficultyChange() {
+  const difficultyRadios = document.getElementsByName('game');
+  for (let radio of difficultyRadios) {
+    if (radio.checked) {
+      loadHighscores(radio.value);
+      break;
+    }
+  }
+}
+
 // Инициализация игры
 function initGame() {
-  // Инициализация Firebase
-  try {
-    db = getDatabase(app);
-    loadHighscores();
-  } catch (error) {
-    console.error("Ошибка инициализации Firebase:", error);
-  }
+  // Загрузка рекордов по умолчанию
+  loadHighscores();
   
   // Обработчик кнопки "Старт"
   startBtn.addEventListener('click', () => {
@@ -290,8 +259,8 @@ function initGame() {
   checkBtn.addEventListener('click', checkAnswer);
   
   // Обработчик нажатия Enter в поле ответа
-  gameContent.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+  document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !gameScreen.classList.contains('hidden')) {
       checkAnswer();
     }
   });
@@ -302,18 +271,13 @@ function initGame() {
     startScreen.classList.remove('hidden');
     
     // Обновляем таблицу рекордов
-    if (db) {
-      loadHighscores();
-    }
+    loadHighscores(gameDifficulty);
   });
   
   // Обработчики изменения сложности для обновления таблицы рекордов
   const difficultyRadios = document.getElementsByName('game');
   for (let radio of difficultyRadios) {
-    radio.addEventListener('change', () => {
-      // При изменении сложности нужно обновлять таблицу рекордов
-      // Реализация будет добавлена после настройки Firebase
-    });
+    radio.addEventListener('change', handleDifficultyChange);
   }
 }
 
