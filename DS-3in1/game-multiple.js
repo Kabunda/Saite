@@ -39,17 +39,22 @@ function generateQuestions(difficulty) {
   
   // Устанавливаем диапазон чисел в зависимости от сложности
   switch(difficulty) {
-    case 'easy':
+    case 'in8':
       min = 2;
-      max = 20;
-      multiplier = [5,8,11,17];
+      max = 30;
+      multiplier = [8];
       break;
-    case 'hard':
+    case 'in17':
       min = 2;
-      max = 20;
-      multiplier = [17,35];
+      max = 30;
+      multiplier = [17];
       break;
-    default: // midle
+    case 'in35':
+      min = 2;
+      max = 30;
+      multiplier = [35];
+      break;
+    default: // all
       min = 2;
       max = 20;
       multiplier = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
