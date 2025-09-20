@@ -34,7 +34,7 @@ const nameErrorElement = document.getElementById('nameError');
 // Генерация примеров на умножение
 function generateQuestions(difficulty) {
   const questions = [];
-  const multiplier = [];
+  let multiplier = [];
   let min, max;
   
   // Устанавливаем диапазон чисел в зависимости от сложности
@@ -62,7 +62,7 @@ function generateQuestions(difficulty) {
   
   // Генерируем 20 случайных примеров
   for (let i = 0; i < 20; i++) {
-    const b = multiplier[getRandom(0, length(multiplier))];
+    const b = multiplier[Math.floor(Math.random() * multiplier.length)];
     const a = Math.floor(Math.random() * (max - min + 1)) + min;
     questions.push({
       question: `${a} × ${b} = ?`,
@@ -209,7 +209,7 @@ function displayHighscores(scores) {
 }
 
 // Загрузка рекордов из Firebase
-async function loadHighscores(difficulty = 'midle') {
+async function loadHighscores(difficulty = 'all') {
   try {
     const scores = await getHighscores(difficulty, 5);
     displayHighscores(scores);
