@@ -12,6 +12,7 @@ let answersHistory = [];
 let playerName = "";
 let gameDifficulty = "midle";
 let questions = [];
+let isGameActive = false;
 
 // Получение элементов DOM
 const startScreen = document.getElementById('startScreen');
@@ -157,13 +158,11 @@ function formatTime(seconds) {
 }
 
 // Завершение игры
-function endGame() {
+async function endGame() {
+  isGameActive = false;
   clearInterval(timerInterval);
   const endTime = new Date();
   const totalSeconds = Math.floor((endTime - startTime) / 1000);
-  
-  // Сохраняем результат в Firebase
-  saveGameResult(playerName, score, totalSeconds, gameDifficulty);
   
   // Показываем итоги
   finalTimeElement.textContent = formatTime(totalSeconds);
@@ -181,9 +180,27 @@ function endGame() {
     answersListElement.appendChild(li);
   });
   
+  // Сохраняем результат в Firebase
+  const saveSuccess = await saveGameResult(playerName, score, totalSeconds, gameDifficulty);
+  if (!saveSuccess) {
+    alert("Не удалось сохранить результат. Проверьте подключение к интернету.");
+  }
+  
   // Переходим на экран завершения
   gameScreen.classList.add('hidden');
   endScreen.classList.remove('hidden');
+  
+  // Убираем обработчик beforeunload
+  window.removeEventListener('beforeunload', confirmExit);
+}
+
+// Добавим функцию подтверждения выхода
+function confirmExit(e) {
+  if (isGameActive) {
+    e.preventDefault();
+    e.returnValue = 'Вы уверены, что хотите покинуть страницу? Ваш прогресс будет потерян.';
+    return e.returnValue;
+  }
 }
 
 // Отображение таблицы рекордов
@@ -237,6 +254,12 @@ playerNameInput.addEventListener('input', () => {
 
 // Инициализация игры
 function initGame() {
+  // Загрузка сохраненного имени из localStorage
+  const savedName = localStorage.getItem('playerName');
+  if (savedName) {
+    playerNameInput.value = savedName;
+  }
+  
   // Загрузка рекордов по умолчанию
   loadHighscores();
   
@@ -247,8 +270,20 @@ function initGame() {
     // Проверка на пустое имя
     if (!playerName) {
       nameErrorElement.style.display = 'block';
+      playerNameInput.focus();
       return;
     }
+    
+    // Проверка на длину имени
+    if (playerName.length > 20) {
+      nameErrorElement.textContent = "Имя не должно превышать 20 символов";
+      nameErrorElement.style.display = 'block';
+      playerNameInput.focus();
+      return;
+    }
+    
+    // Сохраняем имя в localStorage
+    localStorage.setItem('playerName', playerName);
     
     // Скрываем ошибку если имя введено
     nameErrorElement.style.display = 'none';
@@ -270,6 +305,10 @@ function initGame() {
     score = 0;
     answersHistory = [];
     scoreElement.textContent = score;
+    isGameActive = true;
+    
+    // Добавляем обработчик beforeunload
+    window.addEventListener('beforeunload', confirmExit);
     
     // Переключаем экраны
     startScreen.classList.add('hidden');
@@ -286,7 +325,13 @@ function initGame() {
   // Обработчик нажатия Enter в поле ответа
   document.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !gameScreen.classList.contains('hidden')) {
-      checkAnswer();
+      if (document.activeElement.id === 'answerInput') {
+        checkAnswer();
+      } else {
+        // Если поле ввода не в фокусе, фокусируемся на нем
+        const answerInput = document.getElementById('answerInput');
+        if (answerInput) answerInput.focus();
+      }
     }
   });
   
@@ -304,6 +349,9 @@ function initGame() {
   for (let radio of difficultyRadios) {
     radio.addEventListener('change', handleDifficultyChange);
   }
+  
+  // Фокусируемся на поле ввода имени при загрузке
+  playerNameInput.focus();
 }
 
 // Запуск инициализации при загрузке документа

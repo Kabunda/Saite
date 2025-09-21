@@ -30,15 +30,17 @@ const db = getFirestore(app);
 async function saveGameResult(playerName, score, time, difficulty) {
   try {
     await addDoc(collection(db, "gameResults"), {
-      playerName: playerName,
+      playerName: playerName.trim(),
       score: score,
       time: time,
       difficulty: difficulty,
       timestamp: serverTimestamp()
     });
     console.log("Результат сохранен успешно");
+    return true;
   } catch (error) {
     console.error("Ошибка при сохранении результата: ", error);
+    return false;
   }
 }
 

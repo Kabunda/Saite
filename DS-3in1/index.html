@@ -20,8 +20,10 @@
     <main class="game-container">
     <!-- Начальный экран -->
         <section id="startScreen">
-            <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20">
+            <!-- Обновите поле ввода имени -->
+            <input type="text" id="playerName" placeholder="Ваше имя" maxlength="20" oninput="validateName(this)">
             <div id="nameError" class="error-message" style="color: red; display: none;">Пожалуйста, введите ваше имя</div>
+
             <h3>Правила</h3>
             <p>Ответь на 20 вопросов</p>
             <button class="button" id="startBtn">Старт!</button>
@@ -64,5 +66,12 @@
             <button class="button" id="resetBtn">Хорошо!</button>
         </section>
     </main>
+        <!-- Внутри body, добавьте модальное окно для ошибок -->
+    <div id="errorModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <p id="errorMessage"></p>
+    </div>
+    </div>
 </body>
 </html>
