@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.3';
-const BUILD_TIME = '21.09.2025 14:48'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.4';
+const BUILD_TIME = '21.09.2025 15:35'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
@@ -457,9 +457,6 @@ function initGame() {
   for (let radio of difficultyRadios) {
     radio.addEventListener('change', handleDifficultyChange);
   }
-  
-  // Фокусируемся на поле ввода имени при загрузке
-  playerNameInput.focus();
 }
 
 // Запуск инициализации при загрузке документа
