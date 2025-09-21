@@ -32,6 +32,14 @@ const answersListElement = document.getElementById('answersList');
 const highscoreListElement = document.getElementById('highscoreList');
 const nameErrorElement = document.getElementById('nameError');
 
+// Добавим после объявления переменных
+function validateName(input) {
+  const value = input.value.trim();
+  if (value.length > 20) {
+    input.value = value.substring(0, 20);
+  }
+}
+
 // Генерация примеров на умножение
 function generateQuestions(difficulty) {
   const questions = [];
@@ -56,19 +64,66 @@ function generateQuestions(difficulty) {
       multiplier = [35];
       break;
     default: // all
-      min = 2;
+      min = 5;
       max = 20;
-      multiplier = [5, 8, 11, 17, 17, 17, 17, 35, 35, 35];
+      multiplier = [5, 8, 11, 17, 17, 17, 35, 35];
   }
   
-  // Генерируем 20 случайных примеров
-  for (let i = 0; i < 20; i++) {
+// Для отслеживания уникальных вопросов
+  const usedQuestions = new Set();
+  
+  // Генерируем 20 уникальных примеров
+  let attempts = 0;
+  const maxAttempts = 100; // Защита от бесконечного цикла
+  
+  while (questions.length < 20 && attempts < maxAttempts) {
+    attempts++;
+    
     const b = multiplier[Math.floor(Math.random() * multiplier.length)];
     const a = Math.floor(Math.random() * (max - min + 1)) + min;
+    
+    // Проверяем, чтобы ответ был не слишком большим (максимум 3 цифры)
+    if (a * b > 999) {
+      continue;
+    }
+    
+    // Создаем уникальный идентификатор вопроса
+    const questionKey = `${a}-${b}`;
+    
+    // Пропускаем, если вопрос уже использовался
+    if (usedQuestions.has(questionKey)) {
+      continue;
+    }
+    
+    // Добавляем вопрос в использованные
+    usedQuestions.add(questionKey);
+    
     questions.push({
       question: `${a} × ${b} = ?`,
       correctAnswer: a * b
     });
+  }
+  
+  // Если не удалось сгенерировать достаточно уникальных вопросов,
+  // дополняем оставшиеся места не уникальными
+  if (questions.length < 20) {
+    const needed = 20 - questions.length;
+    
+    for (let i = 0; i < needed; i++) {
+      const b = multiplier[Math.floor(Math.random() * multiplier.length)];
+      const a = Math.floor(Math.random() * (max - min + 1)) + min;
+      
+      // Проверяем, чтобы ответ был не слишком большим
+      if (a * b > 999) {
+        i--; // Повторяем итерацию
+        continue;
+      }
+      
+      questions.push({
+        question: `${a} × ${b} = ?`,
+        correctAnswer: a * b
+      });
+    }
   }
   
   return questions;
@@ -104,6 +159,8 @@ function checkAnswer() {
   
   if (isNaN(userAnswer)) {
     messageElement.textContent = "Пожалуйста, введите число!";
+    answerInput.value = ''; // Очищаем поле ввода
+    answerInput.focus(); // Возвращаем фокус
     return;
   }
   
@@ -167,23 +224,33 @@ async function endGame() {
   // Показываем итоги
   finalTimeElement.textContent = formatTime(totalSeconds);
   
-  // Показываем историю ответов
+  // В функции endGame обновим отображение истории ответов
   answersListElement.innerHTML = '';
   answersHistory.forEach((item, index) => {
     const li = document.createElement('li');
+    li.classList.add(item.isCorrect ? 'correct' : 'incorrect');
     li.innerHTML = `
-      ${index + 1}. ${item.question} 
-      <span class="${item.isCorrect ? 'correct' : 'incorrect'}">
-        Ваш ответ: ${item.userAnswer} ${item.isCorrect ? '✓' : `✗ (Правильно: ${item.correctAnswer})`}
+      <strong>${index + 1}.</strong> ${item.question.replace('?', '')}
+      <br>
+      <span class="answer-result">
+        Ваш ответ: ${item.userAnswer} 
+        ${item.isCorrect ? 
+          '<span class="result-icon">✓</span>' : 
+          `<span class="result-icon">✗</span> (Правильно: ${item.correctAnswer})`
+        }
       </span>
     `;
     answersListElement.appendChild(li);
   });
   
   // Сохраняем результат в Firebase
-  const saveSuccess = await saveGameResult(playerName, score, totalSeconds, gameDifficulty);
-  if (!saveSuccess) {
-    alert("Не удалось сохранить результат. Проверьте подключение к интернету.");
+  try {
+    const saveSuccess = await saveGameResult(playerName, score, totalSeconds, gameDifficulty);
+    if (!saveSuccess) {
+      showError("Не удалось сохранить результат. Проверьте подключение к интернету.");
+    }
+  } catch (error) {
+    showError("Ошибка при сохранении результата: " + error.message);
   }
   
   // Переходим на экран завершения
@@ -246,11 +313,26 @@ function handleDifficultyChange() {
   }
 }
 
+// Обновим обработчик input для playerNameInput
 playerNameInput.addEventListener('input', () => {
+  validateName(playerNameInput);
   if (playerNameInput.value.trim()) {
     nameErrorElement.style.display = 'none';
   }
 });
+
+// Добавим функции для работы с модальным окном
+function showError(message) {
+  const errorModal = document.getElementById('errorModal');
+  const errorMessage = document.getElementById('errorMessage');
+  errorMessage.textContent = message;
+  errorModal.classList.remove('hidden');
+}
+
+function hideError() {
+  const errorModal = document.getElementById('errorModal');
+  errorModal.classList.add('hidden');
+}
 
 // Инициализация игры
 function initGame() {
@@ -262,6 +344,15 @@ function initGame() {
   
   // Загрузка рекордов по умолчанию
   loadHighscores();
+
+    // Инициализация модального окна
+  const errorModal = document.getElementById('errorModal');
+  const closeModalBtn = errorModal.querySelector('.close');
+  
+  closeModalBtn.addEventListener('click', hideError);
+  errorModal.addEventListener('click', (e) => {
+    if (e.target === errorModal) hideError();
+  });
   
   // Обработчик кнопки "Старт"
   startBtn.addEventListener('click', () => {
