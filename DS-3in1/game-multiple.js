@@ -1,5 +1,18 @@
 // game-multiple.js
 
+// В начало game-multiple.js добавьте
+const APP_VERSION = '0.3';
+const BUILD_TIME = '21.09.2025 14:48'; // Обновляйте вручную при каждом изменении
+
+// И обновите функцию displayVersion
+function displayVersion() {
+    const versionInfo = document.getElementById('versionInfo');
+    if (versionInfo) {
+        versionInfo.textContent = `v${APP_VERSION} (${BUILD_TIME})`;
+        versionInfo.title = `Версия: ${APP_VERSION}, Сборка: ${BUILD_TIME}`;
+    }
+}
+
 // Импорт Firebase функций
 import { saveGameResult, getHighscores } from './firebase.js';
 
@@ -336,6 +349,10 @@ function hideError() {
 
 // Инициализация игры
 function initGame() {
+
+    // Показываем версию
+  displayVersion();
+
   // Загрузка сохраненного имени из localStorage
   const savedName = localStorage.getItem('playerName');
   if (savedName) {
