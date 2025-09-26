@@ -16,7 +16,9 @@ import {
   onSnapshot, 
   arrayUnion, 
   arrayRemove,
-  deleteDoc
+  deleteDoc,
+  arrayUnion, 
+  arrayRemove
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
 // Конфигурация Firebase
@@ -48,10 +50,6 @@ async function saveGameResult(playerName, score, time, difficulty) {
     return true;
   } catch (error) {
     console.error("Ошибка при сохранении результата: ", error);
-
-    // Сохранить в localStorage для последующей синхронизации
-    saveResultOffline(playerName, score, time, difficulty);
-
     return false;
   }
 }
@@ -156,19 +154,27 @@ function subscribeToSession(sessionId, callback) {
 async function updatePlayerProgress(sessionId, playerName, progress, score, answers) {
   try {
     const sessionRef = doc(db, "sessions", sessionId);
-    const session = await getSession(sessionId);
     
-    if (!session) return false;
-    
-    const updatedPlayers = session.players.map(player => 
-      player.name === playerName 
-        ? { ...player, progress, score, answers }
-        : player
-    );
-    
+    // Используем атомарную операцию для обновления конкретного игрока
     await updateDoc(sessionRef, {
-      players: updatedPlayers
+      players: arrayUnion({
+        name: playerName,
+        progress: progress,
+        score: score,
+        answers: answers
+      })
     });
+    
+    // Удаляем старую запись игрока
+    const session = await getSession(sessionId);
+    if (session && session.players) {
+      const oldPlayerData = session.players.find(p => p.name === playerName);
+      if (oldPlayerData) {
+        await updateDoc(sessionRef, {
+          players: arrayRemove(oldPlayerData)
+        });
+      }
+    }
     
     return true;
   } catch (error) {
@@ -201,25 +207,6 @@ async function endSession(sessionId) {
     return false;
   }
 }
-
-// Добавить в firebase.js после функций сессии
-function saveResultOffline(playerName, score, time, difficulty) {
-    try {
-        const offlineResults = JSON.parse(localStorage.getItem('offlineResults') || '[]');
-        offlineResults.push({
-            playerName,
-            score,
-            time,
-            difficulty,
-            timestamp: new Date().toISOString()
-        });
-        localStorage.setItem('offlineResults', JSON.stringify(offlineResults));
-        console.log("Результат сохранен офлайн");
-    } catch (error) {
-        console.error("Ошибка офлайн-сохранения:", error);
-    }
-}
-
 
 // Экспорт новых функций
 export { 

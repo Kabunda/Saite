@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.5';
-const BUILD_TIME = '27.09.2025 00:55'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.6';
+const BUILD_TIME = '27.09.2025 02:17'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
@@ -303,13 +303,17 @@ async function checkAnswer() {
   
   // Обновляем прогресс в сессии
   if (currentSessionId) {
-    await updatePlayerProgress(
-      currentSessionId, 
-      playerName, 
-      currentQuestion, 
-      score, 
-      answersHistory
-    );
+    try {
+      await updatePlayerProgress(
+        currentSessionId, 
+        playerName, 
+        currentQuestion, // Уже увеличенный на 1
+        score, 
+        answersHistory
+      );
+    } catch (error) {
+      console.error("Ошибка обновления прогресса:", error);
+    }
   }
   
   currentQuestion++;
