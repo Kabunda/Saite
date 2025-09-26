@@ -13,8 +13,18 @@ function displayVersion() {
     }
 }
 
-// Импорт Firebase функций
-import { saveGameResult, getHighscores } from './firebase.js';
+// game-multiple.js - добавляем многопользовательский функционал
+import { 
+  saveGameResult, 
+  getHighscores,
+  createSession,
+  joinSession,
+  getSession,
+  subscribeToSession,
+  updatePlayerProgress,
+  startSession,
+  endSession
+} from './firebase.js';
 
 // Инициализация переменных
 let startTime;
@@ -26,6 +36,13 @@ let playerName = "";
 let gameDifficulty = "midle";
 let questions = [];
 let isGameActive = false;
+
+// ... добавляем многопользовательский функционал переменные
+let currentSessionId = null;
+let isHost = false;
+let sessionUnsubscribe = null;
+let players = [];
+let gameStartTimeout = null;
 
 // Получение элементов DOM
 const startScreen = document.getElementById('startScreen');
@@ -44,6 +61,97 @@ const finalTimeElement = document.getElementById('finalTime');
 const answersListElement = document.getElementById('answersList');
 const highscoreListElement = document.getElementById('highscoreList');
 const nameErrorElement = document.getElementById('nameError');
+const questionText = document.getElementById('questionText');
+
+// Добавляем элементы DOM для многопользовательского режима
+const sessionScreen = document.getElementById('sessionScreen');
+const sessionIdElement = document.getElementById('sessionId');
+const playersListElement = document.getElementById('playersList');
+const countdownElement = document.getElementById('countdown');
+const waitingMessageElement = document.getElementById('waitingMessage');
+
+// Новая функция для отображения экрана ожидания сессии
+function showSessionScreen(sessionId, isHost) {
+  startScreen.classList.add('hidden');
+  sessionScreen.classList.remove('hidden');
+  sessionIdElement.textContent = sessionId;
+  
+  if (isHost) {
+    waitingMessageElement.textContent = "Ожидание игроков... (максимум 4)";
+  } else {
+    waitingMessageElement.textContent = "Ожидание начала игры...";
+  }
+}
+
+// Функция для отображения списка игроков
+function updatePlayersList(players) {
+  playersListElement.innerHTML = '';
+  players.forEach((player, index) => {
+    const playerElement = document.createElement('div');
+    playerElement.className = 'player-item';
+    playerElement.innerHTML = `
+      <span class="player-name">${player.name}</span>
+      <span class="player-status">${index === 0 ? '👑' : '👤'}</span>
+    `;
+    playersListElement.appendChild(playerElement);
+  });
+}
+
+// Функция для отображения прогресса игроков во время игры
+function updatePlayersProgress(players) {
+  const opponentProgress = document.getElementById('opponentProgress');
+  opponentProgress.innerHTML = '';
+  
+  // Фильтруем текущего игрока
+  const otherPlayers = players.filter(player => player.name !== playerName);
+  
+  otherPlayers.forEach(player => {
+    const playerProgress = document.createElement('div');
+    playerProgress.className = 'player-progress';
+    
+    const playerNameElement = document.createElement('div');
+    playerNameElement.className = 'player-name-small';
+    playerNameElement.textContent = player.name;
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'progress-bar';
+    
+    for (let i = 0; i < 20; i++) {
+      const brick = document.createElement('div');
+      brick.className = 'progress-brick';
+      
+      if (i < player.progress) {
+        // Находим ответ для этого вопроса
+        const answer = player.answers[i];
+        brick.classList.add(answer && answer.isCorrect ? 'correct' : 'incorrect');
+      }
+      
+      progressBar.appendChild(brick);
+    }
+    
+    playerProgress.appendChild(playerNameElement);
+    playerProgress.appendChild(progressBar);
+    opponentProgress.appendChild(playerProgress);
+  });
+}
+
+// Функция для запуска обратного отсчета
+function startCountdown(seconds, callback) {
+  let count = seconds;
+  countdownElement.textContent = `Игра начнется через: ${count}с`;
+  countdownElement.classList.remove('hidden');
+  
+  const countdownInterval = setInterval(() => {
+    count--;
+    countdownElement.textContent = `Игра начнется через: ${count}с`;
+    
+    if (count <= 0) {
+      clearInterval(countdownInterval);
+      countdownElement.classList.add('hidden');
+      callback();
+    }
+  }, 1000);
+}
 
 // Добавим после объявления переменных
 function validateName(input) {
@@ -152,12 +260,8 @@ function displayQuestion() {
   const question = questions[currentQuestion - 1];
   levelElement.textContent = currentQuestion;
   questionCounterElement.textContent = `${currentQuestion}/20`;
-  
-  gameContent.innerHTML = `
-    <div class="question">${question.question}</div>
-    <input type="number" id="answerInput" placeholder="Ваш ответ" autocomplete="off">
-  `;
-  
+  if (questionText) questionText.textContent = question.question;
+
   // Фокус на поле ввода
   setTimeout(() => {
     const answerInput = document.getElementById('answerInput');
@@ -165,30 +269,30 @@ function displayQuestion() {
   }, 100);
 }
 
-// Проверка ответа
-function checkAnswer() {
+// Модифицируем функцию checkAnswer() для многопользовательского режима
+async function checkAnswer() {
   const answerInput = document.getElementById('answerInput');
   const userAnswer = parseInt(answerInput.value);
   
   if (isNaN(userAnswer)) {
     messageElement.textContent = "Пожалуйста, введите число!";
-    answerInput.value = ''; // Очищаем поле ввода
-    answerInput.focus(); // Возвращаем фокус
+    answerInput.value = '';
+    answerInput.focus();
     return;
   }
   
   const currentQ = questions[currentQuestion - 1];
   const isCorrect = userAnswer === currentQ.correctAnswer;
   
-  // Записываем в историю
-  answersHistory.push({
+  const answerData = {
     question: currentQ.question,
     userAnswer: userAnswer,
     correctAnswer: currentQ.correctAnswer,
     isCorrect: isCorrect
-  });
+  };
   
-  // Обновляем счет
+  answersHistory.push(answerData);
+  
   if (isCorrect) {
     score++;
     scoreElement.textContent = score;
@@ -197,13 +301,26 @@ function checkAnswer() {
     messageElement.textContent = `Неверно! Правильный ответ: ${currentQ.correctAnswer}`;
   }
   
-  // Переходим к следующему вопросу
+  // Обновляем прогресс в сессии
+  if (currentSessionId) {
+    await updatePlayerProgress(
+      currentSessionId, 
+      playerName, 
+      currentQuestion, 
+      score, 
+      answersHistory
+    );
+  }
+  
   currentQuestion++;
   
-  // Очищаем сообщение через 1 секунду
   setTimeout(() => {
     messageElement.textContent = "";
-    displayQuestion();
+    if (currentQuestion > 20) {
+      endGame();
+    } else {
+      displayQuestion();
+    }
   }, 1000);
 }
 
@@ -227,14 +344,22 @@ function formatTime(seconds) {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Завершение игры
+// Модифицируем функцию endGame() для многопользовательского режима
 async function endGame() {
   isGameActive = false;
   clearInterval(timerInterval);
+  
+  if (gameStartTimeout) {
+    clearTimeout(gameStartTimeout);
+  }
+  
+  if (sessionUnsubscribe) {
+    sessionUnsubscribe();
+  }
+  
   const endTime = new Date();
   const totalSeconds = Math.floor((endTime - startTime) / 1000);
   
-  // Показываем итоги
   finalTimeElement.textContent = formatTime(totalSeconds);
   
   // В функции endGame обновим отображение истории ответов
@@ -264,6 +389,11 @@ async function endGame() {
     }
   } catch (error) {
     showError("Ошибка при сохранении результата: " + error.message);
+  }
+  
+  // Завершаем сессию, если мы хост
+  if (isHost && currentSessionId) {
+    await endSession(currentSessionId);
   }
   
   // Переходим на экран завершения
@@ -371,8 +501,8 @@ function initGame() {
     if (e.target === errorModal) hideError();
   });
   
-  // Обработчик кнопки "Старт"
-  startBtn.addEventListener('click', () => {
+  // Обработчик кнопки "Старт" - теперь создает/присоединяется к сессии
+  startBtn.addEventListener('click', async () => {
     playerName = playerNameInput.value.trim();
 
     // Проверка на пустое имя
@@ -405,26 +535,54 @@ function initGame() {
       }
     }
     
-    // Генерируем вопросы
-    questions = generateQuestions(gameDifficulty);
+    // Пытаемся присоединиться к сессии или создать новую
+    // currentSessionId = playerName; // Используем имя как идентификатор сессии
+    // Риск конфликта имен. Лучше генерировать случайный ID:
+    currentSessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+
+    const existingSession = await getSession(currentSessionId);
     
-    // Сбрасываем состояние игры
-    currentQuestion = 1;
-    score = 0;
-    answersHistory = [];
-    scoreElement.textContent = score;
-    isGameActive = true;
+    if (existingSession && existingSession.status === "waiting") {
+      // Присоединяемся к существующей сессии
+      const success = await joinSession(currentSessionId, playerName);
+      if (!success) {
+        showError("Не удалось присоединиться к сессии");
+        return;
+      }
+      isHost = false;
+    } else {
+      // Создаем новую сессию
+      const success = await createSession(currentSessionId, playerName, gameDifficulty);
+      if (!success) {
+        showError("Не удалось создать сессию");
+        return;
+      }
+      isHost = true;
+      
+      // Автоматически запускаем игру через 5 секунд
+      gameStartTimeout = setTimeout(async () => {
+        await startSession(currentSessionId);
+      }, 5000);
+    }
     
-    // Добавляем обработчик beforeunload
-    window.addEventListener('beforeunload', confirmExit);
+    showSessionScreen(currentSessionId, isHost);
     
-    // Переключаем экраны
-    startScreen.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    
-    // Запускаем таймер и показываем первый вопрос
-    startTimer();
-    displayQuestion();
+    // Подписываемся на изменения сессии
+    sessionUnsubscribe = subscribeToSession(currentSessionId, (session) => {
+      if (!session) return;
+      
+      players = session.players;
+      updatePlayersList(players);
+      
+      if (session.status === "starting") {
+        startCountdown(3, () => {
+          startMultiplayerGame(session);
+        });
+      } else if (session.status === "active") {
+        updatePlayersProgress(players);
+      }
+    });
   });
   
   // Обработчик кнопки "Готово"
@@ -433,7 +591,7 @@ function initGame() {
   // Обработчик нажатия Enter в поле ответа
   document.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !gameScreen.classList.contains('hidden')) {
-      if (document.activeElement.id === 'answerInput') {
+      if (document.activeElement.id === 'answerInput' && isGameActive) {
         checkAnswer();
       } else {
         // Если поле ввода не в фокусе, фокусируемся на нем
@@ -457,6 +615,23 @@ function initGame() {
   for (let radio of difficultyRadios) {
     radio.addEventListener('change', handleDifficultyChange);
   }
+}
+
+// Новая функция для запуска многопользовательской игры
+function startMultiplayerGame(session) {
+  questions = generateQuestions(session.difficulty);
+  currentQuestion = 1;
+  score = 0;
+  answersHistory = [];
+  scoreElement.textContent = score;
+  isGameActive = true;
+  
+  sessionScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  
+  window.addEventListener('beforeunload', confirmExit);
+  startTimer();
+  displayQuestion();
 }
 
 // Запуск инициализации при загрузке документа

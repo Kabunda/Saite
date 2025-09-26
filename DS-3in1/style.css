@@ -371,3 +371,78 @@ input[type="number"] {
   color: darkred;
   animation: pulse 0.5s;
 }
+
+/* Добавьте в style.css стили для многопользовательского режима */
+#sessionScreen {
+    text-align: center;
+    padding: 20px;
+}
+
+.countdown {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff6b6b;
+    margin: 20px 0;
+}
+
+.players-list {
+    margin: 20px 0;
+}
+
+.player-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.player-name {
+    font-weight: bold;
+}
+
+.player-status {
+    font-size: 18px;
+}
+
+.player-progress {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.player-name-small {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.progress-bar {
+    display: flex;
+    gap: 2px;
+}
+
+.progress-brick {
+    width: 15px;
+    height: 15px;
+    background: #ddd;
+    border-radius: 2px;
+    transition: background-color 0.3s;
+}
+
+.progress-brick.correct {
+    background: #4caf50;
+}
+
+.progress-brick.incorrect {
+    background: #f44336;
+}
+
+#opponentProgress {
+    margin: 20px 0;
+    max-height: 200px;
+    overflow-y: auto;
+}

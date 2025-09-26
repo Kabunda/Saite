@@ -15,7 +15,7 @@
 <body>
     <header class="game-header">
         <a href="https://kabunda.github.io/Saite/" class="home-link">← На главную</a>
-        <h1 class="logo" id="nazvanie">Счетчик</h1>
+        <h1 class="logo" id="nazvanie">Самый быстрый</h1>
     </header>
     <main class="game-container">
     <!-- Начальный экран -->
@@ -39,16 +39,33 @@
                 <div id="highscoreList"></div>                
             </div>    
         </section>
+
+        <!-- index.html - добавляем новый экран сессии -->
+        <!-- После startScreen и перед gameScreen добавьте: -->
+        <section class="hidden" id="sessionScreen">
+            <h2>Сессия: <span id="sessionId"></span></h2>
+            <div id="waitingMessage"></div>
+            <div id="countdown" class="countdown hidden"></div>
+            
+            <div class="players-list">
+                <h3>Игроки в сессии:</h3>
+                <div id="playersList"></div>
+            </div>
+            
+            <p>Пригласите друзей: назовите им идентификатор сессии</p>
+        </section>
+
     <!-- Игровой экран -->
         <section class="hidden" id="gameScreen">
             <div class="stats">
-                <div>Этап: <span id="level"></span></div>        
-                <div>Счёт: <span id="score"></span></div>
+                <div>Вопрос: <span id="level"></span></div>        
+                <div>Осталось: <span id="score"></span></div>
             </div>
             <div id="opponentProgress" class="opponent-progress"></div>
-            <div id="questionCounter" class="timer">1/20</div>
+            <div id="questionCounter" class="timer">00:00</div>
             <div class="game-content" id="gameContent">
-                <!-- Динамически заменяется содержимое -->
+                <div class="question" id="questionText"></div>
+                <input type="number" id="answerInput" placeholder="Ваш ответ" autocomplete="off">
             </div>
             <div class ="hintContainer" id="message"></div>
             <button class="button" id="checkBtn">Готово</button>
