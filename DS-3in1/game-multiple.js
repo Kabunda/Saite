@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.4';
-const BUILD_TIME = '21.09.2025 15:35'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.5';
+const BUILD_TIME = '27.09.2025 00:55'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
