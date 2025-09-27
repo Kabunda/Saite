@@ -17,11 +17,10 @@ import {
   arrayUnion, 
   arrayRemove,
   deleteDoc,
-  arrayUnion, 
-  arrayRemove
+  runTransaction  // Добавляем runTransaction
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-// Конфигурация Firebase
+// Конфигурация Firebase остается без изменений
 const firebaseConfig = {
   apiKey: "AIzaSyASzuGAuC5ME8rCV6ZRTDDlIdQYXZSekiw",
   authDomain: "neiborssprint.firebaseapp.com",
@@ -36,7 +35,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Функция для сохранения результата игры
+// Функция для сохранения результата игры (без изменений)
 async function saveGameResult(playerName, score, time, difficulty) {
   try {
     await addDoc(collection(db, "gameResults"), {
@@ -54,9 +53,7 @@ async function saveGameResult(playerName, score, time, difficulty) {
   }
 }
 
-
-
-// Функция для получения рекордов по сложности
+// Функция для получения рекордов (без изменений)
 async function getHighscores(difficulty, limitCount = 5) {
   try {
     const q = query(
@@ -71,7 +68,6 @@ async function getHighscores(difficulty, limitCount = 5) {
     const results = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      // Преобразуем Firestore timestamp в обычную дату, если нужно
       const timestamp = data.timestamp ? data.timestamp.toDate().getTime() : Date.now();
       results.push({ 
         id: doc.id, 
@@ -88,7 +84,7 @@ async function getHighscores(difficulty, limitCount = 5) {
   }
 }
 
-// Функции для работы с сессиями
+// Функции для работы с сессиями (без изменений)
 async function createSession(sessionId, playerName, difficulty) {
   try {
     const sessionRef = doc(db, "sessions", sessionId);
@@ -115,6 +111,12 @@ async function createSession(sessionId, playerName, difficulty) {
 
 async function joinSession(sessionId, playerName) {
   try {
+    const session = await getSession(sessionId);
+    if (session && session.players.find(p => p.name === playerName)) {
+      console.log("Игрок уже в сессии");
+      return true;
+    }
+    
     const sessionRef = doc(db, "sessions", sessionId);
     await updateDoc(sessionRef, {
       players: arrayUnion({
@@ -151,30 +153,26 @@ function subscribeToSession(sessionId, callback) {
   });
 }
 
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ - используем транзакции для надежности
 async function updatePlayerProgress(sessionId, playerName, progress, score, answers) {
   try {
     const sessionRef = doc(db, "sessions", sessionId);
     
-    // Используем атомарную операцию для обновления конкретного игрока
-    await updateDoc(sessionRef, {
-      players: arrayUnion({
-        name: playerName,
-        progress: progress,
-        score: score,
-        answers: answers
-      })
-    });
-    
-    // Удаляем старую запись игрока
-    const session = await getSession(sessionId);
-    if (session && session.players) {
-      const oldPlayerData = session.players.find(p => p.name === playerName);
-      if (oldPlayerData) {
-        await updateDoc(sessionRef, {
-          players: arrayRemove(oldPlayerData)
-        });
+    await runTransaction(db, async (transaction) => {
+      const sessionDoc = await transaction.get(sessionRef);
+      if (!sessionDoc.exists()) {
+        throw new Error("Сессия не существует");
       }
-    }
+      
+      const sessionData = sessionDoc.data();
+      const updatedPlayers = sessionData.players.map(player => 
+        player.name === playerName 
+          ? { ...player, progress, score, answers }
+          : player
+      );
+      
+      transaction.update(sessionRef, { players: updatedPlayers });
+    });
     
     return true;
   } catch (error) {
@@ -208,7 +206,7 @@ async function endSession(sessionId) {
   }
 }
 
-// Экспорт новых функций
+// Экспорт функций
 export { 
   app,
   db,

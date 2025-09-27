@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.61';
-const BUILD_TIME = '27.09.2025 02:18'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.62';
+const BUILD_TIME = '27.09.2025 03:18'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
@@ -301,13 +301,13 @@ async function checkAnswer() {
     messageElement.textContent = `Неверно! Правильный ответ: ${currentQ.correctAnswer}`;
   }
   
-  // Обновляем прогресс в сессии
+  // Обновляем прогресс в сессии с обработкой ошибок
   if (currentSessionId) {
     try {
       await updatePlayerProgress(
         currentSessionId, 
         playerName, 
-        currentQuestion, // Уже увеличенный на 1
+        currentQuestion, // Текущий вопрос (уже отвеченный)
         score, 
         answersHistory
       );
