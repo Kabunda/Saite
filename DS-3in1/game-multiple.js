@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.64';
-const BUILD_TIME = '27.09.2025 11:44'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.65';
+const BUILD_TIME = '27.09.2025 13:44'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
@@ -30,7 +30,7 @@ import {
 let startTime;
 let timerInterval;
 let currentQuestion = 1;
-let score = 0;
+
 let answersHistory = [];
 let playerName = "";
 let gameDifficulty = "midle";
@@ -540,7 +540,7 @@ function initGame() {
     // Пытаемся присоединиться к сессии или создать новую
     // currentSessionId = playerName; // Используем имя как идентификатор сессии
     // Риск конфликта имен. Лучше генерировать случайный ID:
-    currentSessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    currentSessionId = playerName + Math.random().toString(36).substring(2, 8).toUpperCase();
 
 
     const existingSession = await getSession(currentSessionId);
@@ -623,9 +623,9 @@ function initGame() {
 function startMultiplayerGame(session) {
   questions = generateQuestions(session.difficulty);
   currentQuestion = 1;
-  score = 0;
+
   answersHistory = [];
-  scoreElement.textContent = score;
+
   isGameActive = true;
   
   sessionScreen.classList.add('hidden');
