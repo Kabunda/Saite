@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.63';
-const BUILD_TIME = '27.09.2025 11:18'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.64';
+const BUILD_TIME = '27.09.2025 11:44'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
@@ -53,7 +53,7 @@ const startBtn = document.getElementById('startBtn');
 const checkBtn = document.getElementById('checkBtn');
 const resetBtn = document.getElementById('resetBtn');
 const questionCounterElement = document.getElementById('questionCounter');
-const mainTmer = document.getElementById('mainTmer');
+const mainTimer = document.getElementById('mainTimer');
 const messageElement = document.getElementById('message');
 const finalTimeElement = document.getElementById('finalTime');
 const answersListElement = document.getElementById('answersList');
@@ -336,7 +336,7 @@ function startTimer() {
 function updateTimer() {
   const currentTime = new Date();
   const elapsedTime = Math.floor((currentTime - startTime) / 1000);
-  mainTmer = `${formatTime(elapsedTime)}`;
+  mainTimer = `${formatTime(elapsedTime)}`;
 }
 
 // Форматирование времени в мм:сс
