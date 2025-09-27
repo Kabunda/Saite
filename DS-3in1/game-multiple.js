@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.65';
-const BUILD_TIME = '27.09.2025 13:44'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.66';
+const BUILD_TIME = '27.09.2025 14:44'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
@@ -296,8 +296,7 @@ async function checkAnswer() {
   answersHistory.push(answerData);
   
   if (isCorrect) {
-    score++;
-    scoreElement.textContent = score;
+
     messageElement.textContent = "Верно!";
   } else {
     messageElement.textContent = `Неверно! Правильный ответ: ${currentQ.correctAnswer}`;
@@ -310,7 +309,6 @@ async function checkAnswer() {
         currentSessionId, 
         playerName, 
         currentQuestion, // Текущий вопрос (уже отвеченный)
-        score, 
         answersHistory
       );
     } catch (error) {
@@ -336,7 +334,7 @@ function startTimer() {
 function updateTimer() {
   const currentTime = new Date();
   const elapsedTime = Math.floor((currentTime - startTime) / 1000);
-  mainTimer = `${formatTime(elapsedTime)}`;
+  mainTimer.textContent = formatTime(elapsedTime);
 }
 
 // Форматирование времени в мм:сс
@@ -385,7 +383,7 @@ async function endGame() {
   
   // Сохраняем результат в Firebase
   try {
-    const saveSuccess = await saveGameResult(playerName, score, totalSeconds, gameDifficulty);
+    const saveSuccess = await saveGameResult(playerName, totalSeconds, gameDifficulty);
     if (!saveSuccess) {
       showError("Не удалось сохранить результат. Проверьте подключение к интернету.");
     }
