@@ -1,8 +1,8 @@
 // game-multiple.js
 
 // В начало game-multiple.js добавьте
-const APP_VERSION = '0.62';
-const BUILD_TIME = '27.09.2025 03:18'; // Обновляйте вручную при каждом изменении
+const APP_VERSION = '0.63';
+const BUILD_TIME = '27.09.2025 11:18'; // Обновляйте вручную при каждом изменении
 
 // И обновите функцию displayVersion
 function displayVersion() {
@@ -52,16 +52,15 @@ const playerNameInput = document.getElementById('playerName');
 const startBtn = document.getElementById('startBtn');
 const checkBtn = document.getElementById('checkBtn');
 const resetBtn = document.getElementById('resetBtn');
-const levelElement = document.getElementById('level');
-const scoreElement = document.getElementById('score');
 const questionCounterElement = document.getElementById('questionCounter');
-const gameContent = document.getElementById('gameContent');
+const mainTmer = document.getElementById('mainTmer');
 const messageElement = document.getElementById('message');
 const finalTimeElement = document.getElementById('finalTime');
 const answersListElement = document.getElementById('answersList');
 const highscoreListElement = document.getElementById('highscoreList');
 const nameErrorElement = document.getElementById('nameError');
 const questionText = document.getElementById('questionText');
+const answerInput = document.getElementById('answerInput');
 
 // Добавляем элементы DOM для многопользовательского режима
 const sessionScreen = document.getElementById('sessionScreen');
@@ -257,10 +256,11 @@ function displayQuestion() {
     return;
   }
   
+  console.log ("отображение вопроса");
+
   const question = questions[currentQuestion - 1];
-  levelElement.textContent = currentQuestion;
   questionCounterElement.textContent = `${currentQuestion}/20`;
-  if (questionText) questionText.textContent = question.question;
+  questionText.textContent = question.question;
 
   // Фокус на поле ввода
   setTimeout(() => {
@@ -271,7 +271,9 @@ function displayQuestion() {
 
 // Модифицируем функцию checkAnswer() для многопользовательского режима
 async function checkAnswer() {
-  const answerInput = document.getElementById('answerInput');
+
+  console.log ("проверка ответа");
+
   const userAnswer = parseInt(answerInput.value);
   
   if (isNaN(userAnswer)) {
@@ -320,11 +322,7 @@ async function checkAnswer() {
   
   setTimeout(() => {
     messageElement.textContent = "";
-    if (currentQuestion > 20) {
-      endGame();
-    } else {
-      displayQuestion();
-    }
+    displayQuestion();
   }, 1000);
 }
 
@@ -338,7 +336,7 @@ function startTimer() {
 function updateTimer() {
   const currentTime = new Date();
   const elapsedTime = Math.floor((currentTime - startTime) / 1000);
-  document.getElementById('nazvanie').textContent = `Время: ${formatTime(elapsedTime)}`;
+  mainTmer = `${formatTime(elapsedTime)}`;
 }
 
 // Форматирование времени в мм:сс
