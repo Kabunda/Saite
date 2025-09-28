@@ -85,7 +85,7 @@ async function getHighscores(difficulty, limitCount = 5) {
 }
 
 // Функции для работы с сессиями (без изменений)
-async function createSession(sessionId, playerName, difficulty) {
+async function createSession(sessionId, playerName, questions) {
   try {
     const sessionRef = doc(db, "sessions", sessionId);
     await setDoc(sessionRef, {
@@ -96,7 +96,7 @@ async function createSession(sessionId, playerName, difficulty) {
         score: 0,
         answers: []
       }],
-      difficulty: difficulty,
+      questions: questions,
       status: "waiting",
       createdAt: serverTimestamp(),
       startTime: null,

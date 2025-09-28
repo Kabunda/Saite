@@ -553,7 +553,7 @@ function initGame() {
       isHost = false;
     } else {
       // Создаем новую сессию
-      const success = await createSession(currentSessionId, playerName, gameDifficulty);
+      const success = await createSession(currentSessionId, playerName, generateQuestions("all"));
       if (!success) {
         showError("Не удалось создать сессию");
         return;
