@@ -1,6 +1,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyASzuGAuC5ME8rCV6ZRTDDlIdQYXZSekiw",
   authDomain: "neiborssprint.firebaseapp.com",
+  databaseURL: "https://neiborssprint-default-rtdb.europe-west1.firebasedatabase.app/",
   projectId: "neiborssprint",
   storageBucket: "neiborssprint.firebasestorage.app",
   messagingSenderId: "111998329250",
