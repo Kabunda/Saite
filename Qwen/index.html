@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Сетевая игра</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="lobby">
+        <h2>Введите ID комнаты:</h2>
+        <input type="text" id="room-id" placeholder="ID комнаты">
+        <button id="join-btn">Присоединиться</button>
+        <button id="create-btn">Создать комнату</button>
+    </div>
+
+    <div id="game" style="display:none;">
+        <h2>Комната: <span id="current-room"></span></h2>
+        <div id="examples-container"></div>
+        <div id="progress-container"></div>
+        <div id="results" style="display:none;">
+            <h3>Результаты:</h3>
+            <ul id="results-list"></ul>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/game-logic.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

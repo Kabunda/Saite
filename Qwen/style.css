@@ -1,0 +1,32 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+#lobby, #game {
+    max-width: 800px;
+    margin: auto;
+}
+
+#examples-container {
+    margin: 20px 0;
+}
+
+.example {
+    margin: 10px 0;
+}
+
+.example input {
+    width: 60px;
+}
+
+#progress-container {
+    margin-top: 20px;
+}
+
+.player-progress {
+    padding: 5px;
+    border: 1px solid #ccc;
+    margin: 5px 0;
+}
