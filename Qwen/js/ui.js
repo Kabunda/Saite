@@ -17,7 +17,7 @@ class UI {
                 <input type="number" id="answer-${idx}" data-id="${ex.id}" placeholder="Ответ">
             `;
             div.querySelector('input').addEventListener('change', function() {
-                gameLogic.submitAnswer(ex.id, parseInt(this.value));
+                gameLogic.submitAnswer(parseInt(this.dataset.id), parseInt(this.value));
             });
             container.appendChild(div);
         });
@@ -26,18 +26,27 @@ class UI {
     static updateProgress(players) {
         const container = document.getElementById('progress-container');
         container.innerHTML = '';
-        for (let pid in players) {
-            const player = players[pid];
+        for (let name in players) {
+            const player = players[name];
             const div = document.createElement('div');
             div.className = 'player-progress';
-            div.textContent = `Игрок ${pid}: ${player.answers ? Object.keys(player.answers).length : 0} из ${gameLogic.examples.length}`;
+            const count = player.answers ? Object.keys(player.answers).length : 0;
+            div.textContent = `${name}: ${count} из ${gameLogic.examples.length}`;
             container.appendChild(div);
         }
+    }
+
+    static updateTimer(timeMs) {
+        const seconds = Math.floor(timeMs / 1000);
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        const display = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        document.getElementById('time-display').textContent = display;
     }
 
     static showResults(winner) {
         document.getElementById('results').style.display = 'block';
         const list = document.getElementById('results-list');
-        list.innerHTML = `<li>Победитель: Игрок ${winner}</li>`;
+        list.innerHTML = `<li>Победитель: ${winner}</li>`;
     }
 }
