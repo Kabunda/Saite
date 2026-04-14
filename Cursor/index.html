@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тренажер умножения</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <section id="menuScreen" class="screen">
+      <h1>Тренажер умножения</h1>
+      <p class="subtitle">20 вопросов: 5, 8, 11, 17, 35 × 2..20</p>
+
+      <div class="menu-panel">
+        <p id="playerInfo" class="player-info"></p>
+        <p id="connectStatus" class="status-text"></p>
+        <p id="networkStatus" class="status-text"></p>
+      </div>
+      <div class="menu-panel">
+        <p class="player-info">Настройки</p>
+        <label class="toggle-row">
+          <input id="soundToggle" type="checkbox" />
+          <span>Звук</span>
+        </label>
+        <label class="toggle-row">
+          <input id="vibrationToggle" type="checkbox" />
+          <span>Вибрация</span>
+        </label>
+      </div>
+
+      <div class="menu-buttons">
+        <button id="startBtn">Начать игру</button>
+        <button id="connectBtn" class="secondary">Подключить</button>
+        <button id="renameBtn" class="secondary">Сменить имя</button>
+        <button id="networkBtn" class="secondary">Сетевой режим</button>
+      </div>
+
+      <section class="leaderboard">
+        <h2>Топ игроков (лучшее время)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Игрок</th>
+              <th>Время</th>
+              <th>Очки</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <tr>
+              <td colspan="4">Пока нет результатов.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <section id="gameScreen" class="screen hidden">
+      <div class="status-row">
+        <div class="progress-wrap" aria-label="Прогресс вопросов">
+          <div id="progressTrack" class="progress-track"></div>
+        </div>
+        <span id="timer">Время: 00:00</span>
+      </div>
+      <div class="game-meta">
+        <span id="streak">Серия: 0</span>
+        <div class="game-actions">
+          <button id="pauseBtn" class="mini-btn secondary">Пауза</button>
+          <button id="backBtn" class="mini-btn secondary">В меню</button>
+        </div>
+      </div>
+      <p id="questionText" class="question">5 × 2 = ?</p>
+      <p id="answerText" class="answer">_</p>
+      <p id="feedback" class="feedback"></p>
+
+      <div class="keypad" id="keypad">
+        <div class="keypad-main">
+          <div class="digit-grid">
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+            <button class="key key-zero" data-key="0">0</button>
+          </div>
+          <div class="action-grid">
+            <button class="key key-action" data-key="del">⌫</button>
+            <button class="key key-action" data-key="clear">C</button>
+          </div>
+        </div>
+        <button class="key key-confirm key-ok-side" data-key="enter">OK</button>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen hidden">
+      <h2>Игра завершена</h2>
+      <p id="resultSummary"></p>
+      <div class="answers-panel">
+        <h3>Все вопросы и ответы</h3>
+        <ul id="answersList" class="answers-list"></ul>
+      </div>
+      <div class="menu-buttons">
+        <button id="playAgainBtn">Играть снова</button>
+        <button id="toMenuBtn" class="secondary">В главное меню</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
