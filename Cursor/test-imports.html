@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест импортов модулей</title>
+</head>
+<body>
+  <h1>Тестирование модульной структуры</h1>
+  <div id="output"></div>
+  
+  <script type="module">
+    const output = document.getElementById('output');
+    
+    async function testImports() {
+      const tests = [
+        { name: 'Константы', module: './src/scripts/utils/constants.js' },
+        { name: 'Вспомогательные функции', module: './src/scripts/utils/helpers.js' },
+        { name: 'Сервис хранилища', module: './src/scripts/services/storage.js' },
+        { name: 'Сервис аудио', module: './src/scripts/services/audio.js' },
+        { name: 'Ядро игры', module: './src/scripts/game/core.js' },
+        { name: 'UI менеджер', module: './src/scripts/ui/manager.js' },
+        { name: 'Модальные окна', module: './src/scripts/ui/modals.js' },
+        { name: 'Главный модуль', module: './src/scripts/main.js' }
+      ];
+      
+      output.innerHTML = '<h2>Результаты тестирования импортов:</h2><ul>';
+      
+      for (const test of tests) {
+        try {
+          const module = await import(test.module);
+          output.innerHTML += `<li>✅ ${test.name} - успешно</li>`;
+          console.log(`✅ ${test.name}:`, Object.keys(module));
+        } catch (error) {
+          output.innerHTML += `<li>❌ ${test.name} - ошибка: ${error.message}</li>`;
+          console.error(`❌ ${test.name}:`, error);
+        }
+      }
+      
+      output.innerHTML += '</ul>';
+      
+      // Тестируем создание экземпляров
+      try {
+        const { GameCore } = await import('./src/scripts/game/core.js');
+        const game = new GameCore();
+        output.innerHTML += `<p>✅ Создание GameCore - успешно</p>`;
+        console.log('✅ GameCore создан:', game);
+      } catch (error) {
+        output.innerHTML += `<p>❌ Создание GameCore - ошибка: ${error.message}</p>`;
+        console.error('❌ GameCore:', error);
+      }
+      
+      try {
+        const { StorageService } = await import('./src/scripts/services/storage.js');
+        const name = StorageService.getPlayerName();
+        output.innerHTML += `<p>✅ StorageService.getPlayerName() = "${name}"</p>`;
+      } catch (error) {
+        output.innerHTML += `<p>❌ StorageService - ошибка: ${error.message}</p>`;
+      }
+    }
+    
+    testImports().catch(console.error);
+  </script>
+</body>
+</html>
