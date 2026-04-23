@@ -37,9 +37,89 @@ class MultiplicationTrainer {
     // Инициализируем обработчики событий
     this.setupEventListeners();
     
-    // Устанавливаем имя игрока по умолчанию если не установлено
-    if (!localStorage.getItem('mt_player_name')) {
-      StorageService.setPlayerName('Игрок');
+    // Проверяем, установлено ли имя игрока, если нет - запрашиваем
+    setTimeout(() => {
+      console.log('Запуск checkPlayerName после задержки');
+      this.checkPlayerName();
+    }, 500);
+  }
+
+  /**
+   * Проверяет, установлено ли имя игрока, и запрашивает его если нет
+   */
+  async checkPlayerName() {
+    console.log('checkPlayerName вызван');
+    const currentName = StorageService.getPlayerName();
+    console.log('Текущее имя:', currentName);
+    if (!currentName.trim()) {
+      console.log('Имя не установлено, запрашиваем...');
+      // Блокируем кнопку "Начать игру" пока имя не введено
+      this.ui.disableStartButton();
+      await this.requestPlayerName();
+    } else {
+      console.log('Имя уже установлено');
+      // Имя уже установлено - убедимся, что кнопка разблокирована
+      this.ui.enableStartButton();
+    }
+  }
+
+  /**
+   * Запрашивает имя игрока через модальное окно (принудительно)
+   */
+  async requestPlayerName() {
+    console.log('requestPlayerName вызван');
+    try {
+      const { ModalService } = await import('./ui/modals.js');
+      console.log('ModalService загружен');
+      
+      const newName = await ModalService.showPrompt({
+        title: 'Введите имя игрока',
+        message: 'Для начала игры необходимо указать ваше имя.',
+        defaultValue: '',
+        placeholder: 'Ваше имя',
+        confirmText: 'Сохранить',
+        cancelText: 'Отмена',
+        validate: (value) => {
+          if (!value.trim()) {
+            return 'Имя не может быть пустым.';
+          }
+          if (value.length > 50) {
+            return 'Имя слишком длинное (максимум 50 символов).';
+          }
+          return null;
+        }
+      });
+      console.log('Пользователь ввел имя:', newName);
+      
+      if (newName === null) {
+        console.log('Пользователь отменил ввод, повторяем запрос');
+        // Пользователь отменил - повторяем запрос
+        return this.requestPlayerName();
+      }
+      
+      StorageService.setPlayerName(newName);
+      this.ui.updateMenuStatus();
+      // Разблокируем кнопку "Начать игру"
+      this.ui.enableStartButton();
+      console.log('Имя сохранено, кнопка разблокирована');
+      
+      ModalService.showNotification({
+        message: `Имя установлено: ${newName}`,
+        type: 'success',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Ошибка при запросе имени:', error);
+      // Fallback на стандартный prompt
+      const newName = prompt('Для начала игры необходимо указать ваше имя:', '');
+      if (newName !== null && newName.trim()) {
+        StorageService.setPlayerName(newName.trim());
+        this.ui.updateMenuStatus();
+        this.ui.enableStartButton();
+      } else {
+        // Если пользователь отменил, повторяем запрос
+        this.requestPlayerName();
+      }
     }
   }
 
@@ -474,6 +554,8 @@ class MultiplicationTrainer {
       
       StorageService.setPlayerName(newName);
       this.ui.updateMenuStatus();
+      // Убедимся, что кнопка "Начать игру" разблокирована
+      this.ui.enableStartButton();
       
       // Используем уведомление через ModalService
       ModalService.showNotification({
@@ -489,6 +571,7 @@ class MultiplicationTrainer {
       if (newName !== null && newName.trim()) {
         StorageService.setPlayerName(newName.trim());
         this.ui.updateMenuStatus();
+        this.ui.enableStartButton();
         showNotification(`Имя изменено на: ${newName.trim()}`, 'success');
       }
     }

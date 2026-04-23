@@ -66,8 +66,7 @@ export class ModalService {
       
       const confirmBtn = createElement('button', {
         className: 'modal-btn modal-btn-primary',
-        type: 'button',
-        disabled: !defaultValue.trim()
+        type: 'button'
       }, confirmText);
       addAriaAttributes(confirmBtn, {
         'aria-label': 'Подтвердить ввод'
@@ -75,19 +74,24 @@ export class ModalService {
       
       // Обработчики событий
       const handleConfirm = () => {
+        console.log('handleConfirm вызван, значение:', input.value);
         const value = input.value.trim();
         if (validate) {
+          console.log('Валидация...');
           const error = validate(value);
           if (error) {
+            console.log('Ошибка валидации:', error);
             alert(error); // Временное решение, можно улучшить
             return;
           }
         }
+        console.log('Подтверждение, cleanup и resolve');
         cleanup();
         resolve(value);
       };
       
       const handleCancel = () => {
+        console.log('handleCancel вызван');
         cleanup();
         resolve(null);
       };
@@ -95,20 +99,35 @@ export class ModalService {
       const handleKeyDown = (e) => {
         if (e.key === 'Escape') {
           handleCancel();
-        } else if (e.key === 'Enter' && input.value.trim()) {
+        } else if (e.key === 'Enter') {
           handleConfirm();
         }
       };
       
       const handleInput = () => {
+        console.log('handleInput вызван, значение:', input.value, 'trim:', input.value.trim());
         confirmBtn.disabled = !input.value.trim();
+        console.log('confirmBtn disabled после обновления:', confirmBtn.disabled);
       };
       
       // Назначаем обработчики
+      console.log('Добавление обработчиков событий');
       confirmBtn.addEventListener('click', handleConfirm);
       cancelBtn.addEventListener('click', handleCancel);
       input.addEventListener('input', handleInput);
+      input.addEventListener('keyup', handleInput);
+      input.addEventListener('change', handleInput);
       document.addEventListener('keydown', handleKeyDown);
+      
+      // Обработчик клика по overlay для отмены (если клик вне modal)
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          console.log('Клик по overlay, отмена');
+          handleCancel();
+        }
+      });
+      
+      console.log('Обработчики добавлены, confirmBtn disabled:', confirmBtn.disabled);
       
       // Функция очистки
       const cleanup = () => {
@@ -127,6 +146,10 @@ export class ModalService {
       
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
+      console.log('Модальное окно создано, overlay добавлен в DOM', overlay);
+      console.log('Overlay размеры:', overlay.offsetWidth, 'x', overlay.offsetHeight);
+      console.log('Overlay стиль display:', overlay.style.display);
+      console.log('Overlay computed style:', window.getComputedStyle(overlay).display);
       
       // Фокусируемся на поле ввода
       setTimeout(() => input.focus(), 10);

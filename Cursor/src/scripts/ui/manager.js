@@ -88,13 +88,35 @@ export class UIManager {
     const isConnected = StorageService.isConnected();
     const isNetworkMode = StorageService.isNetworkMode();
 
-    this.elements.playerInfo.textContent = `Игрок: ${playerName}`;
+    this.elements.playerInfo.textContent = playerName
+      ? `Игрок: ${playerName}`
+      : "Игрок: (не установлено)";
     this.elements.connectStatus.textContent = isConnected
       ? "Подключение: активно"
       : "Подключение: отключено";
     this.elements.networkStatus.textContent = isNetworkMode
       ? "Сетевой режим: включен"
       : "Сетевой режим: выключен";
+  }
+
+  /**
+   * Блокирует кнопку "Начать игру"
+   */
+  disableStartButton() {
+    if (this.elements.startBtn) {
+      this.elements.startBtn.disabled = true;
+      this.elements.startBtn.setAttribute('aria-disabled', 'true');
+    }
+  }
+
+  /**
+   * Разблокирует кнопку "Начать игру"
+   */
+  enableStartButton() {
+    if (this.elements.startBtn) {
+      this.elements.startBtn.disabled = false;
+      this.elements.startBtn.setAttribute('aria-disabled', 'false');
+    }
   }
 
   /**

@@ -8,11 +8,11 @@ import { firebaseService } from './firebase.js';
 export class StorageService {
   /**
    * Получает имя игрока
-   * @returns {string} имя игрока
+   * @returns {string} имя игрока (может быть пустой строкой если не установлено)
    */
   static getPlayerName() {
     const value = localStorage.getItem(STORAGE_KEYS.playerName);
-    return value && value.trim() ? value : "Игрок";
+    return value || "";
   }
 
   /**
