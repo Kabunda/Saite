@@ -73,5 +73,7 @@ export const DOM_IDS = {
   keypad: "keypad",
   streak: "streak",
   resultSummary: "resultSummary",
-  answersList: "answersList"
+  answersList: "answersList",
+  networkProgress: "networkProgress",
+  participantsList: "participantsList"
 };

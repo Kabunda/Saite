@@ -50,6 +50,10 @@ export class UIManager {
     this.elements.streak = document.getElementById(DOM_IDS.streak);
     this.elements.resultSummary = document.getElementById(DOM_IDS.resultSummary);
     this.elements.answersList = document.getElementById(DOM_IDS.answersList);
+    
+    // Сетевые элементы
+    this.elements.networkProgress = document.getElementById(DOM_IDS.networkProgress);
+    this.elements.participantsList = document.getElementById(DOM_IDS.participantsList);
   }
 
   /**
@@ -384,5 +388,99 @@ export class UIManager {
         'role': 'button'
       });
     });
+  }
+
+  /**
+   * Показывает прогресс участников сетевой игры
+   */
+  showNetworkProgress() {
+    if (this.elements.networkProgress) {
+      this.elements.networkProgress.classList.remove(CSS_CLASSES.hidden);
+    }
+  }
+
+  /**
+   * Скрывает прогресс участников сетевой игры
+   */
+  hideNetworkProgress() {
+    if (this.elements.networkProgress) {
+      this.elements.networkProgress.classList.add(CSS_CLASSES.hidden);
+    }
+  }
+
+  /**
+   * Обновляет отображение прогресса участников
+   * @param {Object} participants - объект участников
+   */
+  updateNetworkProgress(participants) {
+    if (!this.elements.participantsList) return;
+
+    // Очищаем список
+    this.elements.participantsList.innerHTML = '';
+
+    // Сортируем участников по прогрессу (убывание)
+    const sortedParticipants = Object.values(participants).sort((a, b) => {
+      if (a.finished && !b.finished) return -1;
+      if (!a.finished && b.finished) return 1;
+      return (b.progress || 0) - (a.progress || 0);
+    });
+
+    // Ограничиваем количество участников (макс. 5)
+    const limitedParticipants = sortedParticipants.slice(0, 5);
+
+    // Создаем элементы для каждого участника
+    limitedParticipants.forEach(participant => {
+      const participantEl = document.createElement('div');
+      participantEl.className = 'participant-item';
+      
+      const nameEl = document.createElement('span');
+      nameEl.className = 'participant-name';
+      nameEl.textContent = participant.name || 'Участник';
+      
+      const progressContainer = document.createElement('div');
+      progressContainer.className = 'participant-progress';
+      
+      const progressBar = document.createElement('div');
+      progressBar.className = 'progress-bar';
+      
+      const progressFill = document.createElement('div');
+      progressFill.className = 'progress-fill';
+      progressFill.style.width = `${participant.progress || 0}%`;
+      
+      progressBar.appendChild(progressFill);
+      progressContainer.appendChild(progressBar);
+      
+      const scoreEl = document.createElement('span');
+      scoreEl.className = 'participant-score';
+      scoreEl.textContent = participant.score || 0;
+      
+      const statusEl = document.createElement('span');
+      statusEl.className = `participant-status ${participant.finished ? 'finished' : ''}`;
+      statusEl.textContent = participant.finished ? 'Завершил' : 'В игре';
+      
+      participantEl.appendChild(nameEl);
+      participantEl.appendChild(progressContainer);
+      participantEl.appendChild(scoreEl);
+      participantEl.appendChild(statusEl);
+      
+      this.elements.participantsList.appendChild(participantEl);
+    });
+
+    // Если участников нет, показываем сообщение
+    if (limitedParticipants.length === 0) {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'participant-item';
+      emptyMsg.textContent = 'Нет других участников';
+      this.elements.participantsList.appendChild(emptyMsg);
+    }
+  }
+
+  /**
+   * Показывает результаты сетевой игры
+   * @param {Object} session - данные сессии
+   */
+  showNetworkResults(session) {
+    // TODO: реализовать отображение результатов сетевой игры
+    console.log('Результаты сетевой игры:', session);
   }
 }

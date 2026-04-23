@@ -251,4 +251,47 @@ export class GameCore {
   getAnswersLog() {
     return this.answersLog;
   }
+
+  /**
+   * Устанавливает вопросы для сетевой игры
+   * @param {Array} questions - массив вопросов
+   */
+  setNetworkQuestions(questions) {
+    // Преобразуем вопросы в формат, понятный игре
+    this.currentQuestions = questions.map(q => ({
+      a: parseInt(q.question.split('×')[0].trim()),
+      b: parseInt(q.question.split('×')[1].trim())
+    }));
+  }
+
+  /**
+   * Получает текущий прогресс в процентах
+   * @returns {number} прогресс от 0 до 100
+   */
+  getProgressPercent() {
+    if (this.currentQuestions.length === 0) return 0;
+    return Math.round((this.currentRound / this.currentQuestions.length) * 100);
+  }
+
+  /**
+   * Получает текущий счет
+   * @returns {number} счет
+   */
+  getScore() {
+    return this.score;
+  }
+
+  /**
+   * Обновляет прогресс для сетевой синхронизации
+   * @returns {Object} данные прогресса
+   */
+  getNetworkProgress() {
+    return {
+      progress: this.getProgressPercent(),
+      score: this.score,
+      currentRound: this.currentRound,
+      totalRounds: this.currentQuestions.length,
+      finished: this.currentRound >= this.currentQuestions.length
+    };
+  }
 }

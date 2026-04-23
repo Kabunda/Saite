@@ -73,6 +73,15 @@
           <button id="backBtn" class="mini-btn secondary" aria-label="Вернуться в главное меню">В меню</button>
         </div>
       </div>
+      
+      <!-- Сетевой прогресс участников -->
+      <div id="networkProgress" class="network-progress hidden" aria-label="Прогресс участников сетевой игры">
+        <h3>Участники</h3>
+        <div id="participantsList" class="participants-list">
+          <!-- Участники будут добавлены динамически -->
+        </div>
+      </div>
+      
       <p id="questionText" class="question" aria-live="polite" aria-label="Текущий вопрос">5 × 2 = ?</p>
       <p id="answerText" class="answer" aria-live="polite" aria-label="Ваш ответ">_</p>
       <p id="feedback" class="feedback" aria-live="assertive"></p>

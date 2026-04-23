@@ -2,6 +2,7 @@ import { GameCore } from './game/core.js';
 import { UIManager } from './ui/manager.js';
 import { StorageService } from './services/storage.js';
 import { audioService } from './services/audio.js';
+import { networkSessionService } from './services/network-session.js';
 import { DELAYS } from './utils/constants.js';
 import { requestFullscreenOnMobile, showNotification } from './utils/helpers.js';
 
@@ -14,6 +15,9 @@ class MultiplicationTrainer {
     this.ui = new UIManager();
     this.progressCells = [];
     this.timerInterval = null;
+    this.networkSession = networkSessionService;
+    this.isNetworkGame = false;
+    this.networkParticipants = {};
     
     this.init();
   }
@@ -192,6 +196,9 @@ class MultiplicationTrainer {
     // Обновляем UI
     this.updateGameUI();
     
+    // Обновляем сетевой прогресс
+    this.updateNetworkProgress();
+    
     // Переходим к следующему вопросу или завершаем игру
     setTimeout(() => {
       const gameFinished = this.game.nextQuestion();
@@ -215,6 +222,23 @@ class MultiplicationTrainer {
   }
 
   /**
+   * Обновляет сетевой прогресс
+   */
+  async updateNetworkProgress() {
+    if (!this.isNetworkGame) return;
+    
+    try {
+      const progress = this.game.getNetworkProgress();
+      await this.networkSession.updateProgress(
+        progress.progress,
+        progress.score
+      );
+    } catch (error) {
+      console.error('Ошибка обновления сетевого прогресса:', error);
+    }
+  }
+
+  /**
    * Завершает игру
    */
   async finishGame() {
@@ -223,6 +247,18 @@ class MultiplicationTrainer {
     // Получаем результаты (асинхронно)
     const result = await this.game.finishGame();
     const answersLog = this.game.getAnswersLog();
+    
+    // Обновляем сетевой прогресс при завершении
+    if (this.isNetworkGame) {
+      try {
+        await this.networkSession.finishGame(
+          result.score,
+          result.totalTimeSec
+        );
+      } catch (error) {
+        console.error('Ошибка завершения сетевой игры:', error);
+      }
+    }
     
     // Показываем экран результатов
     this.ui.showScreen('result');
@@ -275,7 +311,7 @@ class MultiplicationTrainer {
   /**
    * Переключает сетевой режим
    */
-  toggleNetworkMode() {
+  async toggleNetworkMode() {
     if (!StorageService.isConnected()) {
       showNotification('Сначала нажмите «Подключить».', 'warning');
       return;
@@ -285,10 +321,125 @@ class MultiplicationTrainer {
     StorageService.setNetworkMode(newState);
     this.ui.updateMenuStatus();
     
+    if (newState) {
+      // Включаем сетевой режим - ищем или создаем сессию
+      await this.startNetworkSession();
+    } else {
+      // Выключаем сетевой режим - покидаем сессию
+      await this.leaveNetworkSession();
+    }
+    
     showNotification(
       newState ? 'Сетевой режим включен' : 'Сетевой режим выключен',
       'info'
     );
+  }
+
+  /**
+   * Запускает сетевую сессию (поиск или создание)
+   */
+  async startNetworkSession() {
+    try {
+      // Ищем активные сессии
+      const activeSessions = await this.networkSession.findActiveSessions();
+      
+      if (activeSessions.length > 0) {
+        // Присоединяемся к первой доступной сессии
+        const session = activeSessions[0];
+        const joined = await this.networkSession.joinSession(session.id);
+        
+        if (joined) {
+          this.isNetworkGame = true;
+          this.setupNetworkListeners();
+          showNotification(`Присоединились к сессии ${session.hostName}`, 'success');
+        } else {
+          // Если не удалось присоединиться, создаем свою сессию
+          await this.createNetworkSession();
+        }
+      } else {
+        // Создаем новую сессию
+        await this.createNetworkSession();
+      }
+    } catch (error) {
+      console.error('Ошибка запуска сетевой сессии:', error);
+      showNotification('Ошибка подключения к сетевой сессии', 'error');
+    }
+  }
+
+  /**
+   * Создает новую сетевую сессию
+   */
+  async createNetworkSession() {
+    try {
+      const sessionId = await this.networkSession.createSession();
+      this.isNetworkGame = true;
+      this.setupNetworkListeners();
+      showNotification('Создана новая сессия. Ожидание участников...', 'info');
+    } catch (error) {
+      console.error('Ошибка создания сессии:', error);
+      showNotification('Ошибка создания сессии', 'error');
+    }
+  }
+
+  /**
+   * Покидает сетевую сессию
+   */
+  async leaveNetworkSession() {
+    try {
+      await this.networkSession.leaveSession();
+      this.isNetworkGame = false;
+      this.networkParticipants = {};
+      this.ui.hideNetworkProgress();
+    } catch (error) {
+      console.error('Ошибка выхода из сессии:', error);
+    }
+  }
+
+  /**
+   * Настраивает слушатели сетевых событий
+   */
+  setupNetworkListeners() {
+    // Обновление участников
+    this.networkSession.onParticipantsChange = (participants) => {
+      this.networkParticipants = participants;
+      this.ui.updateNetworkProgress(participants);
+    };
+
+    // Начало игры
+    this.networkSession.onGameStart = (questions) => {
+      showNotification('Игра началась!', 'success');
+      // TODO: синхронизировать вопросы и начать игру
+      this.startNetworkGame(questions);
+    };
+
+    // Обновление состояния сессии
+    this.networkSession.onSessionUpdate = (session) => {
+      if (session && session.status === 'finished') {
+        this.finishNetworkGame(session);
+      }
+    };
+  }
+
+  /**
+   * Начинает сетевую игру
+   */
+  startNetworkGame(questions) {
+    // Устанавливаем вопросы для игры
+    this.game.setNetworkQuestions(questions);
+    
+    // Начинаем игру
+    this.startGame();
+    
+    // Обновляем UI для сетевого режима
+    this.ui.showNetworkProgress();
+  }
+
+  /**
+   * Завершает сетевую игру
+   */
+  finishNetworkGame(session) {
+    // Показываем результаты всех участников
+    this.ui.showNetworkResults(session);
   }
 
   /**

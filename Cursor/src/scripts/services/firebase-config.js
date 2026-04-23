@@ -17,5 +17,7 @@ export const firebaseConfig = {
 export const DB_PATHS = {
   RESULTS: 'gameResults',
   LEADERBOARD: 'leaderboard',
-  USERS: 'users'
+  USERS: 'users',
+  SESSIONS: 'sessions',
+  ACTIVE_SESSIONS: 'activeSessions'
 };
