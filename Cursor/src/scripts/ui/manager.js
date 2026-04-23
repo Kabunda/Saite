@@ -96,30 +96,49 @@ export class UIManager {
   /**
    * Отображает таблицу лидеров
    */
-  renderLeaderboard() {
-    const items = StorageService.getLeaderboard();
+  async renderLeaderboard() {
     const tbody = this.elements.leaderboardBody;
-
-    if (!items.length) {
+    
+    // Показываем индикатор загрузки, если есть сетевой режим
+    if (StorageService.isNetworkMode() && StorageService.isConnected()) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="4">Пока нет результатов.</td>
+          <td colspan="4">Загрузка таблицы лидеров...</td>
         </tr>
       `;
-      return;
     }
 
-    tbody.innerHTML = "";
-    items.forEach((item, index) => {
-      const row = createElement('tr', {}, '');
-      row.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${item.playerName}</td>
-        <td>${item.totalTimeSec.toFixed(1)} сек</td>
-        <td>${item.score}/${item.rounds}</td>
+    try {
+      const items = await StorageService.getLeaderboard();
+
+      if (!items.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">Пока нет результатов.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = "";
+      items.forEach((item, index) => {
+        const row = createElement('tr', {}, '');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.playerName}</td>
+          <td>${item.totalTimeSec.toFixed(1)} сек</td>
+          <td>${item.score}/${item.rounds}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (error) {
+      console.error('Ошибка загрузки таблицы лидеров:', error);
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4">Не удалось загрузить таблицу лидеров.</td>
+        </tr>
       `;
-      tbody.appendChild(row);
-    });
+    }
   }
 
   /**

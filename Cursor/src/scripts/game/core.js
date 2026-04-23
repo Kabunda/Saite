@@ -120,9 +120,9 @@ export class GameCore {
 
   /**
    * Завершает игру и возвращает результат
-   * @returns {Object} результат игры
+   * @returns {Promise<Object>} результат игры
    */
-  finishGame() {
+  async finishGame() {
     const runningPart = this.isPaused ? 0 : Date.now() - this.roundStartAt;
     const totalTimeSec = (this.elapsedMs + runningPart) / 1000;
     const playerName = StorageService.getPlayerName();
@@ -137,8 +137,8 @@ export class GameCore {
       finishedAt: Date.now()
     };
     
-    // Сохраняем результат
-    StorageService.saveResult(result);
+    // Сохраняем результат (асинхронно)
+    await StorageService.saveResult(result);
     
     return result;
   }

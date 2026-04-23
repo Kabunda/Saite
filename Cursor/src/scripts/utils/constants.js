@@ -11,7 +11,8 @@ export const STORAGE_KEYS = {
   networkMode: "mt_network_mode",
   leaderboard: "mt_leaderboard",
   soundEnabled: "mt_sound_enabled",
-  vibrationEnabled: "mt_vibration_enabled"
+  vibrationEnabled: "mt_vibration_enabled",
+  syncQueue: "mt_sync_queue"
 };
 
 // Настройки звука

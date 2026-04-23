@@ -28,7 +28,7 @@ class MultiplicationTrainer {
     
     // Устанавливаем начальные значения
     this.ui.updateMenuStatus();
-    this.ui.renderLeaderboard();
+    this.ui.renderLeaderboard().catch(err => console.error('Ошибка загрузки таблицы лидеров:', err));
     
     // Инициализируем обработчики событий
     this.setupEventListeners();
@@ -217,11 +217,11 @@ class MultiplicationTrainer {
   /**
    * Завершает игру
    */
-  finishGame() {
+  async finishGame() {
     this.stopTimer();
     
-    // Получаем результаты
-    const result = this.game.finishGame();
+    // Получаем результаты (асинхронно)
+    const result = await this.game.finishGame();
     const answersLog = this.game.getAnswersLog();
     
     // Показываем экран результатов
@@ -229,7 +229,7 @@ class MultiplicationTrainer {
     this.ui.showResults(result, answersLog);
     
     // Обновляем таблицу лидеров
-    this.ui.renderLeaderboard();
+    this.ui.renderLeaderboard().catch(err => console.error('Ошибка загрузки таблицы лидеров:', err));
   }
 
   /**
@@ -239,7 +239,7 @@ class MultiplicationTrainer {
     this.stopTimer();
     this.ui.showScreen('menu');
     this.ui.updateMenuStatus();
-    this.ui.renderLeaderboard();
+    this.ui.renderLeaderboard().catch(err => console.error('Ошибка загрузки таблицы лидеров:', err));
   }
 
   /**
