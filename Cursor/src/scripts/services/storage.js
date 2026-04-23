@@ -100,7 +100,7 @@ export class StorageService {
    */
   static async saveResult(result) {
     // Всегда сохраняем локально
-    const current = this.getLeaderboard();
+    const current = await this.getLeaderboard();
     const next = [...current, result]
       .sort((a, b) => {
         if (a.totalTimeSec !== b.totalTimeSec) return a.totalTimeSec - b.totalTimeSec;
