@@ -295,14 +295,103 @@ th {
   color: #b91c1c;
 }
 
-/* Модальные окна */
-.modal-overlay {
+/* Стили для экрана ввода имени */
+.name-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #dbeafe;
+  border-radius: 10px;
+  font-size: 16px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.hint {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Иконки */
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.icon-btn:active {
+  background-color: #e2e8f0;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Панель игрока с иконками */
+.player-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.player-name-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.player-name-text {
+  color: #0f172a;
+}
+
+/* Кнопка настроек в меню */
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.settings-btn:hover {
+  background: #e2e8f0;
+}
+
+/* Стили для модальных окон */
+.modal {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 0, 0, 0.7) !important; /* Яркий красный для отладки */
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -310,407 +399,49 @@ th {
   padding: 16px;
 }
 
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  animation: modal-appear 0.3s ease-out;
-}
-
-@keyframes modal-appear {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal h3 {
-  margin: 0 0 16px;
-  font-size: 20px;
-  color: #0f172a;
-}
-
-.modal-input {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid #dbeafe;
-  border-radius: 8px;
-  font-size: 16px;
-  margin-bottom: 20px;
-  transition: border-color 0.2s;
-}
-
-.modal-input:focus {
-  outline: none;
-  border-color: #2563eb;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.modal-btn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.2s;
-}
-
-.modal-btn-primary {
-  background: #2563eb;
-  color: white;
-}
-
-.modal-btn-primary:hover {
-  background: #1d4ed8;
-}
-
-.modal-btn-secondary {
-  background: #e2e8f0;
-  color: #475569;
-}
-
-.modal-btn-secondary:hover {
-  background: #cbd5e1;
-}
-
-.modal-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Уведомления */
-.notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 1001;
-  animation: notification-slide 0.3s ease-out;
-  max-width: 350px;
-}
-
-@keyframes notification-slide {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.notification-icon {
-  font-size: 24px;
-}
-
-.notification-success {
-  border-left: 4px solid #22c55e;
-}
-
-.notification-warning {
-  border-left: 4px solid #f59e0b;
-}
-
-.notification-error {
-  border-left: 4px solid #ef4444;
-}
-
-.notification-info {
-  border-left: 4px solid #3b82f6;
-}
-
-.notification-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #64748b;
-  margin-left: auto;
-}
-
-.notification-close:hover {
-  color: #0f172a;
-}
-
-/* Анимации */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slide-down {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-5px);
-  }
-  20%, 40%, 60%, 80% {
-    transform: translateX(5px);
-  }
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
-}
-
-/* Анимации экранов */
-.screen {
-  animation: fade-in 0.3s ease-out;
-}
-
-.screen.hidden {
+.modal.hidden {
   display: none;
 }
 
-/* Анимации кнопок */
-.key {
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.key:active {
-  transform: translateY(1px) scale(0.99);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
-}
-
-.key-pressed {
-  animation: pulse 0.2s ease;
-}
-
-/* Анимация правильного ответа */
-.answer-correct {
-  animation: pulse 0.5s ease;
-  color: #15803d;
-}
-
-/* Анимация неправильного ответа */
-.answer-incorrect {
-  animation: shake 0.5s ease;
-  color: #b91c1c;
-}
-
-/* Анимация прогресса */
-.progress-cell {
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.progress-cell--ok {
-  animation: pulse 0.5s ease;
-}
-
-.progress-cell--bad {
-  animation: shake 0.5s ease;
-}
-
-/* Анимация вопроса */
-.question {
-  animation: slide-down 0.4s ease-out;
-}
-
-/* Анимация ответа */
-.answer {
-  animation: slide-up 0.4s ease-out;
-  transition: color 0.3s ease;
-}
-
-/* Анимация обратной связи */
-.feedback {
-  animation: slide-up 0.3s ease-out;
-  transition: color 0.3s ease;
-}
-
-/* Анимация появления элементов */
-.menu-panel, .menu-buttons, .leaderboard {
-  animation: slide-up 0.5s ease-out;
-  animation-fill-mode: both;
-}
-
-.menu-panel {
-  animation-delay: 0.1s;
-}
-
-.menu-buttons {
-  animation-delay: 0.2s;
-}
-
-.leaderboard {
-  animation-delay: 0.3s;
-}
-
-/* Анимация загрузки */
-.loading {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(37, 99, 235, 0.3);
-  border-radius: 50%;
-  border-top-color: #2563eb;
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Анимация счета */
-.score-change {
-  animation: bounce 0.6s ease;
-  display: inline-block;
-}
-
-/* Сетевой прогресс */
-.network-progress {
-  background: #f8fafc;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 16px;
-  animation: fadeIn 0.3s ease;
-}
-
-.network-progress.hidden {
-  display: none;
-}
-
-.network-progress h3 {
-  margin: 0 0 8px;
-  font-size: 16px;
-  color: #475569;
-}
-
-.participants-list {
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.participant-item {
+.modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.participant-name {
-  font-weight: 600;
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
   color: #0f172a;
 }
 
-.participant-progress {
+.modal-body {
+  padding: 20px;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #e2e8f0;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  margin: 0 12px;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #3b82f6;
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.participant-score {
-  font-weight: 600;
-  color: #3b82f6;
-  min-width: 40px;
-  text-align: right;
-}
-
-.participant-status {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  background: #f1f5f9;
-  color: #64748b;
-}
-
-.participant-status.finished {
-  background: #dcfce7;
-  color: #166534;
-}
-
-/* Плавные переходы для состояний */
-button, input, .key, .progress-cell, .question, .answer, .feedback {
-  transition: all 0.2s ease;
+.modal-footer button {
+  min-width: 100px;
 }

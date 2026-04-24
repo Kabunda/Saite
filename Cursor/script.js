@@ -1,17 +1,41 @@
+import {
+  FIRST_MULTIPLIERS,
+  SECOND_MIN,
+  SECOND_MAX,
+  DEFAULT_ROUNDS,
+  buildQuestionList,
+  randomInt
+} from './task-generator.js';
+
+const nameInputScreen = document.getElementById("nameInputScreen");
 const menuScreen = document.getElementById("menuScreen");
 const gameScreen = document.getElementById("gameScreen");
 const resultScreen = document.getElementById("resultScreen");
 
 const startBtn = document.getElementById("startBtn");
-const connectBtn = document.getElementById("connectBtn");
-const renameBtn = document.getElementById("renameBtn");
-const networkBtn = document.getElementById("networkBtn");
 const backBtn = document.getElementById("backBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const playAgainBtn = document.getElementById("playAgainBtn");
 const toMenuBtn = document.getElementById("toMenuBtn");
 const soundToggle = document.getElementById("soundToggle");
 const vibrationToggle = document.getElementById("vibrationToggle");
+const playerNameInput = document.getElementById("playerNameInput");
+const continueBtn = document.getElementById("continueBtn");
+const editNameBtn = document.getElementById("editNameBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+const currentPlayerName = document.getElementById("currentPlayerName");
+
+// Модальные окна
+const settingsModal = document.getElementById("settingsModal");
+const editNameModal = document.getElementById("editNameModal");
+const modalSoundToggle = document.getElementById("modalSoundToggle");
+const modalVibrationToggle = document.getElementById("modalVibrationToggle");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+const closeEditNameBtn = document.getElementById("closeEditNameBtn");
+const saveNameBtn = document.getElementById("saveNameBtn");
+const cancelEditNameBtn = document.getElementById("cancelEditNameBtn");
+const editNameInput = document.getElementById("editNameInput");
 
 const playerInfo = document.getElementById("playerInfo");
 const connectStatus = document.getElementById("connectStatus");
@@ -27,11 +51,6 @@ const keypad = document.getElementById("keypad");
 const streakEl = document.getElementById("streak");
 const resultSummary = document.getElementById("resultSummary");
 const answersList = document.getElementById("answersList");
-
-const FIRST_MULTIPLIERS = [5, 8, 11, 17, 35];
-const SECOND_MIN = 2;
-const SECOND_MAX = 20;
-const ROUNDS = 5;
 
 const STORAGE_KEYS = {
   playerName: "mt_player_name",
@@ -105,6 +124,9 @@ function setLeaderboard(items) {
 }
 
 function updateMenuStatus() {
+  // Обновляем отображение имени игрока в новой панели
+  currentPlayerName.textContent = getPlayerName();
+  // Старые элементы (оставлены для обратной совместимости, но скрыты)
   playerInfo.textContent = `Игрок: ${getPlayerName()}`;
   connectStatus.textContent = isConnected()
     ? "Подключение: активно"
@@ -355,7 +377,10 @@ function finishGame() {
     totalTimeSec,
     score,
     rounds: currentQuestions.length,
-    finishedAt: Date.now()
+    finishedAt: Date.now(),
+    tasks: currentQuestions, // Сохраняем все задачи
+    answers: answersLog,     // Сохраняем ответы игрока
+    gameId: Date.now()       // Уникальный идентификатор игры
   });
 
   gameScreen.classList.add("hidden");
@@ -405,8 +430,14 @@ function getBoolSetting(key, defaultValue) {
 }
 
 function initSettingsUi() {
-  soundToggle.checked = getBoolSetting(STORAGE_KEYS.soundEnabled, true);
-  vibrationToggle.checked = getBoolSetting(STORAGE_KEYS.vibrationEnabled, true);
+  // Инициализируем модальные переключатели
+  if (modalSoundToggle) {
+    modalSoundToggle.checked = getBoolSetting(STORAGE_KEYS.soundEnabled, true);
+  }
+  if (modalVibrationToggle) {
+    modalVibrationToggle.checked = getBoolSetting(STORAGE_KEYS.vibrationEnabled, true);
+  }
+  // Старые переключатели (если остались) - игнорируем
 }
 
 function setSetting(key, value) {
@@ -453,45 +484,12 @@ function vibrate(pattern) {
   navigator.vibrate(pattern);
 }
 
-connectBtn.addEventListener("click", () => {
-  const newState = !isConnected();
-  setConnected(newState);
-  updateMenuStatus();
-});
-
-networkBtn.addEventListener("click", () => {
-  if (!isConnected()) {
-    alert("Сначала нажмите «Подключить».");
-    return;
-  }
-  setNetworkMode(!isNetworkMode());
-  updateMenuStatus();
-});
-
-renameBtn.addEventListener("click", () => {
-  const current = getPlayerName();
-  const entered = prompt("Введите новое имя игрока:", current);
-  if (entered === null) return;
-  const trimmed = entered.trim();
-  if (!trimmed) {
-    alert("Имя не может быть пустым.");
-    return;
-  }
-  setPlayerName(trimmed);
-  updateMenuStatus();
-});
 
 startBtn.addEventListener("click", startGame);
 pauseBtn.addEventListener("click", togglePause);
 backBtn.addEventListener("click", backToMenu);
 playAgainBtn.addEventListener("click", startGame);
 toMenuBtn.addEventListener("click", backToMenu);
-soundToggle.addEventListener("change", () => {
-  setSetting(STORAGE_KEYS.soundEnabled, soundToggle.checked);
-});
-vibrationToggle.addEventListener("change", () => {
-  setSetting(STORAGE_KEYS.vibrationEnabled, vibrationToggle.checked);
-});
 
 keypad.addEventListener("click", (event) => {
   const target = event.target;
@@ -530,10 +528,123 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+// Функции для управления модальными окнами
+function openSettingsModal() {
+  // Синхронизируем состояние переключателей с текущими настройками
+  modalSoundToggle.checked = isSoundEnabled();
+  modalVibrationToggle.checked = isVibrationEnabled();
+  settingsModal.classList.remove("hidden");
+}
+
+function closeSettingsModal() {
+  settingsModal.classList.add("hidden");
+}
+
+function saveSettings() {
+  // Сохраняем настройки из модального окна
+  setSetting(STORAGE_KEYS.soundEnabled, modalSoundToggle.checked);
+  setSetting(STORAGE_KEYS.vibrationEnabled, modalVibrationToggle.checked);
+  // Обновляем основные переключатели (если они еще есть)
+  if (soundToggle) soundToggle.checked = modalSoundToggle.checked;
+  if (vibrationToggle) vibrationToggle.checked = modalVibrationToggle.checked;
+  closeSettingsModal();
+}
+
+function openEditNameModal() {
+  editNameInput.value = getPlayerName();
+  editNameModal.classList.remove("hidden");
+  editNameInput.focus();
+  editNameInput.select();
+}
+
+function closeEditNameModal() {
+  editNameModal.classList.add("hidden");
+}
+
+function saveName() {
+  const newName = editNameInput.value.trim();
+  if (newName === "") {
+    alert("Имя не может быть пустым");
+    editNameInput.focus();
+    return;
+  }
+  setPlayerName(newName);
+  updateMenuStatus();
+  closeEditNameModal();
+}
+
+// Обработчики для модальных окон
+settingsBtn.addEventListener("click", openSettingsModal);
+closeSettingsBtn.addEventListener("click", closeSettingsModal);
+saveSettingsBtn.addEventListener("click", saveSettings);
+
+editNameBtn.addEventListener("click", openEditNameModal);
+closeEditNameBtn.addEventListener("click", closeEditNameModal);
+cancelEditNameBtn.addEventListener("click", closeEditNameModal);
+saveNameBtn.addEventListener("click", saveName);
+
+// Закрытие модальных окон по клику вне контента
+settingsModal.addEventListener("click", (event) => {
+  if (event.target === settingsModal) {
+    closeSettingsModal();
+  }
+});
+
+editNameModal.addEventListener("click", (event) => {
+  if (event.target === editNameModal) {
+    closeEditNameModal();
+  }
+});
+
+// Обработка Enter в поле изменения имени
+editNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    saveName();
+  }
+});
+
+// Функция для проверки и отображения экрана ввода имени
+function checkAndShowNameInput() {
+  const savedName = localStorage.getItem(STORAGE_KEYS.playerName);
+  if (!savedName || savedName.trim() === "") {
+    // Показываем экран ввода имени
+    nameInputScreen.classList.remove("hidden");
+    menuScreen.classList.add("hidden");
+    gameScreen.classList.add("hidden");
+    resultScreen.classList.add("hidden");
+    playerNameInput.focus();
+  } else {
+    // Показываем главное меню
+    nameInputScreen.classList.add("hidden");
+    menuScreen.classList.remove("hidden");
+  }
+}
+
+// Обработчик кнопки "Продолжить" на экране ввода имени
+continueBtn.addEventListener("click", () => {
+  const name = playerNameInput.value.trim();
+  if (name === "") {
+    alert("Пожалуйста, введите ваше имя");
+    playerNameInput.focus();
+    return;
+  }
+  setPlayerName(name);
+  nameInputScreen.classList.add("hidden");
+  menuScreen.classList.remove("hidden");
+  updateMenuStatus();
+  renderLeaderboard();
+});
+
+// Обработка нажатия Enter в поле ввода
+playerNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    continueBtn.click();
+  }
+});
+
 if (!localStorage.getItem(STORAGE_KEYS.playerName)) {
   setPlayerName("Игрок");
 }
 initSettingsUi();
 updateTimerView();
-updateMenuStatus();
-renderLeaderboard();
+checkAndShowNameInput();

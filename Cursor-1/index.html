@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тренажер умножения - Тренировка таблицы умножения</title>
+  <meta name="description" content="Интерактивный тренажер для тренировки таблицы умножения. Игра с таймером, прогрессом и таблицей лидеров.">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app" role="main">
+    <section id="menuScreen" class="screen" aria-label="Главное меню">
+      <h1>Тренажер умножения</h1>
+      <p class="subtitle">яндексовская</p>
+
+      <div class="menu-panel" role="region" aria-label="Информация о игроке">
+        <p id="playerInfo" class="player-info" aria-live="polite"></p>
+        <p id="connectStatus" class="status-text" aria-live="polite"></p>
+        <p id="networkStatus" class="status-text" aria-live="polite"></p>
+      </div>
+      <div class="menu-panel" role="region" aria-label="Настройки игры">
+        <p class="player-info">Настройки</p>
+        <label class="toggle-row">
+          <input id="soundToggle" type="checkbox" aria-label="Включить звук" />
+          <span>Звук</span>
+        </label>
+        <label class="toggle-row">
+          <input id="vibrationToggle" type="checkbox" aria-label="Включить вибрацию" />
+          <span>Вибрация</span>
+        </label>
+      </div>
+
+      <div class="menu-buttons" role="navigation" aria-label="Основные действия">
+        <button id="startBtn" aria-label="Начать новую игру">Начать игру</button>
+        <button id="connectBtn" class="secondary" aria-label="Подключить к сети">Подключить</button>
+        <button id="renameBtn" class="secondary" aria-label="Сменить имя игрока">Сменить имя</button>
+        <button id="networkBtn" class="secondary" aria-label="Переключить сетевой режим">Сетевой режим</button>
+      </div>
+
+      <section class="leaderboard" role="region" aria-label="Таблица лидеров">
+        <h2>Топ игроков (лучшее время)</h2>
+        <div role="region" aria-label="Таблица результатов" tabindex="0">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" role="columnheader">#</th>
+                <th scope="col" role="columnheader">Игрок</th>
+                <th scope="col" role="columnheader">Время</th>
+                <th scope="col" role="columnheader">Очки</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <tr>
+                <td colspan="4">Пока нет результатов.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="gameScreen" class="screen hidden" aria-label="Экран игры">
+      <div class="status-row">
+        <div class="progress-wrap" aria-label="Прогресс вопросов" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="progressTrack" class="progress-track"></div>
+        </div>
+        <span id="timer" aria-live="polite" aria-label="Текущее время игры">Время: 00:00</span>
+      </div>
+      <div class="game-meta">
+        <span id="streak" aria-live="polite">Серия: 0</span>
+        <div class="game-actions">
+          <button id="pauseBtn" class="mini-btn secondary" aria-label="Пауза или продолжить игру">Пауза</button>
+          <button id="backBtn" class="mini-btn secondary" aria-label="Вернуться в главное меню">В меню</button>
+        </div>
+      </div>
+      
+      <!-- Сетевой прогресс участников -->
+      <div id="networkProgress" class="network-progress hidden" aria-label="Прогресс участников сетевой игры">
+        <h3>Участники</h3>
+        <div id="participantsList" class="participants-list">
+          <!-- Участники будут добавлены динамически -->
+        </div>
+      </div>
+      
+      <p id="questionText" class="question" aria-live="polite" aria-label="Текущий вопрос">5 × 2 = ?</p>
+      <p id="answerText" class="answer" aria-live="polite" aria-label="Ваш ответ">_</p>
+      <p id="feedback" class="feedback" aria-live="assertive"></p>
+
+      <div class="keypad" id="keypad" role="application" aria-label="Цифровая клавиатура">
+        <div class="keypad-main">
+          <div class="digit-grid" role="group" aria-label="Цифровые клавиши">
+            <button class="key" data-key="1" aria-label="Цифра 1">1</button>
+            <button class="key" data-key="2" aria-label="Цифра 2">2</button>
+            <button class="key" data-key="3" aria-label="Цифра 3">3</button>
+            <button class="key" data-key="4" aria-label="Цифра 4">4</button>
+            <button class="key" data-key="5" aria-label="Цифра 5">5</button>
+            <button class="key" data-key="6" aria-label="Цифра 6">6</button>
+            <button class="key" data-key="7" aria-label="Цифра 7">7</button>
+            <button class="key" data-key="8" aria-label="Цифра 8">8</button>
+            <button class="key" data-key="9" aria-label="Цифра 9">9</button>
+            <button class="key key-zero" data-key="0" aria-label="Цифра 0">0</button>
+          </div>
+          <div class="action-grid" role="group" aria-label="Управляющие клавиши">
+            <button class="key key-action" data-key="del" aria-label="Удалить последнюю цифру">⌫</button>
+            <button class="key key-action" data-key="clear" aria-label="Очистить ответ">C</button>
+          </div>
+        </div>
+        <button class="key key-confirm key-ok-side" data-key="enter" aria-label="Подтвердить ответ">OK</button>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen hidden" aria-label="Экран результатов">
+      <h2>Игра завершена</h2>
+      <p id="resultSummary" aria-live="polite"></p>
+      <div class="answers-panel" role="region" aria-label="Детализация ответов">
+        <h3>Все вопросы и ответы</h3>
+        <ul id="answersList" class="answers-list" aria-label="Список вопросов и ответов"></ul>
+      </div>
+      <div class="menu-buttons" role="navigation" aria-label="Действия после игры">
+        <button id="playAgainBtn" aria-label="Начать новую игру">Играть снова</button>
+        <button id="toMenuBtn" class="secondary" aria-label="Вернуться в главное меню">В главное меню</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- Заменяем старый script.js на модульную версию -->
+  <script type="module" src="src/scripts/main.js"></script>
+</body>
+</html>

@@ -3,130 +3,195 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Тренажер умножения - Тренировка таблицы умножения</title>
-  <meta name="description" content="Интерактивный тренажер для тренировки таблицы умножения. Игра с таймером, прогрессом и таблицей лидеров.">
+  <title>Тренажер умножения</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="app" role="main">
-    <section id="menuScreen" class="screen" aria-label="Главное меню">
+  <main class="app">
+    <section id="nameInputScreen" class="screen">
+      <h1>Добро пожаловать!</h1>
+      <p class="subtitle">Введите ваше имя для начала игры</p>
+      
+      <div class="menu-panel">
+        <label for="playerNameInput" class="player-info">Ваше имя:</label>
+        <input
+          type="text"
+          id="playerNameInput"
+          placeholder="Например, Алеша"
+          maxlength="20"
+          autocomplete="off"
+          class="name-input"
+        />
+        <p class="hint">Имя будет сохранено и отображено в таблице лидеров</p>
+      </div>
+      
+      <div class="menu-buttons">
+        <button id="continueBtn">Продолжить</button>
+      </div>
+    </section>
+
+    <section id="menuScreen" class="screen hidden">
       <h1>Тренажер умножения</h1>
-      <p class="subtitle">яндексовская</p>
+      <p class="subtitle">20 вопросов: 5, 8, 11, 17, 35 × 2..20</p>
 
-      <div class="menu-panel" role="region" aria-label="Информация о игроке">
-        <p id="playerInfo" class="player-info" aria-live="polite"></p>
-        <p id="connectStatus" class="status-text" aria-live="polite"></p>
-        <p id="networkStatus" class="status-text" aria-live="polite"></p>
-      </div>
-      <div class="menu-panel" role="region" aria-label="Настройки игры">
-        <p class="player-info">Настройки</p>
-        <label class="toggle-row">
-          <input id="soundToggle" type="checkbox" aria-label="Включить звук" />
-          <span>Звук</span>
-        </label>
-        <label class="toggle-row">
-          <input id="vibrationToggle" type="checkbox" aria-label="Включить вибрацию" />
-          <span>Вибрация</span>
-        </label>
-      </div>
-
-      <div class="menu-buttons" role="navigation" aria-label="Основные действия">
-        <button id="startBtn" aria-label="Начать новую игру">Начать игру</button>
-        <button id="connectBtn" class="secondary" aria-label="Подключить к сети">Подключить</button>
-        <button id="renameBtn" class="secondary" aria-label="Сменить имя игрока">Сменить имя</button>
-        <button id="networkBtn" class="secondary" aria-label="Переключить сетевой режим">Сетевой режим</button>
-      </div>
-
-      <section class="leaderboard" role="region" aria-label="Таблица лидеров">
-        <h2>Топ игроков (лучшее время)</h2>
-        <div role="region" aria-label="Таблица результатов" tabindex="0">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col" role="columnheader">#</th>
-                <th scope="col" role="columnheader">Игрок</th>
-                <th scope="col" role="columnheader">Время</th>
-                <th scope="col" role="columnheader">Очки</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboardBody">
-              <tr>
-                <td colspan="4">Пока нет результатов.</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="player-panel">
+        <div class="player-name-display">
+          <span class="player-name-text">Игрок: <span id="currentPlayerName">Игрок</span></span>
+          <button id="editNameBtn" class="icon-btn" aria-label="Изменить имя">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
+          </button>
         </div>
+      </div>
+
+      <div class="menu-buttons">
+        <button id="startBtn">Начать игру</button>
+        <button id="settingsBtn" class="secondary settings-btn">
+          <svg class="icon" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+          Настройки
+        </button>
+      </div>
+
+      <section class="leaderboard">
+        <h2>Топ игроков (лучшее время)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Игрок</th>
+              <th>Время</th>
+              <th>Очки</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <tr>
+              <td colspan="4">Пока нет результатов.</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
     </section>
 
-    <section id="gameScreen" class="screen hidden" aria-label="Экран игры">
+    <section id="gameScreen" class="screen hidden">
       <div class="status-row">
-        <div class="progress-wrap" aria-label="Прогресс вопросов" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="progress-wrap" aria-label="Прогресс вопросов">
           <div id="progressTrack" class="progress-track"></div>
         </div>
-        <span id="timer" aria-live="polite" aria-label="Текущее время игры">Время: 00:00</span>
+        <span id="timer">Время: 00:00</span>
       </div>
       <div class="game-meta">
-        <span id="streak" aria-live="polite">Серия: 0</span>
+        <span id="streak">Серия: 0</span>
         <div class="game-actions">
-          <button id="pauseBtn" class="mini-btn secondary" aria-label="Пауза или продолжить игру">Пауза</button>
-          <button id="backBtn" class="mini-btn secondary" aria-label="Вернуться в главное меню">В меню</button>
+          <button id="pauseBtn" class="mini-btn secondary">Пауза</button>
+          <button id="backBtn" class="mini-btn secondary">В меню</button>
         </div>
       </div>
-      
-      <!-- Сетевой прогресс участников -->
-      <div id="networkProgress" class="network-progress hidden" aria-label="Прогресс участников сетевой игры">
-        <h3>Участники</h3>
-        <div id="participantsList" class="participants-list">
-          <!-- Участники будут добавлены динамически -->
-        </div>
-      </div>
-      
-      <p id="questionText" class="question" aria-live="polite" aria-label="Текущий вопрос">5 × 2 = ?</p>
-      <p id="answerText" class="answer" aria-live="polite" aria-label="Ваш ответ">_</p>
-      <p id="feedback" class="feedback" aria-live="assertive"></p>
+      <p id="questionText" class="question">5 × 2 = ?</p>
+      <p id="answerText" class="answer">_</p>
+      <p id="feedback" class="feedback"></p>
 
-      <div class="keypad" id="keypad" role="application" aria-label="Цифровая клавиатура">
+      <div class="keypad" id="keypad">
         <div class="keypad-main">
-          <div class="digit-grid" role="group" aria-label="Цифровые клавиши">
-            <button class="key" data-key="1" aria-label="Цифра 1">1</button>
-            <button class="key" data-key="2" aria-label="Цифра 2">2</button>
-            <button class="key" data-key="3" aria-label="Цифра 3">3</button>
-            <button class="key" data-key="4" aria-label="Цифра 4">4</button>
-            <button class="key" data-key="5" aria-label="Цифра 5">5</button>
-            <button class="key" data-key="6" aria-label="Цифра 6">6</button>
-            <button class="key" data-key="7" aria-label="Цифра 7">7</button>
-            <button class="key" data-key="8" aria-label="Цифра 8">8</button>
-            <button class="key" data-key="9" aria-label="Цифра 9">9</button>
-            <button class="key key-zero" data-key="0" aria-label="Цифра 0">0</button>
+          <div class="digit-grid">
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+            <button class="key key-zero" data-key="0">0</button>
           </div>
-          <div class="action-grid" role="group" aria-label="Управляющие клавиши">
-            <button class="key key-action" data-key="del" aria-label="Удалить последнюю цифру">⌫</button>
-            <button class="key key-action" data-key="clear" aria-label="Очистить ответ">C</button>
+          <div class="action-grid">
+            <button class="key key-action" data-key="del">⌫</button>
+            <button class="key key-action" data-key="clear">C</button>
           </div>
         </div>
-        <button class="key key-confirm key-ok-side" data-key="enter" aria-label="Подтвердить ответ">OK</button>
+        <button class="key key-confirm key-ok-side" data-key="enter">OK</button>
       </div>
     </section>
 
-    <section id="resultScreen" class="screen hidden" aria-label="Экран результатов">
+    <section id="resultScreen" class="screen hidden">
       <h2>Игра завершена</h2>
-      <p id="resultSummary" aria-live="polite"></p>
-      <div class="answers-panel" role="region" aria-label="Детализация ответов">
+      <p id="resultSummary"></p>
+      <div class="answers-panel">
         <h3>Все вопросы и ответы</h3>
-        <ul id="answersList" class="answers-list" aria-label="Список вопросов и ответов"></ul>
+        <ul id="answersList" class="answers-list"></ul>
       </div>
-      <div class="menu-buttons" role="navigation" aria-label="Действия после игры">
-        <button id="playAgainBtn" aria-label="Начать новую игру">Играть снова</button>
-        <button id="toMenuBtn" class="secondary" aria-label="Вернуться в главное меню">В главное меню</button>
+      <div class="menu-buttons">
+        <button id="playAgainBtn">Играть снова</button>
+        <button id="toMenuBtn" class="secondary">В главное меню</button>
       </div>
     </section>
+
+    <!-- Модальное окно настроек -->
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Настройки</h2>
+          <button id="closeSettingsBtn" class="icon-btn" aria-label="Закрыть">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="menu-panel">
+            <p class="player-info">Настройки игры</p>
+            <label class="toggle-row">
+              <input id="modalSoundToggle" type="checkbox" />
+              <span>Звук</span>
+            </label>
+            <label class="toggle-row">
+              <input id="modalVibrationToggle" type="checkbox" />
+              <span>Вибрация</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveSettingsBtn" class="secondary">Сохранить и закрыть</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно изменения имени -->
+    <div id="editNameModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Изменение имени</h2>
+          <button id="closeEditNameBtn" class="icon-btn" aria-label="Закрыть">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="menu-panel">
+            <label for="editNameInput" class="player-info">Введите новое имя:</label>
+            <input
+              type="text"
+              id="editNameInput"
+              placeholder="Ваше имя"
+              maxlength="20"
+              autocomplete="off"
+              class="name-input"
+            />
+            <p class="hint">Имя будет отображаться в таблице лидеров</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveNameBtn">Сохранить</button>
+          <button id="cancelEditNameBtn" class="secondary">Отмена</button>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <!-- Заменяем старый script.js на модульную версию -->
-  <script type="module" src="src/scripts/main.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
