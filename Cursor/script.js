@@ -79,9 +79,6 @@ let mistakesInCurrentGame = [];
 let answersLog = [];
 let audioCtx = null;
 
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 function getPlayerName() {
   const value = localStorage.getItem(STORAGE_KEYS.playerName);
@@ -210,16 +207,6 @@ function backToMenu() {
   renderLeaderboard();
 }
 
-function buildQuestionList() {
-  const list = [];
-  for (let i = 0; i < ROUNDS; i += 1) {
-    list.push({
-      a: FIRST_MULTIPLIERS[randomInt(0, FIRST_MULTIPLIERS.length - 1)],
-      b: randomInt(SECOND_MIN, SECOND_MAX)
-    });
-  }
-  return list;
-}
 
 function setCurrentQuestion() {
   const question = currentQuestions[currentRound];
