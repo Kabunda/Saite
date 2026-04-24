@@ -4,6 +4,7 @@ import {
   SECOND_MAX,
   DEFAULT_ROUNDS,
   buildQuestionList,
+  buildUniqueQuestionList,
   randomInt
 } from './task-generator.js';
 
@@ -17,8 +18,6 @@ const backBtn = document.getElementById("backBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const playAgainBtn = document.getElementById("playAgainBtn");
 const toMenuBtn = document.getElementById("toMenuBtn");
-const soundToggle = document.getElementById("soundToggle");
-const vibrationToggle = document.getElementById("vibrationToggle");
 const playerNameInput = document.getElementById("playerNameInput");
 const continueBtn = document.getElementById("continueBtn");
 const editNameBtn = document.getElementById("editNameBtn");
@@ -37,9 +36,6 @@ const saveNameBtn = document.getElementById("saveNameBtn");
 const cancelEditNameBtn = document.getElementById("cancelEditNameBtn");
 const editNameInput = document.getElementById("editNameInput");
 
-const playerInfo = document.getElementById("playerInfo");
-const connectStatus = document.getElementById("connectStatus");
-const networkStatus = document.getElementById("networkStatus");
 const leaderboardBody = document.getElementById("leaderboardBody");
 
 const progressTrackEl = document.getElementById("progressTrack");
@@ -123,14 +119,6 @@ function setLeaderboard(items) {
 function updateMenuStatus() {
   // Обновляем отображение имени игрока в новой панели
   currentPlayerName.textContent = getPlayerName();
-  // Старые элементы (оставлены для обратной совместимости, но скрыты)
-  playerInfo.textContent = `Игрок: ${getPlayerName()}`;
-  connectStatus.textContent = isConnected()
-    ? "Подключение: активно"
-    : "Подключение: отключено";
-  networkStatus.textContent = isNetworkMode()
-    ? "Сетевой режим: включен"
-    : "Сетевой режим: выключен";
 }
 
 function renderLeaderboard() {
@@ -173,7 +161,7 @@ function startGame() {
   resultScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
 
-  currentQuestions = buildQuestionList();
+  currentQuestions = buildUniqueQuestionList(20);
   currentRound = 0;
   score = 0;
   currentAnswer = "";
@@ -222,6 +210,8 @@ function updateHeaderMeta() {
 function initProgressTrack() {
   progressTrackEl.innerHTML = "";
   progressCells = [];
+  // Динамически устанавливаем количество колонок
+  progressTrackEl.style.gridTemplateColumns = `repeat(${currentQuestions.length}, 1fr)`;
   for (let i = 0; i < currentQuestions.length; i += 1) {
     const cell = document.createElement("div");
     cell.className = "progress-cell";
@@ -365,8 +355,6 @@ function finishGame() {
     score,
     rounds: currentQuestions.length,
     finishedAt: Date.now(),
-    tasks: currentQuestions, // Сохраняем все задачи
-    answers: answersLog,     // Сохраняем ответы игрока
     gameId: Date.now()       // Уникальный идентификатор игры
   });
 
@@ -446,6 +434,10 @@ function playTone(freq, durationSec) {
     if (!Ctx) return;
     audioCtx = new Ctx();
   }
+  // Возобновляем контекст, если он приостановлен (требуется жестом пользователя)
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   const oscillator = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   oscillator.type = "sine";
@@ -483,11 +475,15 @@ keypad.addEventListener("click", (event) => {
   if (!(target instanceof HTMLElement)) return;
   const key = target.dataset.key;
   if (!key) return;
+  // Игнорируем ввод, если открыто модальное окно
+  if (!settingsModal.classList.contains("hidden") || !editNameModal.classList.contains("hidden")) return;
   handleKeyPress(key);
 });
 
 document.addEventListener("keydown", (event) => {
   if (gameScreen.classList.contains("hidden")) return;
+  // Игнорируем ввод, если открыто модальное окно
+  if (!settingsModal.classList.contains("hidden") || !editNameModal.classList.contains("hidden")) return;
   if (event.key.toLowerCase() === "p") {
     togglePause();
     return;
@@ -521,6 +517,10 @@ function openSettingsModal() {
   modalSoundToggle.checked = isSoundEnabled();
   modalVibrationToggle.checked = isVibrationEnabled();
   settingsModal.classList.remove("hidden");
+  // Если игра активна и не на паузе, ставим на паузу
+  if (!gameScreen.classList.contains("hidden") && !isPaused) {
+    togglePause();
+  }
 }
 
 function closeSettingsModal() {
@@ -531,9 +531,6 @@ function saveSettings() {
   // Сохраняем настройки из модального окна
   setSetting(STORAGE_KEYS.soundEnabled, modalSoundToggle.checked);
   setSetting(STORAGE_KEYS.vibrationEnabled, modalVibrationToggle.checked);
-  // Обновляем основные переключатели (если они еще есть)
-  if (soundToggle) soundToggle.checked = modalSoundToggle.checked;
-  if (vibrationToggle) vibrationToggle.checked = modalVibrationToggle.checked;
   closeSettingsModal();
 }
 
@@ -542,6 +539,10 @@ function openEditNameModal() {
   editNameModal.classList.remove("hidden");
   editNameInput.focus();
   editNameInput.select();
+  // Если игра активна и не на паузе, ставим на паузу
+  if (!gameScreen.classList.contains("hidden") && !isPaused) {
+    togglePause();
+  }
 }
 
 function closeEditNameModal() {

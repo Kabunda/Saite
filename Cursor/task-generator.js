@@ -7,7 +7,7 @@
 export const FIRST_MULTIPLIERS = [5, 8, 11, 17, 35];
 export const SECOND_MIN = 2;
 export const SECOND_MAX = 20;
-export const DEFAULT_ROUNDS = 5;
+export const DEFAULT_ROUNDS = 20;
 
 /**
  * Генерирует случайное целое число в диапазоне [min, max] включительно.
@@ -76,14 +76,4 @@ export function buildUniqueQuestionList(rounds = DEFAULT_ROUNDS) {
  */
 export function isCorrectAnswer(a, b, answer) {
   return a * b === answer;
-}
-
-/**
- * Возвращает правильный ответ для задачи.
- * @param {number} a - первый множитель
- * @param {number} b - второй множитель
- * @returns {number} произведение a * b
- */
-export function getCorrectAnswer(a, b) {
-  return a * b;
 }
