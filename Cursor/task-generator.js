@@ -49,22 +49,19 @@ export function buildQuestionList(
  * @returns {Array<{a: number, b: number}>} массив уникальных задач
  */
 export function buildUniqueQuestionList(rounds = DEFAULT_ROUNDS) {
-  const used = new Set();
-  const list = [];
-  const maxAttempts = rounds * 10;
-  let attempts = 0;
-
-  while (list.length < rounds && attempts < maxAttempts) {
-    const a = FIRST_MULTIPLIERS[randomInt(0, FIRST_MULTIPLIERS.length - 1)];
-    const b = randomInt(SECOND_MIN, SECOND_MAX);
-    const key = `${a}x${b}`;
-    if (!used.has(key)) {
-      used.add(key);
-      list.push({ a, b });
+  const all = [];
+  for (const a of FIRST_MULTIPLIERS) {
+    for (let b = SECOND_MIN; b <= SECOND_MAX; b++) {
+      all.push({ a, b });
     }
-    attempts += 1;
   }
-  return list;
+  // Перемешиваем весь массив
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  // Берём первые rounds штук (гарантированно уникальные)
+  return all.slice(0, rounds);
 }
 
 /**

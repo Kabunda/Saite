@@ -3,9 +3,7 @@ import {
   SECOND_MIN,
   SECOND_MAX,
   DEFAULT_ROUNDS,
-  buildQuestionList,
-  buildUniqueQuestionList,
-  randomInt
+  buildUniqueQuestionList
 } from './task-generator.js';
 
 const nameInputScreen = document.getElementById("nameInputScreen");
@@ -83,22 +81,6 @@ function getPlayerName() {
 
 function setPlayerName(name) {
   localStorage.setItem(STORAGE_KEYS.playerName, name.trim());
-}
-
-function isConnected() {
-  return localStorage.getItem(STORAGE_KEYS.connected) === "true";
-}
-
-function setConnected(flag) {
-  localStorage.setItem(STORAGE_KEYS.connected, String(flag));
-}
-
-function isNetworkMode() {
-  return localStorage.getItem(STORAGE_KEYS.networkMode) === "true";
-}
-
-function setNetworkMode(flag) {
-  localStorage.setItem(STORAGE_KEYS.networkMode, String(flag));
 }
 
 function getLeaderboard() {
@@ -267,8 +249,11 @@ function resetFeedback() {
 function handleKeyPress(key) {
   if (isLocked || isPaused) return;
 
-  // Легкий тактильный отклик на каждую клавишу ввода.
-  vibrate([10]);
+  // Легкий тактильный отклик на каждую клавишу ввода, кроме Enter
+  // (вибрация для Enter будет в checkAnswer, чтобы избежать двойной).
+  if (key !== "enter") {
+    vibrate([10]);
+  }
 
   if (key === "del") {
     currentAnswer = currentAnswer.slice(0, -1);
@@ -605,6 +590,8 @@ function checkAndShowNameInput() {
     // Показываем главное меню
     nameInputScreen.classList.add("hidden");
     menuScreen.classList.remove("hidden");
+    updateMenuStatus();
+    renderLeaderboard();
   }
 }
 
@@ -630,9 +617,6 @@ playerNameInput.addEventListener("keydown", (event) => {
   }
 });
 
-if (!localStorage.getItem(STORAGE_KEYS.playerName)) {
-  setPlayerName("Игрок");
-}
 initSettingsUi();
 updateTimerView();
 checkAndShowNameInput();
