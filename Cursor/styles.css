@@ -106,10 +106,22 @@ th {
 
 .status-row {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.status-top {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  width: 100%;
+}
+.timer-large {
+  text-align: center;
+  font-size: 24px;
   font-weight: 700;
+  color: #0f172a;
 }
 
 .game-meta {
@@ -444,4 +456,76 @@ th {
 
 .modal-footer button {
   min-width: 100px;
+}
+
+/* Красный крестик выхода */
+.back-btn {
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.back-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+.back-btn:active {
+  background-color: #dc2626;
+}
+
+/* Шапка меню с настройками справа */
+.menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.menu-header h1 {
+  margin: 0;
+  text-align: left;
+}
+.settings-btn-corner {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+}
+.settings-btn-corner .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Ландшафтная ориентация: клавиатура справа */
+@media (orientation: landscape) {
+  #gameScreen {
+    flex-direction: column;
+    padding: 16px;
+  }
+  .game-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex: 1;
+    width: 100%;
+  }
+  .game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+  .keypad {
+    flex: 0 0 auto;
+    width: 320px;
+    margin-top: 0;
+  }
 }

@@ -13,7 +13,6 @@ const resultScreen = document.getElementById("resultScreen");
 
 const startBtn = document.getElementById("startBtn");
 const backBtn = document.getElementById("backBtn");
-const pauseBtn = document.getElementById("pauseBtn");
 const playAgainBtn = document.getElementById("playAgainBtn");
 const toMenuBtn = document.getElementById("toMenuBtn");
 const playerNameInput = document.getElementById("playerNameInput");
@@ -42,7 +41,6 @@ const questionText = document.getElementById("questionText");
 const answerText = document.getElementById("answerText");
 const feedbackEl = document.getElementById("feedback");
 const keypad = document.getElementById("keypad");
-const streakEl = document.getElementById("streak");
 const resultSummary = document.getElementById("resultSummary");
 const answersList = document.getElementById("answersList");
 
@@ -67,7 +65,6 @@ let timerIntervalId = null;
 let progressCells = [];
 let streak = 0;
 let bestStreak = 0;
-let isPaused = false;
 let currentQuestions = [];
 let mistakesInCurrentGame = [];
 let answersLog = [];
@@ -150,16 +147,13 @@ function startGame() {
   elapsedMs = 0;
   roundStartAt = Date.now();
   isLocked = false;
-  isPaused = false;
   streak = 0;
   bestStreak = 0;
   mistakesInCurrentGame = [];
   answersLog = [];
   initProgressTrack();
-  applyPauseState();
 
   resetFeedback();
-  updateHeaderMeta();
   renderAnswer();
   setCurrentQuestion();
   startTimer();
@@ -169,7 +163,6 @@ function startGame() {
 function backToMenu() {
   stopTimer();
   isLocked = true;
-  isPaused = false;
   gameScreen.classList.add("hidden");
   resultScreen.classList.add("hidden");
   menuScreen.classList.remove("hidden");
@@ -185,9 +178,6 @@ function setCurrentQuestion() {
   questionText.textContent = `${currentA} × ${currentB} = ?`;
 }
 
-function updateHeaderMeta() {
-  streakEl.textContent = `Серия: ${streak}`;
-}
 
 function initProgressTrack() {
   progressTrackEl.innerHTML = "";
@@ -220,7 +210,7 @@ function updateTimerView() {
     timerEl.textContent = "Время: 00:00";
     return;
   }
-  const runningPart = isPaused ? 0 : Date.now() - roundStartAt;
+  const runningPart = Date.now() - roundStartAt;
   const elapsedSec = Math.floor((elapsedMs + runningPart) / 1000);
   timerEl.textContent = `Время: ${formatTime(elapsedSec)}`;
 }
@@ -247,7 +237,7 @@ function resetFeedback() {
 }
 
 function handleKeyPress(key) {
-  if (isLocked || isPaused) return;
+  if (isLocked) return;
 
   // Легкий тактильный отклик на каждую клавишу ввода, кроме Enter
   // (вибрация для Enter будет в checkAnswer, чтобы избежать двойной).
@@ -308,7 +298,6 @@ function checkAnswer() {
     vibrate([120, 50, 120]);
   }
   paintProgressCell(isCorrect);
-  updateHeaderMeta();
 
   setTimeout(nextQuestion, 650);
 }
@@ -323,7 +312,6 @@ function nextQuestion() {
   isLocked = false;
   currentAnswer = "";
   resetFeedback();
-  updateHeaderMeta();
   renderAnswer();
   setCurrentQuestion();
 }
@@ -331,7 +319,7 @@ function nextQuestion() {
 function finishGame() {
   stopTimer();
   isLocked = true;
-  const runningPart = isPaused ? 0 : Date.now() - roundStartAt;
+  const runningPart = Date.now() - roundStartAt;
   const totalTimeSec = (elapsedMs + runningPart) / 1000;
   const playerName = getPlayerName();
   saveResult({
@@ -365,23 +353,6 @@ function renderAnswersLog() {
   });
 }
 
-function applyPauseState() {
-  pauseBtn.textContent = isPaused ? "Продолжить" : "Пауза";
-  keypad.classList.toggle("paused", isPaused);
-}
-
-function togglePause() {
-  if (gameScreen.classList.contains("hidden") || isLocked) return;
-  if (isPaused) {
-    roundStartAt = Date.now();
-    isPaused = false;
-  } else {
-    elapsedMs += Date.now() - roundStartAt;
-    isPaused = true;
-  }
-  applyPauseState();
-  updateTimerView();
-}
 
 function getBoolSetting(key, defaultValue) {
   const raw = localStorage.getItem(key);
@@ -450,8 +421,11 @@ function vibrate(pattern) {
 
 
 startBtn.addEventListener("click", startGame);
-pauseBtn.addEventListener("click", togglePause);
-backBtn.addEventListener("click", backToMenu);
+backBtn.addEventListener("click", () => {
+  if (confirm("Вы уверены, что хотите выйти? Прогресс игры будет потерян.")) {
+    backToMenu();
+  }
+});
 playAgainBtn.addEventListener("click", startGame);
 toMenuBtn.addEventListener("click", backToMenu);
 
@@ -469,11 +443,7 @@ document.addEventListener("keydown", (event) => {
   if (gameScreen.classList.contains("hidden")) return;
   // Игнорируем ввод, если открыто модальное окно
   if (!settingsModal.classList.contains("hidden") || !editNameModal.classList.contains("hidden")) return;
-  if (event.key.toLowerCase() === "p") {
-    togglePause();
-    return;
-  }
-  if (isLocked || isPaused) return;
+  if (isLocked) return;
 
   if (event.key >= "0" && event.key <= "9") {
     handleKeyPress(event.key);
@@ -502,10 +472,6 @@ function openSettingsModal() {
   modalSoundToggle.checked = isSoundEnabled();
   modalVibrationToggle.checked = isVibrationEnabled();
   settingsModal.classList.remove("hidden");
-  // Если игра активна и не на паузе, ставим на паузу
-  if (!gameScreen.classList.contains("hidden") && !isPaused) {
-    togglePause();
-  }
 }
 
 function closeSettingsModal() {
@@ -524,10 +490,6 @@ function openEditNameModal() {
   editNameModal.classList.remove("hidden");
   editNameInput.focus();
   editNameInput.select();
-  // Если игра активна и не на паузе, ставим на паузу
-  if (!gameScreen.classList.contains("hidden") && !isPaused) {
-    togglePause();
-  }
 }
 
 function closeEditNameModal() {
