@@ -1,0 +1,531 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background: #eef2ff;
+  color: #0f172a;
+}
+
+.app {
+  max-width: 780px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.screen {
+  padding: 20px;
+  transition: opacity 0.2s ease;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Анимация появления экранов */
+.screen:not(.hidden) {
+  animation: fadeSlide 0.25s ease-out;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Типография */
+h1 {
+  margin: 4px 0;
+  text-align: center;
+  font-size: clamp(1.4rem, 6vw, 2rem);
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0 0 16px;
+  text-align: center;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+/* Панели */
+.menu-panel {
+  background: #f8fafc;
+  border: 1px solid #e2edff;
+  border-radius: 24px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.player-info {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Переключатели */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  font-weight: 500;
+}
+
+/* Кнопки */
+button {
+  border: none;
+  border-radius: 60px;
+  background: #2563eb;
+  color: #fff;
+  padding: 14px 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+  transform: scale(0.97);
+  background: #1d4ed8;
+}
+
+.secondary {
+  background: #64748b;
+}
+.secondary:active {
+  background: #475569;
+}
+
+.menu-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Таблица лидеров */
+.leaderboard {
+  margin-top: 20px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #f8fafc;
+  padding: 4px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+/* Игровой экран */
+#gameScreen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.status-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.status-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.timer-large {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 1px;
+  background: #f1f5f9;
+  padding: 6px;
+  border-radius: 40px;
+}
+
+/* Прогресс-бар */
+.progress-wrap {
+  flex: 1;
+  background: #e2e8f0;
+  border-radius: 20px;
+  padding: 4px;
+}
+
+.progress-track {
+  display: grid;
+  gap: 4px;
+  height: 12px;
+}
+
+.progress-cell {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.progress-cell--ok {
+  background: #22c55e;
+  box-shadow: 0 0 0 1px #15803d;
+}
+
+.progress-cell--bad {
+  background: #ef4444;
+  box-shadow: 0 0 0 1px #b91c1c;
+}
+
+.progress-cell--current {
+  background: #facc15;
+  box-shadow: 0 0 0 2px #eab308;
+  animation: pulse 0.8s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* Центрирование игровой области */
+.game-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.game-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+}
+
+.question {
+  text-align: center;
+  font-size: clamp(2rem, 10vw, 4rem);
+  font-weight: 800;
+  margin: 20px 0 8px;
+}
+
+.answer {
+  text-align: center;
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 700;
+  margin: 8px auto;
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-radius: 60px;
+  display: inline-block;
+  min-width: 160px;
+}
+
+.feedback {
+  text-align: center;
+  font-size: clamp(1.2rem, 5vw, 1.6rem);
+  min-height: 3rem;
+  font-weight: 600;
+  transition: all 0.1s;
+}
+
+.ok {
+  color: #15803d;
+  transform: scale(1.02);
+}
+
+.bad {
+  color: #b91c1c;
+  transform: scale(1.02);
+}
+
+/* Клавиатура */
+.keypad {
+  display: grid;
+  grid-template-columns: 1fr 92px;
+  gap: 12px;
+  margin-top: auto;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  user-select: none;
+}
+
+.keypad-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.digit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.key {
+  min-height: 68px;
+  padding: 8px 0;
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
+  font-weight: 700;
+  border-radius: 28px;
+  background: #f1f5f9;
+  color: #0f172a;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transition: 0.05s linear;
+}
+
+.key:active {
+  transform: scale(0.96);
+  background: #e2e8f0;
+}
+
+.key-zero {
+  grid-column: 1 / span 3;
+}
+
+.key-action {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.key-confirm {
+  background: #16a34a;
+  color: white;
+}
+
+.key-confirm:active {
+  background: #15803d;
+}
+
+.key-ok-side {
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+/* Экран результатов */
+.answers-panel {
+  margin: 16px 0;
+  border-radius: 24px;
+  background: #f8fafc;
+  padding: 16px;
+}
+
+.answers-list {
+  max-height: 260px;
+  overflow: auto;
+  padding-left: 20px;
+}
+
+.answer-ok {
+  color: #15803d;
+}
+
+.answer-bad {
+  color: #b91c1c;
+}
+
+/* Форма ввода имени */
+.name-input {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 60px;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.name-input:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin: 6px 0 0;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* Иконки и кнопки с иконками */
+.icon-btn {
+  background: transparent;
+  box-shadow: none;
+  padding: 8px;
+  border-radius: 40px;
+}
+
+.icon-btn:active {
+  transform: none;
+  background: #e2e8f0;
+}
+
+.icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.settings-btn-corner {
+  background: #f1f5f9;
+  width: 44px;
+  height: 44px;
+}
+
+.back-btn {
+  background: #ef4444;
+  width: 48px;
+  height: 48px;
+  border-radius: 40px;
+}
+
+.back-btn:active {
+  background: #dc2626;
+}
+
+/* Панель игрока в меню */
+.player-panel {
+  background: #f8fafc;
+  border-radius: 60px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.player-name-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+/* Модальные окна */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 40px;
+  max-width: 500px;
+  width: 100%;
+  animation: fadeSlide 0.2s;
+  overflow: hidden;
+}
+
+.modal-header,
+.modal-footer {
+  padding: 18px 20px;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Адаптация: ландшафт на больших экранах */
+@media (orientation: landscape) and (min-width: 640px) {
+  .game-content {
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
+  .game-area {
+    flex: 1;
+    margin-bottom: 0;
+  }
+  .keypad {
+    width: 320px;
+    margin-top: 0;
+  }
+}
+
+/* Очень маленькие экраны (ширина < 400px) */
+@media (max-width: 400px) {
+  .key {
+    min-height: 58px;
+    font-size: 1.6rem;
+  }
+  .keypad {
+    gap: 8px;
+  }
+  .digit-grid {
+    gap: 6px;
+  }
+  .action-grid {
+    gap: 6px;
+  }
+  .screen {
+    padding: 16px;
+  }
+}
+
+/* Обеспечиваем, чтобы на экране меню не было видно игровых элементов */
+#menuScreen:not(.hidden) ~ #gameScreen,
+#menuScreen:not(.hidden) ~ #resultScreen {
+  display: none;
+}
