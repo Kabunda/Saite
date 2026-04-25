@@ -4,6 +4,7 @@ import {
     SECOND_MAX,
     buildUniqueQuestionList
 } from './task-generator.js';
+import * as storage from './storage.js';
 
 // DOM elements
 const nameInputScreen = document.getElementById("nameInputScreen");
@@ -46,16 +47,15 @@ const timeScale = document.getElementById("timeScale");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 const themeToggle = document.getElementById("themeToggle");
 
-const STORAGE_KEYS = {
-    playerName: "mt_player_name",
-    leaderboard: "mt_leaderboard",
-    soundEnabled: "mt_sound_enabled",
-    vibrationEnabled: "mt_vibration_enabled",
-    selectedRounds: "mt_selected_rounds",
-    theme: "mt_theme"
-};
+// Глобальное состояние, загружаемое из хранилища
+let playerName = "Игрок";
+let leaderboard = [];
+let soundEnabled = true;
+let vibrationEnabled = true;
+let selectedRounds = 20;
+let themeDark = false;
 
-// State
+// Игровое состояние
 let currentRound = 0;
 let score = 0;
 let currentA = 0;
@@ -71,66 +71,44 @@ let mistakesInCurrentGame = [];
 let answersLog = [];
 let audioCtx = null;
 let gameStartTime = 0;
-let selectedRounds = parseInt(localStorage.getItem(STORAGE_KEYS.selectedRounds) || "20", 10);
 
-// ----- Screen management -----
+// ----- Загрузка данных при старте -----
+async function loadInitialData() {
+    playerName = await storage.getPlayerName();
+    leaderboard = await storage.getLeaderboard();
+    soundEnabled = await storage.getBoolSetting('mt_sound_enabled', true);
+    vibrationEnabled = await storage.getBoolSetting('mt_vibration_enabled', true);
+    selectedRounds = await storage.getSelectedRounds();
+    themeDark = await storage.getTheme();
+    applyTheme();
+}
+
+// ----- Управление экранами -----
 const ALL_SCREENS = [nameInputScreen, menuScreen, gameScreen, resultScreen];
-
-/**
- * Показывает только указанный экран, все остальные скрывает.
- * @param {HTMLElement} screenElement - элемент экрана, который нужно показать
- */
 function showOnlyScreen(screenElement) {
     ALL_SCREENS.forEach(s => s.classList.add("hidden"));
     screenElement.classList.remove("hidden");
 }
 
-// ----- Utilities -----
-function getPlayerName() {
-    const value = localStorage.getItem(STORAGE_KEYS.playerName);
-    return value?.trim() || "Игрок";
-}
-function setPlayerName(name) {
-    localStorage.setItem(STORAGE_KEYS.playerName, name.trim());
-}
-function getLeaderboard() {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.leaderboard) || "[]");
-    } catch { return []; }
-}
-function setLeaderboard(items) {
-    localStorage.setItem(STORAGE_KEYS.leaderboard, JSON.stringify(items));
-}
-function escapeHtml(str) {
-    return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
-}
-function getBoolSetting(key, def) {
-    const v = localStorage.getItem(key);
-    return v === null ? def : v === "true";
-}
-function setSetting(key, value) { localStorage.setItem(key, String(value)); }
-
-// ----- Theme -----
+// ----- Тема -----
 function applyTheme() {
-    const dark = getBoolSetting(STORAGE_KEYS.theme, false);
-    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    if (themeToggle) themeToggle.checked = dark;
+    document.documentElement.setAttribute("data-theme", themeDark ? "dark" : "light");
+    if (themeToggle) themeToggle.checked = themeDark;
 }
-applyTheme();
-themeToggle?.addEventListener("change", () => {
-    setSetting(STORAGE_KEYS.theme, themeToggle.checked);
+themeToggle?.addEventListener("change", async () => {
+    themeDark = themeToggle.checked;
+    await storage.setTheme(themeDark);
     applyTheme();
 });
 
-// ----- Leaderboard rendering -----
+// ----- Таблица лидеров -----
 function renderLeaderboard() {
-    const items = getLeaderboard();
-    if (!items.length) {
+    if (!leaderboard.length) {
         leaderboardBody.innerHTML = `<tr><td colspan="5">Пока нет результатов.</td></tr>`;
         return;
     }
-    const medals = ['🥇','🥈','🥉'];
-    leaderboardBody.innerHTML = items.slice(0, 10).map((item, idx) => `
+    const medals = ['🥇', '🥈', '🥉'];
+    leaderboardBody.innerHTML = leaderboard.slice(0, 10).map((item, idx) => `
         <tr>
             <td>${idx < 3 ? medals[idx] : idx + 1}</td>
             <td title="${escapeHtml(item.playerName)}">${escapeHtml(item.playerName.substring(0, 12))}${item.playerName.length > 12 ? '…' : ''}</td>
@@ -141,7 +119,7 @@ function renderLeaderboard() {
     `).join('');
 }
 
-// ----- Timer -----
+// ----- Таймер -----
 function startTimer() {
     stopTimer();
     updateTimerDisplay();
@@ -158,7 +136,7 @@ function updateTimerDisplay() {
     timerEl.textContent = `Время: ${m}:${s}`;
 }
 
-// ----- Progress track -----
+// ----- Прогресс -----
 function initProgressTrack() {
     progressTrackEl.innerHTML = "";
     progressCells = [];
@@ -187,9 +165,9 @@ function paintProgressCell(isCorrect) {
     if (!isCorrect) cell.classList.add("shake");
 }
 
-// ----- Audio & vibration -----
+// ----- Звук и вибрация -----
 function playTone(freq, duration) {
-    if (!getBoolSetting(STORAGE_KEYS.soundEnabled, true)) return;
+    if (!soundEnabled) return;
     if (!audioCtx) {
         const Ctx = window.AudioContext || window.webkitAudioContext;
         if (!Ctx) return;
@@ -207,7 +185,7 @@ function playTone(freq, duration) {
     osc.stop(audioCtx.currentTime + duration);
 }
 function playClickSound() {
-    if (!getBoolSetting(STORAGE_KEYS.soundEnabled, true)) return;
+    if (!soundEnabled) return;
     if (!audioCtx) {
         const Ctx = window.AudioContext || window.webkitAudioContext;
         if (!Ctx) return;
@@ -224,19 +202,19 @@ function playClickSound() {
     osc.stop(audioCtx.currentTime + 0.08);
 }
 function vibrate(pattern) {
-    if (getBoolSetting(STORAGE_KEYS.vibrationEnabled, true) && "vibrate" in navigator) {
+    if (vibrationEnabled && "vibrate" in navigator) {
         navigator.vibrate(pattern);
     }
 }
 
-// ----- Game logic -----
+// ----- Игровая логика -----
 function setCurrentQuestion() {
     const q = currentQuestions[currentRound];
     currentA = q.a;
     currentB = q.b;
     questionText.textContent = `${currentA} × ${currentB} = ?`;
     questionText.classList.remove("fade-in");
-    void questionText.offsetWidth; // trigger reflow
+    void questionText.offsetWidth;
     questionText.classList.add("fade-in");
     updateProgressCurrentHighlight();
 }
@@ -293,25 +271,33 @@ function nextQuestion() {
     setCurrentQuestion();
 }
 
-function finishGame() {
+async function finishGame() {
     stopTimer();
     isLocked = true;
     const totalTimeSec = (Date.now() - gameStartTime) / 1000;
-    const playerName = getPlayerName();
-    saveResult({
-        playerName, totalTimeSec, score,
+
+    // Сохраняем результат
+    const result = {
+        playerName,
+        totalTimeSec,
+        score,
         rounds: currentQuestions.length,
         bestStreak,
         finishedAt: Date.now()
-    });
+    };
+    leaderboard = [...leaderboard, result]
+        .sort((a, b) => a.totalTimeSec - b.totalTimeSec || b.score - a.score)
+        .slice(0, 10);
+    await storage.setLeaderboard(leaderboard);
+
     showOnlyScreen(resultScreen);
 
     const streakHtml = bestStreak > 0 ? ` 🔥 Серия: ${bestStreak}` : '';
     resultSummary.innerHTML = `${playerName}, результат: ${score}/${currentQuestions.length}. ` +
         `Время: ${totalTimeSec.toFixed(1)} сек.${streakHtml} Ошибок: ${mistakesInCurrentGame.length}.`;
 
-    // Time scale
-    const personalBest = getLeaderboard().find(e => e.playerName === playerName)?.totalTimeSec;
+    // Шкала времени относительно личного рекорда
+    const personalBest = leaderboard.find(e => e.playerName === playerName)?.totalTimeSec;
     if (personalBest && personalBest > 0) {
         timeScale.classList.remove("hidden");
         const pct = Math.min(100, (personalBest / totalTimeSec) * 100);
@@ -324,17 +310,9 @@ function finishGame() {
     answersList.innerHTML = answersLog.map((item, idx) => {
         const status = item.isCorrect ? "Верно" : "Неверно";
         return `<li class="${item.isCorrect ? 'answer-ok' : 'answer-bad'}">
-            ${idx+1}) ${item.a} × ${item.b} = ${item.playerAnswer} (${status}, правильно: ${item.correctAnswer})
+            ${idx + 1}) ${item.a} × ${item.b} = ${item.playerAnswer} (${status}, правильно: ${item.correctAnswer})
         </li>`;
     }).join('');
-}
-
-function saveResult(result) {
-    const current = getLeaderboard();
-    const next = [...current, result]
-        .sort((a, b) => a.totalTimeSec - b.totalTimeSec || b.score - a.score)
-        .slice(0, 10);
-    setLeaderboard(next);
 }
 
 function startGame() {
@@ -370,35 +348,38 @@ function backToMenu() {
     renderLeaderboard();
 }
 
-// ----- Settings modals -----
+// ----- Модальные окна -----
 function openSettingsModal() {
-    modalSoundToggle.checked = getBoolSetting(STORAGE_KEYS.soundEnabled, true);
-    modalVibrationToggle.checked = getBoolSetting(STORAGE_KEYS.vibrationEnabled, true);
+    modalSoundToggle.checked = soundEnabled;
+    modalVibrationToggle.checked = vibrationEnabled;
     settingsModal.classList.remove("hidden");
     modalSoundToggle.focus();
 }
 function closeSettingsModal() { settingsModal.classList.add("hidden"); }
-function saveSettings() {
-    setSetting(STORAGE_KEYS.soundEnabled, modalSoundToggle.checked);
-    setSetting(STORAGE_KEYS.vibrationEnabled, modalVibrationToggle.checked);
+async function saveSettings() {
+    soundEnabled = modalSoundToggle.checked;
+    vibrationEnabled = modalVibrationToggle.checked;
+    await storage.setSetting('mt_sound_enabled', soundEnabled);
+    await storage.setSetting('mt_vibration_enabled', vibrationEnabled);
     closeSettingsModal();
 }
 
 function openEditNameModal() {
-    editNameInput.value = getPlayerName();
+    editNameInput.value = playerName;
     editNameModal.classList.remove("hidden");
     editNameInput.focus();
     editNameInput.select();
 }
 function closeEditNameModal() { editNameModal.classList.add("hidden"); }
-function saveName() {
+async function saveName() {
     const newName = editNameInput.value.trim();
     if (!newName) {
         alert("Имя не может быть пустым");
         editNameInput.focus();
         return;
     }
-    setPlayerName(newName);
+    playerName = newName;
+    await storage.setPlayerName(newName);
     updateMenuStatus();
     closeEditNameModal();
     showToast("Имя обновлено ✅");
@@ -417,26 +398,25 @@ function showToast(msg) {
 }
 
 function updateMenuStatus() {
-    currentPlayerName.textContent = getPlayerName();
+    currentPlayerName.textContent = playerName;
     document.getElementById("roundsSubtitle").textContent = `${selectedRounds} вопросов: 5, 8, 11, 17, 35 × 2..20`;
 }
 
-// ----- Rounds selector -----
+// ----- Выбор количества вопросов -----
 document.querySelectorAll(".rounds-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
         selectedRounds = parseInt(btn.dataset.rounds, 10);
-        localStorage.setItem(STORAGE_KEYS.selectedRounds, selectedRounds);
+        await storage.setSelectedRounds(selectedRounds);
         document.querySelectorAll(".rounds-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         updateMenuStatus();
     });
 });
-// Set initial active
+// Установить активную кнопку
 document.querySelector(`.rounds-btn[data-rounds="${selectedRounds}"]`)?.classList.add("active");
-updateMenuStatus();
 
-// ----- Name input screen -----
-continueBtn.addEventListener("click", () => {
+// ----- Экран ввода имени -----
+continueBtn.addEventListener("click", async () => {
     const name = playerNameInput.value.trim();
     if (!name) {
         nameError.classList.remove("hidden");
@@ -444,7 +424,8 @@ continueBtn.addEventListener("click", () => {
         return;
     }
     nameError.classList.add("hidden");
-    setPlayerName(name);
+    playerName = name;
+    await storage.setPlayerName(name);
     showOnlyScreen(menuScreen);
     updateMenuStatus();
     renderLeaderboard();
@@ -452,13 +433,13 @@ continueBtn.addEventListener("click", () => {
 playerNameInput.addEventListener("input", () => nameError.classList.add("hidden"));
 playerNameInput.addEventListener("keydown", e => e.key === "Enter" && continueBtn.click());
 
-// ----- Game controls -----
+// ----- Игровые кнопки -----
 startBtn.addEventListener("click", startGame);
 backBtn.addEventListener("click", backToMenu);
 playAgainBtn.addEventListener("click", startGame);
 toMenuBtn.addEventListener("click", backToMenu);
 
-// Keypad handler
+// Клавиатура на экране
 keypad.addEventListener("click", (e) => {
     const key = e.target?.dataset?.key;
     if (!key) return;
@@ -494,7 +475,7 @@ function handleKeyPress(key) {
     }
 }
 
-// Keyboard support
+// Физическая клавиатура
 document.addEventListener("keydown", (e) => {
     if (gameScreen.classList.contains("hidden")) return;
     if (!settingsModal.classList.contains("hidden") || !editNameModal.classList.contains("hidden")) return;
@@ -507,7 +488,7 @@ document.addEventListener("keydown", (e) => {
     else if (key === "Escape") backToMenu();
 });
 
-// Modals
+// Модальные окна
 settingsBtn.addEventListener("click", openSettingsModal);
 closeSettingsBtn.addEventListener("click", closeSettingsModal);
 saveSettingsBtn.addEventListener("click", saveSettings);
@@ -521,21 +502,12 @@ editNameInput.addEventListener("keydown", (e) => e.key === "Enter" && saveName()
     modal.addEventListener("click", (e) => {
         if (e.target === modal) modal.classList.add("hidden");
     });
-    // Focus trapping basic: close on Escape
     modal.addEventListener("keydown", (e) => {
         if (e.key === "Escape") modal.classList.add("hidden");
     });
 });
 
-// When opening modals, focus first input
-settingsModal.addEventListener("transitionend", () => {
-    if (!settingsModal.classList.contains("hidden")) modalSoundToggle?.focus();
-});
-editNameModal.addEventListener("transitionend", () => {
-    if (!editNameModal.classList.contains("hidden")) editNameInput?.focus();
-});
-
-// Fullscreen
+// Полноэкранный режим
 fullscreenBtn?.addEventListener("click", () => {
     if (document.fullscreenEnabled) {
         if (document.fullscreenElement) {
@@ -551,17 +523,16 @@ function requestFullscreenOnMobile() {
     }
 }
 
-// ----- Initial screen setup -----
-function checkAndShowNameInput() {
-    const saved = localStorage.getItem(STORAGE_KEYS.playerName);
-    if (!saved?.trim()) {
+// ----- Старт приложения -----
+(async () => {
+    await loadInitialData();
+    updateMenuStatus();
+    const savedName = playerName; // уже загружено
+    if (!savedName || savedName === "Игрок") {
         showOnlyScreen(nameInputScreen);
         playerNameInput.focus();
     } else {
         showOnlyScreen(menuScreen);
-        updateMenuStatus();
         renderLeaderboard();
     }
-}
-
-checkAndShowNameInput();
+})();
