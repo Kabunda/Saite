@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Заметки + Кто онлайн</title>
+  <style>
+    body { font-family: Arial; max-width: 550px; margin: 40px auto; }
+    .presence, .notes { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+    h3 { margin-top: 0; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .note-text { flex: 2; min-width: 150px; }
+    .note-meta { display: flex; gap: 10px; align-items: center; color: #555; font-size: 0.9em; }
+    .note-author { font-weight: bold; color: #2c3e50; }
+    .note-time { color: #888; }
+    button { cursor: pointer; padding: 4px 8px; }
+    input[type="text"] { padding: 6px; }
+    .status-time { color: #888; font-size: 0.9em; }
+    .offline { opacity: 0.5; }
+    .note-actions { margin-left: auto; }
+  </style>
+</head>
+<body>
+  <!-- ==== БЛОК ПРИСУТСТВИЯ ==== -->
+  <div class="presence">
+    <h3>👥 Кто в сети</h3>
+    <div id="loginArea">
+      <input type="text" id="nameInput" placeholder="Ваше имя" />
+      <button id="joinBtn">Войти</button>
+    </div>
+    <div id="onlineArea" style="display:none;">
+      <span>Вы вошли как <strong id="myNameDisplay"></strong></span>
+      <button id="updateBtn">🔄 Обновить время</button>
+    </div>
+    <ul id="presenceList"><li>Загрузка...</li></ul>
+  </div>
+
+  <!-- ==== БЛОК ЗАМЕТОК ==== -->
+  <div class="notes">
+    <h3>📝 Заметки</h3>
+    <div id="noteForm">
+      <input type="text" id="noteInput" placeholder="Новая заметка" />
+      <button id="addBtn">Добавить</button>
+      <span id="noteAuthWarning" style="color:red;display:none;">Сначала войдите в онлайн</span>
+    </div>
+    <ul id="notesList"></ul>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDQ1Wzpw-cDOG8okWEbDez2AMLNTzk89q8",
+        authDomain: "testds-b169f.firebaseapp.com",
+        databaseURL: "https://testds-b169f-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "testds-b169f",
+        storageBucket: "testds-b169f.firebasestorage.app",
+        messagingSenderId: "726631928847",
+        appId: "1:726631928847:web:d4e5eb7af866398796ff7a"
+      };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ---- Ссылки ----
+    const presenceRef = db.ref('presence');
+    const notesRef = db.ref('notes');
+
+    // ---- Переменные состояния ----
+    let myPresenceKey = null;
+    let myName = '';
+    let updateInterval = null;
+
+    // ---- DOM-элементы ----
+    const loginArea = document.getElementById('loginArea');
+    const onlineArea = document.getElementById('onlineArea');
+    const nameInput = document.getElementById('nameInput');
+    const joinBtn = document.getElementById('joinBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const myNameDisplay = document.getElementById('myNameDisplay');
+    const presenceList = document.getElementById('presenceList');
+
+    const noteInput = document.getElementById('noteInput');
+    const addBtn = document.getElementById('addBtn');
+    const notesList = document.getElementById('notesList');
+    const noteAuthWarning = document.getElementById('noteAuthWarning');
+
+    // ---- Присутствие (без изменений, кроме валидации имени) ----
+    joinBtn.addEventListener('click', () => {
+      myName = nameInput.value.trim();
+      if (!myName) return alert('Введите имя!');
+      enterPresence(myName);
+    });
+
+    nameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') joinBtn.click();
+    });
+
+    function enterPresence(name) {
+      const newRef = presenceRef.push();
+      myPresenceKey = newRef.key;
+
+      const presenceData = {
+        name: name,
+        lastUpdated: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      newRef.set(presenceData);
+      newRef.onDisconnect().remove();
+
+      loginArea.style.display = 'none';
+      onlineArea.style.display = 'block';
+      myNameDisplay.textContent = name;
+
+      if (updateInterval) clearInterval(updateInterval);
+      updateInterval = setInterval(updateMyTime, 60000);
+
+      // Снимаем предупреждение о заметках
+      noteAuthWarning.style.display = 'none';
+    }
+
+    function updateMyTime() {
+      if (!myPresenceKey) return;
+      presenceRef.child(myPresenceKey).update({
+        lastUpdated: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+
+    updateBtn.addEventListener('click', updateMyTime);
+
+    // Очистка старых записей присутствия
+    function cleanupOldPresence() {
+      if (!myPresenceKey) return;
+      const now = Date.now();
+      const TIMEOUT = 5 * 60 * 1000;
+
+      presenceRef.once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        Object.entries(data).forEach(([key, value]) => {
+          if (key === myPresenceKey) return;
+          if (now - value.lastUpdated > TIMEOUT) {
+            presenceRef.child(key).remove();
+          }
+        });
+      });
+    }
+    setInterval(cleanupOldPresence, 30000);
+
+    // Отображение присутствия
+    presenceRef.on('value', (snapshot) => {
+      presenceList.innerHTML = '';
+      const data = snapshot.val();
+      if (!data) {
+        presenceList.innerHTML = '<li>Никого нет онлайн</li>';
+        return;
+      }
+
+      const now = Date.now();
+      const entries = Object.entries(data);
+
+      if (entries.length === 0) {
+        presenceList.innerHTML = '<li>Никого нет онлайн</li>';
+        return;
+      }
+
+      entries.forEach(([key, value]) => {
+        const li = document.createElement('li');
+        const diff = Math.max(0, now - value.lastUpdated);
+        const seconds = Math.floor(diff / 1000);
+        let timeAgo;
+        if (seconds < 60) timeAgo = `${seconds} сек. назад`;
+        else if (seconds < 3600) timeAgo = `${Math.floor(seconds / 60)} мин. назад`;
+        else timeAgo = `${Math.floor(seconds / 3600)} ч. назад`;
+
+        const isMe = (key === myPresenceKey);
+        li.innerHTML = `
+          <span>${escapeHTML(value.name)} ${isMe ? '(вы)' : ''}</span>
+          <span class="status-time">${timeAgo}</span>
+        `;
+        presenceList.appendChild(li);
+      });
+    });
+
+    // ---- Заметки ----
+    // Проверка: можно ли добавить заметку
+    addBtn.addEventListener('click', () => {
+      if (!myName) {
+        noteAuthWarning.style.display = 'inline';
+        return;
+      }
+      const text = noteInput.value.trim();
+      if (!text) return;
+
+      notesRef.push({
+        text: text,
+        author: myName,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      noteInput.value = '';
+    });
+
+    noteInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addBtn.click();
+    });
+
+    // Функция форматирования относительного времени
+    function formatTimeAgo(timestamp) {
+      if (!timestamp) return '';
+      const now = Date.now();
+      const diff = now - timestamp;
+      const seconds = Math.floor(diff / 1000);
+      if (seconds < 60) return `${seconds} сек. назад`;
+      if (seconds < 3600) return `${Math.floor(seconds / 60)} мин. назад`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)} ч. назад`;
+      return new Date(timestamp).toLocaleDateString();
+    }
+
+    // Отображение заметок
+    notesRef.on('value', (snapshot) => {
+      notesList.innerHTML = '';
+      const data = snapshot.val();
+      if (!data) {
+        notesList.innerHTML = '<li>Нет заметок</li>';
+        return;
+      }
+
+      Object.entries(data).forEach(([key, note]) => {
+        const li = document.createElement('li');
+        const author = note.author || 'Неизвестный';
+        const timeStr = formatTimeAgo(note.createdAt);
+
+        li.innerHTML = `
+          <span class="note-text">${escapeHTML(note.text)}</span>
+          <div class="note-meta">
+            <span class="note-author">${escapeHTML(author)}</span>
+            <span class="note-time">${timeStr}</span>
+          </div>
+          <div class="note-actions">
+            <button data-key="${key}" class="deleteBtn">❌</button>
+          </div>
+        `;
+        notesList.appendChild(li);
+      });
+
+      // Вешаем обработчики удаления
+      document.querySelectorAll('.deleteBtn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const key = e.target.getAttribute('data-key');
+          notesRef.child(key).remove();
+        });
+      });
+    });
+
+    // Очистка при закрытии вкладки
+    window.addEventListener('beforeunload', () => {
+      if (myPresenceKey) {
+        presenceRef.child(myPresenceKey).remove();
+      }
+    });
+
+    // Простая защита от XSS
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
