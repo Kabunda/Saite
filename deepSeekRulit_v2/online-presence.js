@@ -1,4 +1,3 @@
-// online-presence.js
 import { db, useFirebase } from './storage.js';
 import {
     ref,
@@ -11,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // Уникальный идентификатор устройства
-function getPlayerId() {
+export function getPlayerId() {
     let id = localStorage.getItem('mt_player_uid');
     if (!id) {
         id = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -28,14 +27,9 @@ if (useFirebase && db) {
     onlineUsersRef = ref(db, 'onlineUsers');
 }
 
-/**
- * Инициализировать запись присутствия игрока со статусом "в меню".
- * @param {string} playerName
- */
 export function initPresence(playerName) {
     if (!useFirebase || !db) return;
 
-    // Удаляем предыдущую запись, если была
     if (onlineRef) {
         remove(onlineRef);
     }
@@ -43,19 +37,15 @@ export function initPresence(playerName) {
     onlineRef = ref(db, `onlineUsers/${playerId}`);
     const userData = {
         name: playerName || 'Игрок',
-        status: 'menu',               // начальный статус
-        joinedAt: serverTimestamp(),   // время первого входа в сессии
+        status: 'menu',
+        joinedAt: serverTimestamp(),
         lastSeen: serverTimestamp()
     };
 
     set(onlineRef, userData);
-    onDisconnect(onlineRef).remove();   // при разрыве связи запись удалится
+    onDisconnect(onlineRef).remove();
 }
 
-/**
- * Обновить статус текущего игрока (например, "menu" или "playing").
- * @param {string} status - 'menu' или 'playing'
- */
 export function updatePresenceStatus(status) {
     if (!onlineRef) return;
     update(onlineRef, {
@@ -64,11 +54,6 @@ export function updatePresenceStatus(status) {
     });
 }
 
-/**
- * Подписаться на изменения списка онлайн‑игроков.
- * @param {function} callback - получает массив { id, name, status, joinedAt, lastSeen }
- * @returns {function} unsubscribe
- */
 export function subscribeToOnlineUsers(callback) {
     if (!useFirebase || !db || !onlineUsersRef) {
         callback([]);
@@ -93,7 +78,6 @@ export function subscribeToOnlineUsers(callback) {
     return unsubscribe;
 }
 
-/** Принудительное удаление записи (beforeunload) */
 export function removePresence() {
     if (onlineRef) {
         remove(onlineRef);

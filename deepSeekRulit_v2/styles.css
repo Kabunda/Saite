@@ -652,3 +652,18 @@ th { background: var(--key-bg); font-weight: 600; }
         height: 18px;
     }
 }
+
+.opponent-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+.opponent-bar {
+    flex: 1;
+    height: 8px;
+}
+.opponent-score {
+    min-width: 40px;
+    text-align: right;
+}

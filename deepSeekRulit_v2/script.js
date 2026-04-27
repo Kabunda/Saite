@@ -8,7 +8,12 @@ import * as storage from './storage.js';
 import { initPresence,
     subscribeToOnlineUsers,
     updatePresenceStatus, 
+    getPlayerId,
     removePresence } from './online-presence.js';
+
+import { startMultiplayerOrSolo, 
+    subscribeOpponentProgress, 
+    updateMyProgress } from './multiplayer.js';    
 
 // Экранирование HTML-символов для безопасного отображения имени игрока
 function escapeHtml(text) {
@@ -25,6 +30,7 @@ function escapeHtml(text) {
 // DOM elements
 const nameInputScreen = document.getElementById("nameInputScreen");
 const menuScreen = document.getElementById("menuScreen");
+const waitScreen = document.getElementById("waitScreen");               // новый экран
 const gameScreen = document.getElementById("gameScreen");
 const resultScreen = document.getElementById("resultScreen");
 
@@ -36,19 +42,12 @@ const playerNameInput = document.getElementById("playerNameInput");
 const continueBtn = document.getElementById("continueBtn");
 const editNameBtn = document.getElementById("editNameBtn");
 const settingsBtn = document.getElementById("settingsBtn");
+const cancelWaitBtn = document.getElementById("cancelWaitBtn");        // кнопка отмены ожидания
 const currentPlayerName = document.getElementById("currentPlayerName");
 const nameError = document.getElementById("nameError");
 
-const settingsModal = document.getElementById("settingsModal");
-const editNameModal = document.getElementById("editNameModal");
 const modalSoundToggle = document.getElementById("modalSoundToggle");
 const modalVibrationToggle = document.getElementById("modalVibrationToggle");
-const closeSettingsBtn = document.getElementById("closeSettingsBtn");
-const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-
-const saveNameBtn = document.getElementById("saveNameBtn");
-const cancelEditNameBtn = document.getElementById("cancelEditNameBtn");
-const editNameInput = document.getElementById("editNameInput");
 
 const leaderboardBody = document.getElementById("leaderboardBody");
 const progressTrackEl = document.getElementById("progressTrack");
@@ -62,10 +61,11 @@ const answersList = document.getElementById("answersList");
 const timeScale = document.getElementById("timeScale");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 const themeToggle = document.getElementById("themeToggle");
+const countdownEl = document.getElementById("countdown");               // элемент обратного отсчёта
 
 // Глобальное состояние, загружаемое из хранилища
 let playerName = "Игрок";
-let leaderboard = null; // теперь может быть null при недоступности Firebase
+let leaderboard = null;
 let soundEnabled = true;
 let vibrationEnabled = true;
 let selectedRounds = 20;
@@ -87,11 +87,12 @@ let mistakesInCurrentGame = [];
 let answersLog = [];
 let audioCtx = null;
 let gameStartTime = 0;
+let waitIntervalId = null;         // идентификатор таймера обратного отсчёта
 
 // ----- Загрузка данных при старте -----
 async function loadInitialData() {
     playerName = await storage.getPlayerName();
-    leaderboard = await storage.getLeaderboard(); // может быть null
+    leaderboard = await storage.getLeaderboard();
     soundEnabled = await storage.getBoolSetting('mt_sound_enabled', true);
     vibrationEnabled = await storage.getBoolSetting('mt_vibration_enabled', true);
     selectedRounds = await storage.getSelectedRounds();
@@ -100,7 +101,7 @@ async function loadInitialData() {
 }
 
 // ----- Управление экранами -----
-const ALL_SCREENS = [nameInputScreen, menuScreen, gameScreen, resultScreen];
+const ALL_SCREENS = [nameInputScreen, menuScreen, waitScreen, gameScreen, resultScreen];
 function showOnlyScreen(screenElement) {
     ALL_SCREENS.forEach(s => s.classList.add("hidden"));
     screenElement.classList.remove("hidden");
@@ -144,7 +145,6 @@ function renderLeaderboard() {
 }
 
 // ----- Добавляем отображение онлайн-пользователей -----
-
 function timeAgo(timestamp) {
     if (!timestamp) return '';
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -165,7 +165,8 @@ function renderOnlineUsers(users) {
     }
 
     listEl.innerHTML = users.map(u => {
-        const statusText = u.status === 'playing' ? '🎮 Играет' : '📋 В меню';
+        const statusText = u.status === 'playing' ? '🎮 Играет' :
+                           u.status === 'waiting' ? '⏳ Ожидание игры' : '📋 В меню';
         const joinedTime = u.joinedAt ? timeAgo(u.joinedAt) : '';
         return `<li><strong>${escapeHtml(u.name)}</strong> — <em>${statusText}</em> ${joinedTime ? `<small>(${joinedTime})</small>` : ''}</li>`;
     }).join('');
@@ -307,6 +308,12 @@ function checkAnswer() {
         setTimeout(() => document.querySelector(".game-area")?.classList.remove("shake-area"), 400);
     }
     paintProgressCell(isCorrect);
+
+        // после обновления score и streak, но до setTimeout
+    if (multiplayerSessionId) {
+        updateMyProgress(multiplayerSessionId, getPlayerId(), currentRound + 1, score, false, 0);
+    }
+
     setTimeout(() => nextQuestion(), 650);
 }
 
@@ -328,7 +335,6 @@ async function finishGame() {
     isLocked = true;
     const totalTimeSec = (Date.now() - gameStartTime) / 1000;
 
-    // Формируем полный результат
     const result = {
         playerName,
         totalTimeSec,
@@ -336,23 +342,23 @@ async function finishGame() {
         rounds: currentQuestions.length,
         bestStreak,
         finishedAt: Date.now(),
-        answers: answersLog // <-- полный список вопросов и ответов
+        answers: answersLog
     };
 
-    // Сохраняем результат (Firebase или локальная очередь)
     await storage.addResult(result);
-
-    // Обновляем таблицу лидеров (загружаем актуальный топ из Firebase)
     leaderboard = await storage.getLeaderboard();
     renderLeaderboard();
 
     showOnlyScreen(resultScreen);
 
+    if (multiplayerSessionId) {
+        await updateMyProgress(multiplayerSessionId, getPlayerId(), currentRound, score, true, totalTimeSec);
+    }
+
     const streakHtml = bestStreak > 0 ? ` 🔥 Серия: ${bestStreak}` : '';
     resultSummary.innerHTML = `${playerName}, результат: ${score}/${currentQuestions.length}. ` +
         `Время: ${totalTimeSec.toFixed(1)} сек.${streakHtml} Ошибок: ${mistakesInCurrentGame.length}.`;
 
-    // Шкала времени относительно личного рекорда
     const personalBest = leaderboard && leaderboard.length > 0
         ? leaderboard.find(e => e.playerName === playerName)?.totalTimeSec
         : null;
@@ -373,7 +379,112 @@ async function finishGame() {
     }).join('');
 }
 
+// ----- Экран ожидания (новый функционал) -----
 function startGame() {
+    // Показать экран ожидания, установить статус "ожидание игры"
+    showOnlyScreen(waitScreen);
+    updatePresenceStatus('waiting');
+
+        // Запускаем поиск соперника
+    startMultiplayerOrSolo(
+        playerName,
+        selectedRounds,
+        // Колбэк для одиночной игры (по истечении таймаута)
+        () => {
+            startGameReal(); // обычный старт
+        },
+        // Колбэк для мультиплеерной игры
+        (sessionId, questions, opponentId, opponentName) => {
+            startMultiplayerGame(sessionId, questions, opponentId, opponentName);
+        }
+    );
+    
+    // Сбросить предыдущий таймер, если был
+    if (waitIntervalId) clearInterval(waitIntervalId);
+    
+    let countdown = 5;
+    countdownEl.textContent = countdown;
+    
+    waitIntervalId = setInterval(() => {
+        countdown--;
+        countdownEl.textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(waitIntervalId);
+            waitIntervalId = null;
+            // Начать реальную игру
+            startGameReal();
+        }
+    }, 1000);
+}
+
+let multiplayerSessionId = null;
+let multiplayerOpponentId = null;
+let opponentUnsubscribe = null;
+
+function startMultiplayerGame(sessionId, questions, opponentId, opponentName) {
+    multiplayerSessionId = sessionId;
+    multiplayerOpponentId = opponentId;
+
+    currentQuestions = questions; // используем готовый набор
+    currentRound = 0;
+    score = 0;
+    currentAnswer = "";
+    isLocked = false;
+    streak = 0;
+    bestStreak = 0;
+    mistakesInCurrentGame = [];
+    answersLog = [];
+    gameStartTime = Date.now();
+    
+    updatePresenceStatus('playing');
+    showOnlyScreen(gameScreen);
+    
+    // Инициализируем оба прогресс-бара
+    initProgressTrack();
+    initOpponentProgressBar(opponentName);
+    
+    // Подписка на прогресс соперника
+    opponentUnsubscribe = subscribeOpponentProgress(sessionId, getPlayerId(), (data) => {
+        updateOpponentProgressBar(data.progress, currentQuestions.length, data.score);
+        if (data.finished) {
+            showOpponentFinishedMessage(opponentName, data.score, data.totalTimeSec);
+        }
+    });
+    
+    resetFeedback();
+    renderAnswer();
+    setCurrentQuestion();
+    startTimer();
+    requestFullscreenOnMobile();
+}
+
+// Вспомогательные функции для прогресс-бара соперника
+function initOpponentProgressBar(name) {
+    const oppTrack = document.getElementById('opponentProgressTrack');
+    oppTrack.innerHTML = '';
+    oppTrack.style.gridTemplateColumns = `repeat(${currentQuestions.length}, 1fr)`;
+    for (let i = 0; i < currentQuestions.length; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'progress-cell';
+        oppTrack.appendChild(cell);
+    }
+    document.querySelector('.opponent-label').textContent = `Соперник (${name}): `;
+    document.getElementById('opponentScore').textContent = `0/${currentQuestions.length}`;
+}
+
+function updateOpponentProgressBar(progress, total, score) {
+    const cells = document.querySelectorAll('#opponentProgressTrack .progress-cell');
+    for (let i = 0; i < total; i++) {
+        if (i < progress) {
+            cells[i]?.classList.add('progress-cell--ok'); // предполагаем, что все его ответы верны; можно усложнить
+        }
+    }
+    document.getElementById('opponentScore').textContent = `${score}/${total}`;
+}
+
+
+// Реальная инициализация игры (бывшая startGame)
+function startGameReal() {
     currentQuestions = buildUniqueQuestionList(selectedRounds);
     currentRound = 0;
     score = 0;
@@ -394,71 +505,60 @@ function startGame() {
     requestFullscreenOnMobile();
 }
 
+// Отмена ожидания – возврат в меню
+cancelWaitBtn.addEventListener('click', () => {
+    if (waitIntervalId) {
+        clearInterval(waitIntervalId);
+        waitIntervalId = null;
+    }
+    backToMenu();
+});
+
+// Обновлённая функция возврата в меню
 function backToMenu() {
+    // Если игра активна – требуется подтверждение
     if (!gameScreen.classList.contains("hidden")) {
         if (!confirm("Вы уверены, что хотите выйти? Прогресс будет потерян.")) return;
     }
+    // Если активен экран ожидания – просто останавливаем таймер и возвращаемся
+    if (!waitScreen.classList.contains("hidden")) {
+        if (waitIntervalId) {
+            clearInterval(waitIntervalId);
+            waitIntervalId = null;
+        }
+    }
+
+    if (opponentUnsubscribe) {
+        opponentUnsubscribe();
+        opponentUnsubscribe = null;
+    }
+    
     stopTimer();
     gameStartTime = 0;
     isLocked = true;
     updatePresenceStatus('menu');
     showOnlyScreen(menuScreen);
     updateMenuStatus();
-    // При возврате в меню обновляем таблицу лидеров
+    // Обновить таблицу лидеров
     (async () => {
         leaderboard = await storage.getLeaderboard();
         renderLeaderboard();
     })();
 }
 
-// ----- Модальные окна -----
+// -----Меню настроек-----
 function openSettingsModal() {
     modalSoundToggle.checked = soundEnabled;
     modalVibrationToggle.checked = vibrationEnabled;
-    settingsModal.classList.remove("hidden");
     modalSoundToggle.focus();
-}
-function closeSettingsModal() { settingsModal.classList.add("hidden"); }
-async function saveSettings() {
-    soundEnabled = modalSoundToggle.checked;
-    vibrationEnabled = modalVibrationToggle.checked;
-    await storage.setSetting('mt_sound_enabled', soundEnabled);
-    await storage.setSetting('mt_vibration_enabled', vibrationEnabled);
-    closeSettingsModal();
+    playerNameInput.value = playerName;
+    showOnlyScreen(nameInputScreen);
 }
 
-function openEditNameModal() {
-    editNameInput.value = playerName;
-    editNameModal.classList.remove("hidden");
-    editNameInput.focus();
-    editNameInput.select();
-}
-function closeEditNameModal() { editNameModal.classList.add("hidden"); }
-async function saveName() {
-    const newName = editNameInput.value.trim();
-    if (!newName) {
-        alert("Имя не может быть пустым");
-        editNameInput.focus();
-        return;
-    }
-    playerName = newName;
-    await storage.setPlayerName(newName);
-    initPresence(newName);          // <-- обновляем данные о присутствии
-    updateMenuStatus();
-    closeEditNameModal();
-    showToast("Имя обновлено ✅");
-}
-
-function showToast(msg) {
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add("show"));
-    setTimeout(() => {
-        toast.classList.remove("show");
-        setTimeout(() => toast.remove(), 300);
-    }, 2000);
+function openEditNameModal() {        
+    playerNameInput.value = playerName;
+    showOnlyScreen(nameInputScreen);
+    playerNameInput.focus();
 }
 
 function updateMenuStatus() {
@@ -490,9 +590,14 @@ continueBtn.addEventListener("click", async () => {
     playerName = name;
     await storage.setPlayerName(name);
     initPresence(name);
+
+    soundEnabled = modalSoundToggle.checked;
+    vibrationEnabled = modalVibrationToggle.checked;
+    await storage.setSetting('mt_sound_enabled', soundEnabled);
+    await storage.setSetting('mt_vibration_enabled', vibrationEnabled);
+
     showOnlyScreen(menuScreen);
     updateMenuStatus();
-    // Загружаем таблицу лидеров
     leaderboard = await storage.getLeaderboard();
     renderLeaderboard();
 });
@@ -502,14 +607,13 @@ playerNameInput.addEventListener("keydown", e => e.key === "Enter" && continueBt
 // ----- Игровые кнопки -----
 startBtn.addEventListener("click", startGame);
 backBtn.addEventListener("click", backToMenu);
-playAgainBtn.addEventListener("click", startGame);
+playAgainBtn.addEventListener("click", startGame);   // При повторной игре тоже запускает отсчёт
 toMenuBtn.addEventListener("click", backToMenu);
 
 // Клавиатура на экране
 keypad.addEventListener("click", (e) => {
     const key = e.target?.dataset?.key;
     if (!key) return;
-    if (!settingsModal.classList.contains("hidden") || !editNameModal.classList.contains("hidden")) return;
     handleKeyPress(key);
 });
 
@@ -541,10 +645,9 @@ function handleKeyPress(key) {
     }
 }
 
-// Физическая клавиатура
+// Физическая клавиатура – работает только на игровом экране
 document.addEventListener("keydown", (e) => {
-    if (gameScreen.classList.contains("hidden")) return;
-    if (!settingsModal.classList.contains("hidden") || !editNameModal.classList.contains("hidden")) return;
+    if (gameScreen.classList.contains("hidden")) return;   // игровой экран скрыт (включая экран ожидания)
     if (isLocked) return;
     const key = e.key;
     if (key >= "0" && key <= "9") handleKeyPress(key);
@@ -554,24 +657,9 @@ document.addEventListener("keydown", (e) => {
     else if (key === "Escape") backToMenu();
 });
 
-// Модальные окна
+// Открывает начальный экран с настройками
 settingsBtn.addEventListener("click", openSettingsModal);
-closeSettingsBtn.addEventListener("click", closeSettingsModal);
-saveSettingsBtn.addEventListener("click", saveSettings);
 editNameBtn.addEventListener("click", openEditNameModal);
-
-cancelEditNameBtn.addEventListener("click", closeEditNameModal);
-saveNameBtn.addEventListener("click", saveName);
-editNameInput.addEventListener("keydown", (e) => e.key === "Enter" && saveName());
-
-[settingsModal, editNameModal].forEach(modal => {
-    modal.addEventListener("click", (e) => {
-        if (e.target === modal) modal.classList.add("hidden");
-    });
-    modal.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") modal.classList.add("hidden");
-    });
-});
 
 // Полноэкранный режим
 fullscreenBtn?.addEventListener("click", () => {
@@ -592,9 +680,7 @@ function requestFullscreenOnMobile() {
 // ----- Старт приложения (выполняется один раз) -----
 (async () => {
     await loadInitialData();
-    // Синхронизируем офлайн-результаты (если Firebase доступен)
     await storage.syncLocalResults();
-    // Заново получаем таблицу после синхронизации
     leaderboard = await storage.getLeaderboard();
 
     updateMenuStatus();
@@ -607,17 +693,9 @@ function requestFullscreenOnMobile() {
         renderLeaderboard();
     }
 
-        // Инициализируем присутствие только когда известно имя
     if (playerName && playerName !== 'Игрок') {
         initPresence(playerName);
     }
 
-    // Подписываемся на обновления онлайна
     subscribeToOnlineUsers(renderOnlineUsers);
-
 })();
-
-// При закрытии страницы (ускоренное удаление записи)
-window.addEventListener('beforeunload', () => {
-    removePresence();
-});

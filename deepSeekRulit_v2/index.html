@@ -18,6 +18,33 @@
                 <p id="nameError" class="error-message hidden">⚠️ Имя не может быть пустым</p>
                 <p class="hint">Имя будет сохранено и отображено в таблице лидеров</p>
             </div>
+            <div class="rounds-selector">
+                <span class="rounds-label">Вопросов:</span>
+                <button class="rounds-btn" data-rounds="10">10</button>
+                <button class="rounds-btn active" data-rounds="20">20</button>
+                <button class="rounds-btn" data-rounds="30">30</button>
+            </div>
+            <div class="theme-toggle-wrapper">
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
+                <span class="theme-label">Тёмная тема</span>
+            </div>
+                <div class="toggle-row">
+                    <span>Звук</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modalSoundToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <span>Вибрация</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modalVibrationToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             <div class="menu-buttons">
                 <button id="continueBtn">Продолжить</button>
             </div>
@@ -40,22 +67,11 @@
                     </button>
                 </div>
             </div>
-            <div class="rounds-selector">
-                <span class="rounds-label">Вопросов:</span>
-                <button class="rounds-btn" data-rounds="10">10</button>
-                <button class="rounds-btn active" data-rounds="20">20</button>
-                <button class="rounds-btn" data-rounds="30">30</button>
-            </div>
+
             <div class="menu-buttons">
                 <button id="startBtn">Начать игру</button>
             </div>
-            <div class="theme-toggle-wrapper">
-                <label class="switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="slider"></span>
-                </label>
-                <span class="theme-label">Тёмная тема</span>
-            </div>
+
 
             <div class="online-users">
                 <h3>Сейчас в игре:</h3>
@@ -73,6 +89,13 @@
             </section>
         </section>
 
+        <!-- Экран ожидания (НОВЫЙ) -->
+        <section id="waitScreen" class="screen hidden">
+            <h2>Приготовьтесь!</h2>
+            <div id="countdown" class="timer-large">5</div>
+            <button id="cancelWaitBtn" class="secondary">Отмена</button>
+        </section>
+
         <!-- Игровой экран -->
         <section id="gameScreen" class="screen hidden">
             <div class="status-row">
@@ -80,13 +103,19 @@
                     <div class="progress-wrap">
                         <div id="progressTrack" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"></div>
                     </div>
-                    <button id="backBtn" class="mini-btn icon-btn back-btn" aria-label="Выход">
-                        <svg class="icon" viewBox="0 0 24 24" width="20" height="20"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                    </button>
-                    <button id="fullscreenBtn" class="mini-btn icon-btn fullscreen-btn" aria-label="На весь экран">
-                        <svg class="icon" viewBox="0 0 24 24" width="20" height="20"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-                    </button>
+                    <button id="backBtn" class="mini-btn icon-btn back-btn" aria-label="Выход">X</button>
+                    <button id="fullscreenBtn" class="mini-btn icon-btn fullscreen-btn" aria-label="На весь экран">#</button>
                 </div>
+
+                    <!-- Прогресс-бар соперника -->
+                <div class="opponent-progress">
+                    <span class="opponent-label">Соперник: </span>
+                    <div class="progress-wrap opponent-bar">
+                        <div id="opponentProgressTrack" class="progress-track"></div>
+                    </div>
+                    <span id="opponentScore" class="opponent-score">0/0</span>
+                </div>
+
                 <div id="timer" class="timer-large">Время: 00:00</div>
             </div>
             <div class="game-content">
@@ -130,47 +159,6 @@
                 <button id="toMenuBtn" class="secondary">В главное меню</button>
             </div>
         </section>
-
-        <!-- Модальное окно настроек -->
-        <div id="settingsModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header"><h3>Настройки</h3></div>
-                <div class="modal-body">
-                    <div class="toggle-row">
-                        <span>Звук</span>
-                        <label class="switch">
-                            <input type="checkbox" id="modalSoundToggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="toggle-row">
-                        <span>Вибрация</span>
-                        <label class="switch">
-                            <input type="checkbox" id="modalVibrationToggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button id="closeSettingsBtn" class="secondary">Закрыть</button>
-                    <button id="saveSettingsBtn">Сохранить</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Модальное окно редактирования имени -->
-        <div id="editNameModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header"><h3>Изменить имя</h3></div>
-                <div class="modal-body">
-                    <input type="text" id="editNameInput" class="name-input" placeholder="Ваше имя" maxlength="20" autocomplete="off" />
-                </div>
-                <div class="modal-footer">
-                    <button id="cancelEditNameBtn" class="secondary">Отмена</button>
-                    <button id="saveNameBtn">Сохранить</button>
-                </div>
-            </div>
-        </div>
     </main>
 
     <script type="module" src="script.js"></script>
