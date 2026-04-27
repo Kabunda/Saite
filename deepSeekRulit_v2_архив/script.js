@@ -6,6 +6,18 @@ import {
 } from './task-generator.js';
 import * as storage from './storage.js';
 
+// Экранирование HTML-символов для безопасного отображения имени игрока
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
 // DOM elements
 const nameInputScreen = document.getElementById("nameInputScreen");
 const menuScreen = document.getElementById("menuScreen");
@@ -29,7 +41,7 @@ const modalSoundToggle = document.getElementById("modalSoundToggle");
 const modalVibrationToggle = document.getElementById("modalVibrationToggle");
 const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-const closeEditNameBtn = document.getElementById("closeEditNameBtn");
+
 const saveNameBtn = document.getElementById("saveNameBtn");
 const cancelEditNameBtn = document.getElementById("cancelEditNameBtn");
 const editNameInput = document.getElementById("editNameInput");
@@ -49,7 +61,7 @@ const themeToggle = document.getElementById("themeToggle");
 
 // Глобальное состояние, загружаемое из хранилища
 let playerName = "Игрок";
-let leaderboard = [];
+let leaderboard = null; // теперь может быть null при недоступности Firebase
 let soundEnabled = true;
 let vibrationEnabled = true;
 let selectedRounds = 20;
@@ -75,7 +87,7 @@ let gameStartTime = 0;
 // ----- Загрузка данных при старте -----
 async function loadInitialData() {
     playerName = await storage.getPlayerName();
-    leaderboard = await storage.getLeaderboard();
+    leaderboard = await storage.getLeaderboard(); // может быть null
     soundEnabled = await storage.getBoolSetting('mt_sound_enabled', true);
     vibrationEnabled = await storage.getBoolSetting('mt_vibration_enabled', true);
     selectedRounds = await storage.getSelectedRounds();
@@ -103,20 +115,28 @@ themeToggle?.addEventListener("change", async () => {
 
 // ----- Таблица лидеров -----
 function renderLeaderboard() {
+    if (leaderboard === null) {
+        leaderboardBody.innerHTML = `<tr><td colspan="5" class="leaderboard-error">⚠️ Не удалось загрузить таблицу лидеров. Проверьте подключение к интернету.</td></tr>`;
+        return;
+    }
     if (!leaderboard.length) {
         leaderboardBody.innerHTML = `<tr><td colspan="5">Пока нет результатов.</td></tr>`;
         return;
     }
     const medals = ['🥇', '🥈', '🥉'];
-    leaderboardBody.innerHTML = leaderboard.slice(0, 10).map((item, idx) => `
+    leaderboardBody.innerHTML = leaderboard.slice(0, 10).map((item, idx) => {
+        const penalty = item.rounds - item.score;
+        const penaltyText = penalty > 0 ? ` (+${penalty * 5})` : '';
+        return `
         <tr>
             <td>${idx < 3 ? medals[idx] : idx + 1}</td>
             <td title="${escapeHtml(item.playerName)}">${escapeHtml(item.playerName.substring(0, 12))}${item.playerName.length > 12 ? '…' : ''}</td>
-            <td>${item.totalTimeSec.toFixed(1)} сек</td>
+            <td>${item.totalTimeSec.toFixed(1)} сек${penaltyText}</td>
             <td>${item.score}/${item.rounds}</td>
             <td>${item.bestStreak ?? '—'}</td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // ----- Таймер -----
@@ -276,19 +296,23 @@ async function finishGame() {
     isLocked = true;
     const totalTimeSec = (Date.now() - gameStartTime) / 1000;
 
-    // Сохраняем результат
+    // Формируем полный результат
     const result = {
         playerName,
         totalTimeSec,
         score,
         rounds: currentQuestions.length,
         bestStreak,
-        finishedAt: Date.now()
+        finishedAt: Date.now(),
+        answers: answersLog // <-- полный список вопросов и ответов
     };
-    leaderboard = [...leaderboard, result]
-        .sort((a, b) => a.totalTimeSec - b.totalTimeSec || b.score - a.score)
-        .slice(0, 10);
-    await storage.setLeaderboard(leaderboard);
+
+    // Сохраняем результат (Firebase или локальная очередь)
+    await storage.addResult(result);
+
+    // Обновляем таблицу лидеров (загружаем актуальный топ из Firebase)
+    leaderboard = await storage.getLeaderboard();
+    renderLeaderboard();
 
     showOnlyScreen(resultScreen);
 
@@ -297,7 +321,9 @@ async function finishGame() {
         `Время: ${totalTimeSec.toFixed(1)} сек.${streakHtml} Ошибок: ${mistakesInCurrentGame.length}.`;
 
     // Шкала времени относительно личного рекорда
-    const personalBest = leaderboard.find(e => e.playerName === playerName)?.totalTimeSec;
+    const personalBest = leaderboard && leaderboard.length > 0
+        ? leaderboard.find(e => e.playerName === playerName)?.totalTimeSec
+        : null;
     if (personalBest && personalBest > 0) {
         timeScale.classList.remove("hidden");
         const pct = Math.min(100, (personalBest / totalTimeSec) * 100);
@@ -345,7 +371,11 @@ function backToMenu() {
     isLocked = true;
     showOnlyScreen(menuScreen);
     updateMenuStatus();
-    renderLeaderboard();
+    // При возврате в меню обновляем таблицу лидеров
+    (async () => {
+        leaderboard = await storage.getLeaderboard();
+        renderLeaderboard();
+    })();
 }
 
 // ----- Модальные окна -----
@@ -412,7 +442,6 @@ document.querySelectorAll(".rounds-btn").forEach(btn => {
         updateMenuStatus();
     });
 });
-// Установить активную кнопку
 document.querySelector(`.rounds-btn[data-rounds="${selectedRounds}"]`)?.classList.add("active");
 
 // ----- Экран ввода имени -----
@@ -428,6 +457,8 @@ continueBtn.addEventListener("click", async () => {
     await storage.setPlayerName(name);
     showOnlyScreen(menuScreen);
     updateMenuStatus();
+    // Загружаем таблицу лидеров
+    leaderboard = await storage.getLeaderboard();
     renderLeaderboard();
 });
 playerNameInput.addEventListener("input", () => nameError.classList.add("hidden"));
@@ -493,7 +524,7 @@ settingsBtn.addEventListener("click", openSettingsModal);
 closeSettingsBtn.addEventListener("click", closeSettingsModal);
 saveSettingsBtn.addEventListener("click", saveSettings);
 editNameBtn.addEventListener("click", openEditNameModal);
-closeEditNameBtn.addEventListener("click", closeEditNameModal);
+
 cancelEditNameBtn.addEventListener("click", closeEditNameModal);
 saveNameBtn.addEventListener("click", saveName);
 editNameInput.addEventListener("keydown", (e) => e.key === "Enter" && saveName());
@@ -523,11 +554,16 @@ function requestFullscreenOnMobile() {
     }
 }
 
-// ----- Старт приложения -----
+// ----- Старт приложения (выполняется один раз) -----
 (async () => {
     await loadInitialData();
+    // Синхронизируем офлайн-результаты (если Firebase доступен)
+    await storage.syncLocalResults();
+    // Заново получаем таблицу после синхронизации
+    leaderboard = await storage.getLeaderboard();
+
     updateMenuStatus();
-    const savedName = playerName; // уже загружено
+    const savedName = playerName;
     if (!savedName || savedName === "Игрок") {
         showOnlyScreen(nameInputScreen);
         playerNameInput.focus();
