@@ -130,7 +130,10 @@
         <!-- Модальное окно настроек -->
         <div id="settingsModal" class="modal hidden">
             <div class="modal-content">
-                <div class="modal-header"><h3>Настройки</h3></div>
+                <div class="modal-header">
+                    <h3>Настройки</h3>
+                    <button class="modal-close" aria-label="Закрыть">×</button>
+                </div>
                 <div class="modal-body">
                     <div class="toggle-row">
                         <span>Звук</span>
@@ -157,7 +160,10 @@
         <!-- Модальное окно редактирования имени -->
         <div id="editNameModal" class="modal hidden">
             <div class="modal-content">
-                <div class="modal-header"><h3>Изменить имя</h3></div>
+                <div class="modal-header">
+                    <h3>Изменить имя</h3>
+                    <button class="modal-close" aria-label="Закрыть">×</button>
+                </div>
                 <div class="modal-body">
                     <input type="text" id="editNameInput" class="name-input" placeholder="Ваше имя" maxlength="20" autocomplete="off" />
                 </div>
@@ -169,6 +175,6 @@
         </div>
     </main>
 
-    <script type="module" src="script.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

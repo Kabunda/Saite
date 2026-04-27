@@ -5,6 +5,10 @@ import {
     buildUniqueQuestionList
 } from './task-generator.js';
 import * as storage from './storage.js';
+import { initPresence,
+    subscribeToOnlineUsers,
+    updatePresenceStatus, 
+    removePresence } from './online-presence.js';
 
 // Экранирование HTML-символов для безопасного отображения имени игрока
 function escapeHtml(text) {
@@ -136,6 +140,34 @@ function renderLeaderboard() {
             <td>${item.bestStreak ?? '—'}</td>
         </tr>
         `;
+    }).join('');
+}
+
+// ----- Добавляем отображение онлайн-пользователей -----
+
+function timeAgo(timestamp) {
+    if (!timestamp) return '';
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return 'только что';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} мин назад`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours} ч назад`;
+}
+
+function renderOnlineUsers(users) {
+    const listEl = document.getElementById('onlinePlayersList');
+    if (!listEl) return;
+
+    if (users.length === 0) {
+        listEl.innerHTML = '<li>Никого нет в сети</li>';
+        return;
+    }
+
+    listEl.innerHTML = users.map(u => {
+        const statusText = u.status === 'playing' ? '🎮 Играет' : '📋 В меню';
+        const joinedTime = u.joinedAt ? timeAgo(u.joinedAt) : '';
+        return `<li><strong>${escapeHtml(u.name)}</strong> — <em>${statusText}</em> ${joinedTime ? `<small>(${joinedTime})</small>` : ''}</li>`;
     }).join('');
 }
 
@@ -352,7 +384,7 @@ function startGame() {
     mistakesInCurrentGame = [];
     answersLog = [];
     gameStartTime = Date.now();
-
+    updatePresenceStatus('playing');
     showOnlyScreen(gameScreen);
     initProgressTrack();
     resetFeedback();
@@ -369,6 +401,7 @@ function backToMenu() {
     stopTimer();
     gameStartTime = 0;
     isLocked = true;
+    updatePresenceStatus('menu');
     showOnlyScreen(menuScreen);
     updateMenuStatus();
     // При возврате в меню обновляем таблицу лидеров
@@ -410,6 +443,7 @@ async function saveName() {
     }
     playerName = newName;
     await storage.setPlayerName(newName);
+    initPresence(newName);          // <-- обновляем данные о присутствии
     updateMenuStatus();
     closeEditNameModal();
     showToast("Имя обновлено ✅");
@@ -455,6 +489,7 @@ continueBtn.addEventListener("click", async () => {
     nameError.classList.add("hidden");
     playerName = name;
     await storage.setPlayerName(name);
+    initPresence(name);
     showOnlyScreen(menuScreen);
     updateMenuStatus();
     // Загружаем таблицу лидеров
@@ -571,4 +606,18 @@ function requestFullscreenOnMobile() {
         showOnlyScreen(menuScreen);
         renderLeaderboard();
     }
+
+        // Инициализируем присутствие только когда известно имя
+    if (playerName && playerName !== 'Игрок') {
+        initPresence(playerName);
+    }
+
+    // Подписываемся на обновления онлайна
+    subscribeToOnlineUsers(renderOnlineUsers);
+
 })();
+
+// При закрытии страницы (ускоренное удаление записи)
+window.addEventListener('beforeunload', () => {
+    removePresence();
+});

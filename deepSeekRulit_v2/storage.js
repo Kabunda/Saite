@@ -218,3 +218,5 @@ function getOfflineResults() {
     const raw = localStorage.getItem(LS_KEYS.offlineResults);
     return raw ? JSON.parse(raw) : [];
 }
+
+export { db, useFirebase };
