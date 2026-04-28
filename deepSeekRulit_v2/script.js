@@ -63,6 +63,8 @@ const fullscreenBtn = document.getElementById("fullscreenBtn");
 const themeToggle = document.getElementById("themeToggle");
 const countdownEl = document.getElementById("countdown");               // элемент обратного отсчёта
 
+const opponentPanel = document.querySelector('.opponent-progress');     // Добавляем ссылку на панель соперника
+
 // Глобальное состояние, загружаемое из хранилища
 let playerName = "Игрок";
 let leaderboard = null;
@@ -89,6 +91,9 @@ let audioCtx = null;
 let gameStartTime = 0;
 let waitIntervalId = null;         // идентификатор таймера обратного отсчёта
 let cancelMatchmaking = null;   // функция отмены поиска из multiplayer
+let multiplayerSessionId = null;
+let multiplayerOpponentId = null;
+let opponentUnsubscribe = null;
 
 // ----- Загрузка данных при старте -----
 async function loadInitialData() {
@@ -284,6 +289,196 @@ function resetFeedback() {
     feedbackEl.classList.remove("ok", "bad");
 }
 
+// --- Игровая логика (изменена) ---
+function startGame() {
+    // Отменяем предыдущий поиск, если есть
+    if (cancelMatchmaking) {
+        cancelMatchmaking();
+        cancelMatchmaking = null;
+    }
+
+    showOnlyScreen(waitScreen);
+    updatePresenceStatus('waiting');
+
+    // Запускаем обратный отсчёт (5 секунд)
+    if (waitIntervalId) clearInterval(waitIntervalId);
+    let countdown = 5;
+    countdownEl.textContent = countdown;
+    waitIntervalId = setInterval(() => {
+        countdown--;
+        countdownEl.textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(waitIntervalId);
+            waitIntervalId = null;
+            // Отменяем поиск и начинаем одиночную игру
+            if (cancelMatchmaking) {
+                cancelMatchmaking();
+                cancelMatchmaking = null;
+            }
+            startGameReal();
+        }
+    }, 1000);
+
+    // Запускаем поиск соперника
+    const { cancel, promise } = startSearch(playerName, selectedRounds);
+    cancelMatchmaking = cancel;
+
+    promise
+        .then(({ sessionId, questions, opponentId, opponentName, startTime }) => {
+            // Соперник найден, отменяем обратный отсчёт
+            clearInterval(waitIntervalId);
+            waitIntervalId = null;
+            cancelMatchmaking = null;
+
+            // Ждём startTime (может прийти сразу или быть переданным)
+            if (startTime) {
+                startMultiplayerGame(sessionId, questions, opponentId, opponentName, startTime);
+            } else {
+                // Подписываемся на startTime
+                const unsub = subscribeToGameStart(sessionId, (st) => {
+                    unsub();
+                    startMultiplayerGame(sessionId, questions, opponentId, opponentName, st);
+                });
+                // На случай отмены
+                const originalCancel = cancel;
+                cancelMatchmaking = () => {
+                    unsub();
+                    originalCancel();
+                };
+            }
+        })
+        .catch((err) => {
+            console.warn('Мультиплеер недоступен, начинаем одиночную игру:', err);
+            cancelMatchmaking = null;
+            clearInterval(waitIntervalId);
+            waitIntervalId = null;
+            startGameReal();
+        });
+}
+
+// Отмена ожидания – возврат в меню
+cancelWaitBtn.addEventListener('click', () => {
+    if (waitIntervalId) {
+        clearInterval(waitIntervalId);
+        waitIntervalId = null;
+    }
+    if (cancelMatchmaking) {
+        cancelMatchmaking();
+        cancelMatchmaking = null;
+    }
+    backToMenu();
+});
+
+function startGameReal() {
+    // Скрываем панель соперника
+    if (opponentPanel) opponentPanel.style.display = 'none';
+
+    currentQuestions = buildUniqueQuestionList(selectedRounds);
+    resetGameState();
+    updatePresenceStatus('playing');
+    showOnlyScreen(gameScreen);
+    initProgressTrack();
+    resetFeedback();
+    renderAnswer();
+    setCurrentQuestion();
+    startTimer();
+    requestFullscreenOnMobile();
+}
+
+function startMultiplayerGame(sessionId, questions, opponentId, opponentName, startTime) {
+    // Показываем панель соперника
+    if (opponentPanel) opponentPanel.style.display = '';
+
+    multiplayerSessionId = sessionId;
+    multiplayerOpponentId = opponentId;
+
+    currentQuestions = questions;
+    resetGameState();
+
+    // Синхронизация времени: используем серверное время старта
+    gameStartTime = startTime; // startTime уже в миллисекундах по серверу
+    // Корректировка локального таймера: вычисляем offset
+    const serverTime = startTime;
+    const localTime = Date.now();
+    // Для корректного отображения таймера будем хранить смещение
+    gameStartTime = localTime - (localTime - serverTime); // по сути serverTime
+    // Но проще хранить serverTime и вычислять elapsed = (Date.now() - (serverTime - offset)), но offset неизвестен.
+    // Однако разница между клиентами будет минимальна, используем просто триггер старта:
+    // сбрасываем timer на 0 при старте реального игрового цикла.
+    // Установим gameStartTime = Date.now() в момент получения startTime – это даст почти одновременный старт.
+    gameStartTime = Date.now();
+
+    updatePresenceStatus('playing');
+    showOnlyScreen(gameScreen);
+
+    initProgressTrack();
+    initOpponentProgressBar(opponentName, questions.length);
+
+    opponentUnsubscribe = subscribeOpponentProgress(sessionId, getPlayerId(), (data) => {
+        updateOpponentProgressBar(data.progress, data.score, data.answers, currentQuestions.length);
+        if (data.finished) {
+            showOpponentFinishedMessage(opponentName, data.score, data.totalTimeSec);
+        }
+    });
+
+    resetFeedback();
+    renderAnswer();
+    setCurrentQuestion();
+    startTimer();
+    requestFullscreenOnMobile();
+}
+
+function resetGameState() {
+    currentRound = 0;
+    score = 0;
+    currentAnswer = "";
+    isLocked = false;
+    streak = 0;
+    bestStreak = 0;
+    mistakesInCurrentGame = [];
+    answersLog = [];
+    if (opponentUnsubscribe) {
+        opponentUnsubscribe();
+        opponentUnsubscribe = null;
+    }
+}
+
+function initOpponentProgressBar(name, total) {
+    const oppTrack = document.getElementById('opponentProgressTrack');
+    oppTrack.innerHTML = '';
+    oppTrack.style.gridTemplateColumns = `repeat(${total}, 1fr)`;
+    for (let i = 0; i < total; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'progress-cell';
+        oppTrack.appendChild(cell);
+    }
+    document.querySelector('.opponent-label').textContent = `Соперник (${name}): `;
+    document.getElementById('opponentScore').textContent = `0/${total}`;
+}
+
+function updateOpponentProgressBar(progress, score, answers, total) {
+    const cells = document.querySelectorAll('#opponentProgressTrack .progress-cell');
+    // Сначала сбрасываем все классы
+    cells.forEach(cell => {
+        cell.classList.remove('progress-cell--ok', 'progress-cell--bad');
+    });
+    // Применяем результаты из answers
+    if (answers && Array.isArray(answers)) {
+        answers.forEach(ans => {
+            const idx = ans.index;
+            if (idx >= 0 && idx < cells.length) {
+                cells[idx].classList.add(ans.correct ? 'progress-cell--ok' : 'progress-cell--bad');
+            }
+        });
+    } else {
+        // Если answers нет, закрашиваем только отвеченные как успешные (старое поведение)
+        for (let i = 0; i < progress && i < cells.length; i++) {
+            cells[i].classList.add('progress-cell--ok');
+        }
+    }
+    document.getElementById('opponentScore').textContent = `${score}/${total}`;
+}
+
 function checkAnswer() {
     const value = Number(currentAnswer);
     const correct = currentA * currentB;
@@ -310,12 +505,20 @@ function checkAnswer() {
     }
     paintProgressCell(isCorrect);
 
-        // после обновления score и streak, но до setTimeout
     if (multiplayerSessionId) {
-        updateMyProgress(multiplayerSessionId, getPlayerId(), currentRound + 1, score, false, 0);
+        // Отправляем прогресс + последний ответ
+        updateMyProgress(
+            multiplayerSessionId,
+            getPlayerId(),
+            currentRound + 1,
+            score,
+            false,
+            0,
+            { answers: answersLog.map((item, i) => ({ index: i, correct: item.isCorrect })) } // отправляем весь массив
+        );
     }
 
-    setTimeout(() => nextQuestion(), 650);
+    setTimeout(() => nextQuestion(), 450);
 }
 
 function nextQuestion() {
@@ -353,7 +556,15 @@ async function finishGame() {
     showOnlyScreen(resultScreen);
 
     if (multiplayerSessionId) {
-        await updateMyProgress(multiplayerSessionId, getPlayerId(), currentRound, score, true, totalTimeSec);
+        await updateMyProgress(
+            multiplayerSessionId,
+            getPlayerId(),
+            currentRound,
+            score,
+            true,
+            totalTimeSec,
+            null
+        );
     }
 
     const streakHtml = bestStreak > 0 ? ` 🔥 Серия: ${bestStreak}` : '';
@@ -379,166 +590,6 @@ async function finishGame() {
         </li>`;
     }).join('');
 }
-
-// ----- Экран ожидания (новый функционал) -----
-function startGame() {
-    // Останавливаем предыдущий поиск, если был
-    if (cancelMatchmaking) {
-        cancelMatchmaking();
-        cancelMatchmaking = null;
-    }
-
-    showOnlyScreen(waitScreen);
-    updatePresenceStatus('waiting');
-
-    // Запускаем поиск соперника
-    cancelMatchmaking = startSearch(
-        playerName,
-        selectedRounds,
-        // Колбэк при нахождении соперника
-        (sessionId, questions, opponentId, opponentName) => {
-            cancelMatchmaking = null;
-            // Останавливаем обратный отсчёт
-            if (waitIntervalId) {
-                clearInterval(waitIntervalId);
-                waitIntervalId = null;
-            }
-            startMultiplayerGame(sessionId, questions, opponentId, opponentName);
-        },
-        // Колбэк при ошибке (Firebase недоступен или другая ошибка)
-        (error) => {
-            console.warn('Мультиплеер недоступен, начинаем одиночную игру:', error);
-            cancelMatchmaking = null;
-            // Сразу начинаем одиночную игру (без ожидания)
-            if (waitIntervalId) {
-                clearInterval(waitIntervalId);
-                waitIntervalId = null;
-            }
-            startGameReal();
-        }
-    );
-
-    // Запускаем обратный отсчёт (5 секунд)
-    if (waitIntervalId) clearInterval(waitIntervalId);
-    let countdown = 5;
-    countdownEl.textContent = countdown;
-    
-    waitIntervalId = setInterval(() => {
-        countdown--;
-        countdownEl.textContent = countdown;
-        if (countdown <= 0) {
-            clearInterval(waitIntervalId);
-            waitIntervalId = null;
-            // Если поиск ещё не завершился — отменяем и играем соло
-            if (cancelMatchmaking) {
-                cancelMatchmaking();
-                cancelMatchmaking = null;
-            }
-            startGameReal();
-        }
-    }, 1000);
-}
-
-let multiplayerSessionId = null;
-let multiplayerOpponentId = null;
-let opponentUnsubscribe = null;
-
-function startMultiplayerGame(sessionId, questions, opponentId, opponentName) {
-    multiplayerSessionId = sessionId;
-    multiplayerOpponentId = opponentId;
-
-    currentQuestions = questions; // используем готовый набор
-    currentRound = 0;
-    score = 0;
-    currentAnswer = "";
-    isLocked = false;
-    streak = 0;
-    bestStreak = 0;
-    mistakesInCurrentGame = [];
-    answersLog = [];
-    gameStartTime = Date.now();
-    
-    updatePresenceStatus('playing');
-    showOnlyScreen(gameScreen);
-    
-    // Инициализируем оба прогресс-бара
-    initProgressTrack();
-    initOpponentProgressBar(opponentName);
-    
-    // Подписка на прогресс соперника
-    opponentUnsubscribe = subscribeOpponentProgress(sessionId, getPlayerId(), (data) => {
-        updateOpponentProgressBar(data.progress, currentQuestions.length, data.score);
-        if (data.finished) {
-            showOpponentFinishedMessage(opponentName, data.score, data.totalTimeSec);
-        }
-    });
-    
-    resetFeedback();
-    renderAnswer();
-    setCurrentQuestion();
-    startTimer();
-    requestFullscreenOnMobile();
-}
-
-// Вспомогательные функции для прогресс-бара соперника
-function initOpponentProgressBar(name) {
-    const oppTrack = document.getElementById('opponentProgressTrack');
-    oppTrack.innerHTML = '';
-    oppTrack.style.gridTemplateColumns = `repeat(${currentQuestions.length}, 1fr)`;
-    for (let i = 0; i < currentQuestions.length; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'progress-cell';
-        oppTrack.appendChild(cell);
-    }
-    document.querySelector('.opponent-label').textContent = `Соперник (${name}): `;
-    document.getElementById('opponentScore').textContent = `0/${currentQuestions.length}`;
-}
-
-function updateOpponentProgressBar(progress, total, score) {
-    const cells = document.querySelectorAll('#opponentProgressTrack .progress-cell');
-    for (let i = 0; i < total; i++) {
-        if (i < progress) {
-            cells[i]?.classList.add('progress-cell--ok'); // предполагаем, что все его ответы верны; можно усложнить
-        }
-    }
-    document.getElementById('opponentScore').textContent = `${score}/${total}`;
-}
-
-
-// Реальная инициализация игры (бывшая startGame)
-function startGameReal() {
-    currentQuestions = buildUniqueQuestionList(selectedRounds);
-    currentRound = 0;
-    score = 0;
-    currentAnswer = "";
-    isLocked = false;
-    streak = 0;
-    bestStreak = 0;
-    mistakesInCurrentGame = [];
-    answersLog = [];
-    gameStartTime = Date.now();
-    updatePresenceStatus('playing');
-    showOnlyScreen(gameScreen);
-    initProgressTrack();
-    resetFeedback();
-    renderAnswer();
-    setCurrentQuestion();
-    startTimer();
-    requestFullscreenOnMobile();
-}
-
-// Отмена ожидания – возврат в меню
-cancelWaitBtn.addEventListener('click', () => {
-    if (waitIntervalId) {
-        clearInterval(waitIntervalId);
-        waitIntervalId = null;
-    }
-    if (cancelMatchmaking) {
-        cancelMatchmaking();
-        cancelMatchmaking = null;
-    }
-    backToMenu();
-});
 
 // Обновлённая функция возврата в меню
 function backToMenu() {
@@ -708,7 +759,7 @@ function requestFullscreenOnMobile() {
     }
 }
 
-// ----- Старт приложения (выполняется один раз) -----
+// Инициализация приложения
 (async () => {
     await loadInitialData();
     await storage.syncLocalResults();
@@ -727,6 +778,5 @@ function requestFullscreenOnMobile() {
     if (playerName && playerName !== 'Игрок') {
         initPresence(playerName);
     }
-
     subscribeToOnlineUsers(renderOnlineUsers);
 })();
