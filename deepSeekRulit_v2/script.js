@@ -11,7 +11,7 @@ import { initPresence,
     getPlayerId,
     removePresence } from './online-presence.js';
 
-import { startMultiplayerOrSolo, 
+import { startSearch, 
     subscribeOpponentProgress, 
     updateMyProgress } from './multiplayer.js';    
 
@@ -88,6 +88,7 @@ let answersLog = [];
 let audioCtx = null;
 let gameStartTime = 0;
 let waitIntervalId = null;         // идентификатор таймера обратного отсчёта
+let cancelMatchmaking = null;   // функция отмены поиска из multiplayer
 
 // ----- Загрузка данных при старте -----
 async function loadInitialData() {
@@ -381,27 +382,44 @@ async function finishGame() {
 
 // ----- Экран ожидания (новый функционал) -----
 function startGame() {
-    // Показать экран ожидания, установить статус "ожидание игры"
+    // Останавливаем предыдущий поиск, если был
+    if (cancelMatchmaking) {
+        cancelMatchmaking();
+        cancelMatchmaking = null;
+    }
+
     showOnlyScreen(waitScreen);
     updatePresenceStatus('waiting');
 
-        // Запускаем поиск соперника
-    startMultiplayerOrSolo(
+    // Запускаем поиск соперника
+    cancelMatchmaking = startSearch(
         playerName,
         selectedRounds,
-        // Колбэк для одиночной игры (по истечении таймаута)
-        () => {
-            startGameReal(); // обычный старт
-        },
-        // Колбэк для мультиплеерной игры
+        // Колбэк при нахождении соперника
         (sessionId, questions, opponentId, opponentName) => {
+            cancelMatchmaking = null;
+            // Останавливаем обратный отсчёт
+            if (waitIntervalId) {
+                clearInterval(waitIntervalId);
+                waitIntervalId = null;
+            }
             startMultiplayerGame(sessionId, questions, opponentId, opponentName);
+        },
+        // Колбэк при ошибке (Firebase недоступен или другая ошибка)
+        (error) => {
+            console.warn('Мультиплеер недоступен, начинаем одиночную игру:', error);
+            cancelMatchmaking = null;
+            // Сразу начинаем одиночную игру (без ожидания)
+            if (waitIntervalId) {
+                clearInterval(waitIntervalId);
+                waitIntervalId = null;
+            }
+            startGameReal();
         }
     );
-    
-    // Сбросить предыдущий таймер, если был
+
+    // Запускаем обратный отсчёт (5 секунд)
     if (waitIntervalId) clearInterval(waitIntervalId);
-    
     let countdown = 5;
     countdownEl.textContent = countdown;
     
@@ -411,7 +429,11 @@ function startGame() {
         if (countdown <= 0) {
             clearInterval(waitIntervalId);
             waitIntervalId = null;
-            // Начать реальную игру
+            // Если поиск ещё не завершился — отменяем и играем соло
+            if (cancelMatchmaking) {
+                cancelMatchmaking();
+                cancelMatchmaking = null;
+            }
             startGameReal();
         }
     }, 1000);
@@ -511,6 +533,10 @@ cancelWaitBtn.addEventListener('click', () => {
         clearInterval(waitIntervalId);
         waitIntervalId = null;
     }
+    if (cancelMatchmaking) {
+        cancelMatchmaking();
+        cancelMatchmaking = null;
+    }
     backToMenu();
 });
 
@@ -518,7 +544,7 @@ cancelWaitBtn.addEventListener('click', () => {
 function backToMenu() {
     // Если игра активна – требуется подтверждение
     if (!gameScreen.classList.contains("hidden")) {
-        if (!confirm("Вы уверены, что хотите выйти? Прогресс будет потерян.")) return;
+        //if (!confirm("Вы уверены, что хотите выйти? Прогресс будет потерян.")) return;
     }
     // Если активен экран ожидания – просто останавливаем таймер и возвращаемся
     if (!waitScreen.classList.contains("hidden")) {
@@ -531,6 +557,11 @@ function backToMenu() {
     if (opponentUnsubscribe) {
         opponentUnsubscribe();
         opponentUnsubscribe = null;
+    }
+// При возврате в меню также безопасно отменяем поиск, если он ещё активен:
+    if (cancelMatchmaking) {
+        cancelMatchmaking();
+        cancelMatchmaking = null;
     }
     
     stopTimer();

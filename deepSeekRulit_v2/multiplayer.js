@@ -7,7 +7,8 @@ if (!useFirebase) {
     console.warn("Firebase не инициализирован. Мультиплеер недоступен.");
 }
 
-// Создаёт новую сессию и записывает в базу
+// ================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==================
+
 async function createSession(playerId, playerName, questions) {
     const sessionRef = push(ref(db, 'sessions'));
     const sessionId = sessionRef.key;
@@ -27,7 +28,6 @@ async function createSession(playerId, playerName, questions) {
     return sessionId;
 }
 
-// Присоединяется к существующей сессии
 async function joinSession(sessionId, playerId, playerName) {
     const sessionRef = ref(db, `sessions/${sessionId}`);
     const snapshot = await get(sessionRef);
@@ -45,13 +45,126 @@ async function joinSession(sessionId, playerId, playerName) {
     await update(sessionRef, updates);
 }
 
-// Удаляет себя из waitingPlayers
 async function leaveWaiting(playerId) {
     await remove(ref(db, `waitingPlayers/${playerId}`));
 }
 
-// Подписывается на изменения прогресса соперника
-function subscribeOpponentProgress(sessionId, myPlayerId, callback) {
+// ================== НОВЫЙ ПОИСК СОПЕРНИКА ==================
+
+/**
+ * Начинает поиск соперника.
+ * @param {string} playerName - имя текущего игрока
+ * @param {number} selectedRounds - количество вопросов
+ * @param {function} onOpponentFound - колбэк при обнаружении соперника.
+ *   Получает (sessionId, questions, opponentId, opponentName)
+ * @param {function} onError - вызывается при ошибке или невозможности мультиплеера
+ * @returns {function} cancel - вызов отменяет поиск, удаляет игрока из очереди
+ */
+export function startSearch(playerName, selectedRounds, onOpponentFound, onError) {
+    if (!useFirebase || !db) {
+        // Если Firebase недоступен, сразу сообщаем об ошибке → одиночная игра
+        onError && onError(new Error('Firebase недоступен'));
+        return () => {}; // пустая функция отмены
+    }
+
+    const playerId = getPlayerId();
+    updatePresenceStatus('waiting');
+
+    // Флаг, предотвращающий повторные действия
+    let settled = false;
+    // Ссылки для отписки
+    let unsubscribeSelf = null;
+    let unsubscribeOthers = null;
+
+    // Добавляем себя в waitingPlayers
+    set(ref(db, `waitingPlayers/${playerId}`), {
+        name: playerName,
+        joinedAt: serverTimestamp(),
+        sessionId: null
+    });
+
+    // Слушаем, когда другой игрок назначит нам сессию
+    const selfSessionRef = ref(db, `waitingPlayers/${playerId}/sessionId`);
+    unsubscribeSelf = onValue(selfSessionRef, async (snap) => {
+        if (settled) return;
+        const sessionId = snap.val();
+        if (sessionId) {
+            settled = true;
+            cleanupListeners();
+            try {
+                const sessionSnap = await get(ref(db, `sessions/${sessionId}`));
+                if (!sessionSnap.exists()) {
+                    throw new Error('Сессия не найдена');
+                }
+                const sessionData = sessionSnap.val();
+                const questions = sessionData.questions;
+                const opponent = Object.entries(sessionData.players).find(([id]) => id !== playerId);
+                if (!opponent) {
+                    throw new Error('Соперник не найден в сессии');
+                }
+                const opponentName = opponent[1].name;
+                await joinSession(sessionId, playerId, playerName);
+                await leaveWaiting(playerId);
+                onOpponentFound(sessionId, questions, opponent[0], opponentName);
+            } catch (err) {
+                console.error('Ошибка при подключении к сессии:', err);
+                await leaveWaiting(playerId);
+                onError && onError(err);
+            }
+        }
+    });
+
+    // Слушаем список ожидающих — ищем другого игрока, чтобы создать сессию
+    const waitingRef = ref(db, 'waitingPlayers');
+    unsubscribeOthers = onValue(waitingRef, async (snapshot) => {
+        if (settled) return;
+        const players = snapshot.val() || {};
+        const others = Object.keys(players).filter(id => id !== playerId);
+        if (others.length > 0) {
+            settled = true;
+            cleanupListeners();
+            const opponentId = others[0];
+            const opponentData = players[opponentId];
+            try {
+                const questions = buildUniqueQuestionList(selectedRounds);
+                const sessionId = await createSession(playerId, playerName, questions);
+                await set(ref(db, `waitingPlayers/${opponentId}/sessionId`), sessionId);
+                await leaveWaiting(playerId);
+                await leaveWaiting(opponentId);
+                onOpponentFound(sessionId, questions, opponentId, opponentData.name);
+            } catch (err) {
+                console.error('Ошибка при создании сессии:', err);
+                await leaveWaiting(playerId);
+                onError && onError(err);
+            }
+        }
+    });
+
+    // Функция очистки подписок
+    function cleanupListeners() {
+        if (unsubscribeSelf) {
+            unsubscribeSelf();
+            unsubscribeSelf = null;
+        }
+        if (unsubscribeOthers) {
+            unsubscribeOthers();
+            unsubscribeOthers = null;
+        }
+    }
+
+    // Возвращаем функцию отмены поиска
+    return async () => {
+        if (settled) return;
+        settled = true;
+        cleanupListeners();
+        await leaveWaiting(playerId);
+        updatePresenceStatus('menu'); // или 'idle'
+    };
+}
+
+// ================== ПРОГРЕСС ВО ВРЕМЯ МУЛЬТИПЛЕЕРНОЙ ИГРЫ ==================
+
+export function subscribeOpponentProgress(sessionId, myPlayerId, callback) {
     const sessionRef = ref(db, `sessions/${sessionId}/players`);
     return onValue(sessionRef, (snapshot) => {
         const players = snapshot.val() || {};
@@ -68,8 +181,7 @@ function subscribeOpponentProgress(sessionId, myPlayerId, callback) {
     });
 }
 
-// Обновляет свой прогресс в сессии
-function updateMyProgress(sessionId, playerId, progress, score, finished, totalTimeSec) {
+export function updateMyProgress(sessionId, playerId, progress, score, finished, totalTimeSec) {
     const updates = {};
     updates[`players/${playerId}/progress`] = progress;
     updates[`players/${playerId}/score`] = score;
@@ -77,93 +189,3 @@ function updateMyProgress(sessionId, playerId, progress, score, finished, totalT
     updates[`players/${playerId}/totalTimeSec`] = totalTimeSec;
     return update(ref(db, `sessions/${sessionId}`), updates);
 }
-
-// Основная функция поиска соперника
-export async function startMultiplayerOrSolo(playerName, selectedRounds, onSoloGame, onMultiplayerGame) {
-    if (!useFirebase) {
-        onSoloGame();
-        return;
-    }
-
-    const playerId = getPlayerId();
-    updatePresenceStatus('waiting');
-    
-    // Добавляем себя в waitingPlayers
-    await set(ref(db, `waitingPlayers/${playerId}`), {
-        name: playerName,
-        joinedAt: serverTimestamp(),
-        sessionId: null   // пока нет сессии
-    });
-
-    let opponentFound = false;
-    let timeoutId = null;
-
-    // Слушаем, не появилась ли для нас сессия от другого игрока
-    const myWaitingRef = ref(db, `waitingPlayers/${playerId}/sessionId`);
-    const unsubscribeSelf = onValue(myWaitingRef, async (snap) => {
-        if (opponentFound) return;
-        const sessionId = snap.val();
-        if (sessionId) {
-            // Соперник создал сессию и указал её для нас
-            opponentFound = true;
-            if (timeoutId) clearTimeout(timeoutId);
-            unsubscribeSelf();
-            // Забираем информацию о вопросах и сопернике
-            const sessionSnap = await get(ref(db, `sessions/${sessionId}`));
-            if (!sessionSnap.exists()) return;
-            const sessionData = sessionSnap.val();
-            const questions = sessionData.questions;
-            const opponentPlayer = Object.entries(sessionData.players).find(([id]) => id !== playerId);
-            if (!opponentPlayer) return;
-            const opponentName = opponentPlayer[1].name;
-            await joinSession(sessionId, playerId, playerName);
-            await leaveWaiting(playerId);
-            onMultiplayerGame(sessionId, questions, opponentPlayer[0], opponentName);
-        }
-    });
-
-    // Слушаем других ожидающих игроков
-    const waitingRef = ref(db, 'waitingPlayers');
-    const unsubscribeOthers = onValue(waitingRef, async (snapshot) => {
-        if (opponentFound) return;
-        const players = snapshot.val() || {};
-        const otherPlayers = Object.keys(players).filter(id => id !== playerId);
-        
-        if (otherPlayers.length > 0) {
-            // Выбираем первого попавшегося соперника
-            const opponentId = otherPlayers[0];
-            const opponentData = players[opponentId];
-            
-            opponentFound = true;
-            if (timeoutId) clearTimeout(timeoutId);
-            unsubscribeSelf();
-            unsubscribeOthers();
-            
-            // Генерируем вопросы
-            const questions = buildUniqueQuestionList(selectedRounds);
-            const sessionId = await createSession(playerId, playerName, questions);
-            
-            // Сообщаем сопернику ID сессии
-            await set(ref(db, `waitingPlayers/${opponentId}/sessionId`), sessionId);
-            
-            // Удаляем обоих из waitingPlayers
-            await leaveWaiting(playerId);
-            await leaveWaiting(opponentId);
-            
-            onMultiplayerGame(sessionId, questions, opponentId, opponentData.name);
-        }
-    });
-
-    // Таймаут 5 секунд – если соперник не найден, играем соло
-    timeoutId = setTimeout(async () => {
-        if (!opponentFound) {
-            unsubscribeSelf();
-            unsubscribeOthers();
-            await leaveWaiting(playerId);
-            updatePresenceStatus('playing');
-            onSoloGame();
-        }
-    }, 5000);
-}
-
-export { subscribeOpponentProgress, updateMyProgress };
