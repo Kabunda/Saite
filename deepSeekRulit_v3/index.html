@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <title>Тренажер умножения</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <main class="app">
+        <!-- Экран ввода имени -->
+        <section id="nameInputScreen" class="screen">
+            <h1>Добро пожаловать!</h1>
+            <p class="subtitle">Введите ваше имя для начала игры</p>
+            <div class="menu-panel">
+                <label for="playerNameInput" class="player-info">Ваше имя:</label>
+                <input type="text" id="playerNameInput" placeholder="Например, Алёша" maxlength="20" autocomplete="off" class="name-input" />
+                <p id="nameError" class="error-message hidden">⚠️ Имя не может быть пустым</p>
+                <p class="hint">Имя будет сохранено и отображено в таблице лидеров</p>
+            </div>
+                <div class="toggle-row">
+                    <span>Тёмная тема</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <span>Звук</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modalSoundToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <span>Вибрация</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modalVibrationToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            <div class="menu-buttons">
+                <button id="continueBtn">Продолжить</button>
+            </div>
+        </section>
+
+        <!-- Главное меню -->
+        <section id="menuScreen" class="screen hidden">
+            <div class="menu-header">
+                <h1>Тренажер умножения</h1>
+                <button id="settingsBtn" class="icon-btn settings-btn-corner" aria-label="Настройки">⚙</button>
+            </div>
+            <p class="subtitle" id="roundsSubtitle">20 вопросов</p>
+            <div class="player-panel">
+                <div class="player-name-display">
+                    <span class="player-name-text">Имя: <span id="currentPlayerName">Игрок</span></span>
+                </div>
+            </div>
+            <div class="menu-buttons">
+                <button id="startBtn">Начать игру</button>
+            </div>
+            <div class="online-users">
+                <h3>Сейчас в игре:</h3>
+                <ul id="onlinePlayersList">
+                    <li>Загрузка...</li>
+                </ul>
+            </div>
+
+            <section class="leaderboard">
+                <h2>Топ игроков (лучшее время)</h2>
+                <table>
+                    <thead><tr><th>#</th><th>Игрок</th><th>Время</th><th>Дата</th></tr></thead>
+                    <tbody id="leaderboardBody"><tr><td colspan="5">Пока нет результатов.</td></tr></tbody>
+                </table>
+            </section>
+        </section>
+
+        <!-- Экран ожидания (НОВЫЙ) -->
+        <section id="waitScreen" class="screen hidden">
+            <h2>Приготовьтесь!</h2>
+            <div id="waitMessage">Поиск соперника...</div>
+            <div id="countdown" class="timer-large">5</div>
+            <div id="opponentInfo" style="display: none;">Соперник: <span id="opponentNameSpan"></span></div>
+            <button id="cancelWaitBtn" class="secondary">Отмена</button>
+        </section>
+
+        <!-- Игровой экран -->
+        <section id="gameScreen" class="screen hidden">
+            <div class="status-row">
+                <div class="status-top">
+                    <div class="progress-wrap">
+                        <div id="progressTrack" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"></div>
+                    </div>
+                    <button id="backBtn" class="mini-btn icon-btn back-btn" aria-label="Выход">X</button>
+                    <button id="fullscreenBtn" class="mini-btn icon-btn fullscreen-btn" aria-label="На весь экран">#</button>
+                </div>
+
+                    <!-- Прогресс-бар соперника -->
+                <div class="opponent-progress">
+                    <span class="opponent-label">Соперник: </span>
+                    <div class="progress-wrap opponent-bar">
+                        <div id="opponentProgressTrack" class="progress-track"></div>
+                    </div>
+                    <span id="opponentScore" class="opponent-score">0/0</span>
+                </div>
+
+                <div id="timer" class="timer-large">Время: 00:00</div>
+            </div>
+            <div class="game-content">
+                <div class="game-area">
+                    <p id="questionText" class="question">5 × 2 = ?</p>
+                    <p id="answerText" class="answer">_</p>
+                    <p id="feedback" class="feedback"></p>
+                </div>
+                <div class="keypad" id="keypad">
+                    <div class="keypad-main">
+                        <div class="digit-grid">
+                            <button class="key" data-key="1">1</button><button class="key" data-key="2">2</button><button class="key" data-key="3">3</button>
+                            <button class="key" data-key="4">4</button><button class="key" data-key="5">5</button><button class="key" data-key="6">6</button>
+                            <button class="key" data-key="7">7</button><button class="key" data-key="8">8</button><button class="key" data-key="9">9</button>
+                            <button class="key key-zero" data-key="0">0</button>
+                        </div>
+                        <div class="action-grid">
+                            <button class="key key-action key-del" data-key="del">⌫</button>
+                            <button class="key key-action key-ac" data-key="clear">AC</button>
+                        </div>
+                    </div>
+                    <button class="key key-confirm key-ok-side" data-key="enter">OK</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Экран результатов -->
+        <section id="resultScreen" class="screen hidden">
+            <h2>Игра завершена</h2>
+            <p id="resultSummary"></p>
+            <div id="timeScale" class="time-scale hidden">
+                <div class="time-scale-bar"><div class="time-scale-fill"></div></div>
+                <span class="time-scale-text"></span>
+            </div>
+            <div class="answers-panel">
+                <h3>Все вопросы и ответы</h3>
+                <ul id="answersList" class="answers-list"></ul>
+            </div>
+            <div class="menu-buttons result-buttons">
+                <button id="playAgainBtn">Играть снова</button>
+                <button id="toMenuBtn" class="secondary">В главное меню</button>
+            </div>
+        </section>
+    </main>
+    <div id="leaderboardTooltip" class="leaderboard-tooltip hidden"></div>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
