@@ -37,19 +37,20 @@ async function backToMenu() {
 
 // ---------- Начало игры (из меню) ----------
 async function startGameFlow() {
+    console.log("Запущен поиск игры");
     showScreen('wait');
     updatePresenceStatus('waiting');
     const waitMessage = document.getElementById('waitMessage');
     const countdownEl = document.getElementById('countdown');
     waitMessage.textContent = "Поиск соперника...";
     els.opponentInfo.style.display = "none";
-    countdownEl.textContent = "3";
+    countdownEl.textContent = "30";
 
     let resolved = false;
     const matchmaking = startMatchmaking(state.playerName, state.selectedRounds);
     cancelMatchmaking = matchmaking.cancel;
 
-    let countdown = 3;
+    let countdown = 30;
     countdownEl.textContent = countdown;
     countdownInterval = setInterval(() => {
         countdown--;
@@ -60,6 +61,7 @@ async function startGameFlow() {
             if (!resolved) {
                 resolved = true;
                 matchmaking.cancel();
+                console.log("Игра запущена в соло, соперник не найден");
                 startSinglePlayerGame();
             }
         }
@@ -70,6 +72,7 @@ async function startGameFlow() {
             resolved = true;
             if (countdownInterval) clearInterval(countdownInterval);
             cancelMatchmaking = null;
+            console.log("Игра запущена в мультиплеере");
             startCountdownBeforeMultiplayer(data);
         }
     }).catch(() => {
@@ -77,6 +80,7 @@ async function startGameFlow() {
             resolved = true;
             if (countdownInterval) clearInterval(countdownInterval);
             cancelMatchmaking = null;
+            console.log("Игра запущена с соло, что-то пошло не так");
             startSinglePlayerGame();
         }
     });
@@ -84,6 +88,7 @@ async function startGameFlow() {
 
 // Обратный отсчёт перед мультиплеерной игрой
 async function startCountdownBeforeMultiplayer(data) {
+    
     if (countdownInterval) clearInterval(countdownInterval);
     if (lobbyWatcher) lobbyWatcher();
 

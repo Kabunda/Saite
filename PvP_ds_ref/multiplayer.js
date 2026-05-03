@@ -1,4 +1,9 @@
-// multiplayer.js – полностью переработанный модуль сетевой игры
+// multiplayer.js — модуль для сетевой игры с соперником через Firebase Realtime Database.
+// Отвечает за:
+//   - поиск / создание игрового лобби (startMatchmaking);
+//   - подписку на прогресс соперника (subscribeOpponentProgress);
+//   - отправку собственного прогресса в лобби (updateMyProgress).
+
 import { db, useFirebase } from './storage.js';
 import {
     ref, set, update, get, onValue, remove, push, serverTimestamp
@@ -6,20 +11,28 @@ import {
 import { getPlayerId } from './presence.js';
 import { buildUniqueQuestionList } from './task-generator.js';
 
-// -----------------------------------------------------------------------------
-// ActivityManager – сборщик функций очистки (подписки, интервалы)
-// -----------------------------------------------------------------------------
+// =============================================================================
+// ActivityManager — сборщик функций очистки (подписки, интервалы)
+// Используется для гарантированной отмены всех слушателей при завершении/отмене
+// =============================================================================
 class ActivityManager {
     constructor() {
         this.cleanups = [];
     }
+
+    /**
+     * Добавить функцию или идентификатор интервала для очистки.
+     * @param {Function|number} fnOrInterval
+     */
     add(fnOrInterval) {
         this.cleanups.push(fnOrInterval);
     }
+
+    /** Выполнить все зарегистрированные очистки и очистить список. */
     clear() {
         this.cleanups.forEach(item => {
             if (typeof item === 'function') {
-                try { item(); } catch (e) { /* игнорируем */ }
+                try { item(); } catch (e) { /* ignore */ }
             } else {
                 clearInterval(item);
             }
@@ -28,10 +41,56 @@ class ActivityManager {
     }
 }
 
-// -----------------------------------------------------------------------------
-// startMatchmaking – главная точка входа для поиска / создания игры
-// -----------------------------------------------------------------------------
+// =============================================================================
+// Вспомогательные функции
+// =============================================================================
+
+/**
+ * Безопасно создаёт слушатель на значение startTime в лобби.
+ * Возвращает объект с функцией отписки, которую можно вызывать даже до того,
+ * как реальный слушатель будет присвоен (защита от синхронного вызова колбэка).
+ *
+ * @param {string} lobbyId - идентификатор лобби
+ * @param {function} onStartReady - колбэк, вызывается когда startTime > 0
+ * @returns {{ unsubscribe: function }} объект с методом unsubscribe()
+ */
+function listenForStartTime(lobbyId, onStartReady) {
+    const startTimeRef = ref(db, `lobbies/${lobbyId}/startTime`);
+    let unsub = null;
+
+    // Безопасная функция отписки: вызывает unsub, только если он уже функция
+    const safeUnsubscribe = () => {
+        if (typeof unsub === 'function') {
+            unsub();
+            unsub = null;
+        }
+    };
+
+    unsub = onValue(startTimeRef, (snapshot) => {
+        const st = snapshot.val();
+        if (st && typeof st === 'number' && st > 0) {
+            safeUnsubscribe();    // убираем слушатель
+            onStartReady(st);     // оповещаем о готовности
+        }
+    });
+
+    return { unsubscribe: safeUnsubscribe };
+}
+
+// =============================================================================
+// Основная функция поиска/создания игры
+// =============================================================================
+
+/**
+ * Запускает процесс подбора соперника.
+ * Если Firebase недоступен, сразу возвращает отменяемый ошибочный промис.
+ *
+ * @param {string} playerName - имя текущего игрока
+ * @param {number} selectedRounds - количество вопросов
+ * @returns {{ cancel: Function, promise: Promise<object> }}
+ */
 export function startMatchmaking(playerName, selectedRounds) {
+    // Firebase не настроен – игра по сети невозможна
     if (!useFirebase || !db) {
         return {
             cancel: () => {},
@@ -40,221 +99,252 @@ export function startMatchmaking(playerName, selectedRounds) {
     }
 
     const playerId = getPlayerId();
-    const activity = new ActivityManager();
-    let settled = false;      // флаг завершения (успех / ошибка / отмена)
-    let lobbyRef = null;      // ссылка на собственное лобби, если мы хост
-    let myPlayerRef = null;   // ссылка на /players/<мой id> (присоединившийся)
+    const activity = new ActivityManager();   // сюда будем добавлять очистки
+    let settled = false;                      // true – процесс завершён (успех/ошибка/отмена)
+    let myPlayerRef = null;                   // ссылка на свою запись в players чужого лобби
+    let lobbyRef = null;                      // ссылка на собственное лобби (когда мы хост)
 
-    // Функция финальной очистки (вызывается при любом исходе)
+    /**
+     * Финальная очистка: вызывается при любом исходе (успех, ошибка, отмена).
+     * Удаляет временные записи в Firebase, отписывается от всех слушателей.
+     */
     const finalCleanup = () => {
         activity.clear();
         if (myPlayerRef) {
-            // Если мы присоединились к чужому лобби, удаляем свою запись при отмене
             remove(myPlayerRef).catch(() => {});
+            myPlayerRef = null;
         }
         if (lobbyRef) {
-            // Если мы создали лобби, удаляем его
             remove(lobbyRef).catch(() => {});
+            lobbyRef = null;
         }
     };
 
-    const promise = new Promise(async (resolve, reject) => {
-        // 1. Поиск открытого лобби
-        const lobbiesRef = ref(db, 'lobbies');
-        let openLobbyId = null;
-        try {
-            const snap = await get(lobbiesRef);
-            const lobbies = snap.val() || {};
-            for (const id in lobbies) {
-                if (lobbies[id].status === 'waiting') {
-                    openLobbyId = id;
-                    break;
-                }
-            }
-        } catch (err) {
-            reject(err);
-            return;
+    /**
+     * Корректно завершает процесс с ошибкой.
+     * @param {string|Error} reason
+     */
+    const rejectAndClean = (reason) => {
+        if (!settled) {
+            settled = true;
+            finalCleanup();
+            reject(reason instanceof Error ? reason : new Error(reason));
         }
+    };
 
-        // ---------------------------------------------------------------------
-        // Сценарий А: найдено открытое лобби – присоединяемся как второй игрок
-        // ---------------------------------------------------------------------
-        if (openLobbyId) {
-            const lobbySnap = await get(ref(db, `lobbies/${openLobbyId}`));
-            const lobby = lobbySnap.val();
-            // Двойная проверка: вдруг лобби успело измениться
-            if (!lobby || lobby.status !== 'waiting') {
-                reject(new Error('Лобби уже недоступно'));
-                return;
-            }
-            const players = lobby.players || {};
-            if (players[playerId]) {
-                reject(new Error('Вы уже в этом лобби'));
-                return;
-            }
-            if (Object.keys(players).length >= 2) {
-                reject(new Error('Лобби заполнено'));
-                return;
-            }
-
-            const hostId = lobby.hostId;
-            const questions = lobby.questions;
-            const hostName = lobby.hostName;
-
-            // Атомарно добавляем себя в players (Firebase не поддерживает транзакции,
-            // но update относительно безопасен, т.к. ключ уникален)
-            myPlayerRef = ref(db, `lobbies/${openLobbyId}/players/${playerId}`);
-            await set(myPlayerRef, {
-                name: playerName,
-                progress: 0,
-                score: 0,
-                finished: false,
-                totalTimeSec: 0,
-                answers: []
-            });
-
-            // Слушаем установку startTime хостом
-            const startTimeRef = ref(db, `lobbies/${openLobbyId}/startTime`);
-            const unsubStart = onValue(startTimeRef, (s) => {
-                if (settled) return;
-                const st = s.val();
-                if (st && typeof st === 'number' && st > 0) {
-                    settled = true;
-                    unsubStart();
-                    activity.clear();
-                    myPlayerRef = null;  // больше не удаляем себя при cancel
-                    resolve({
-                        sessionId: openLobbyId,
-                        questions,
-                        opponentId: hostId,
-                        opponentName: hostName,
-                        startTime: st
-                    });
-                }
-            });
-            activity.add(unsubStart);
-
-            // Если лобби удаляется (хост отменил или ушёл)
-            const lobbyListenerRef = ref(db, `lobbies/${openLobbyId}`);
-            const unsubLobby = onValue(lobbyListenerRef, (snap) => {
-                if (settled) return;
-                if (!snap.exists()) {
-                    settled = true;
-                    unsubLobby();
-                    activity.clear();
-                    myPlayerRef = null;
-                    reject(new Error('Создатель игры вышел'));
-                }
-            });
-            activity.add(unsubLobby);
-            return;
+    /**
+     * Успешное завершение: передаём данные созданной игры.
+     * @param {object} gameData
+     */
+    const resolveAndClean = (gameData) => {
+        if (!settled) {
+            settled = true;
+            activity.clear();        // оставляем лобби (оно теперь активное), поэтому не вызываем finalCleanup
+            resolve(gameData);
         }
+    };
 
-        // ---------------------------------------------------------------------
-        // Сценарий Б: открытых лобби нет – создаём новое (становимся хостом)
-        // ---------------------------------------------------------------------
-        const newLobbyRef = push(ref(db, 'lobbies'));
-        lobbyRef = newLobbyRef;
-        const questions = buildUniqueQuestionList(selectedRounds);
-        try {
-            await set(newLobbyRef, {
-                hostId: playerId,
-                hostName: playerName,
-                status: 'waiting',
-                questions,
-                players: {
-                    [playerId]: {
+    const promise = new Promise((resolve, reject) => {
+        (async () => {
+            // 1. Поиск открытого лобби
+            const lobbiesRef = ref(db, 'lobbies');
+            let openLobbyId = null;
+            try {
+                const snap = await get(lobbiesRef);
+                const lobbies = snap.val() || {};
+                for (const id in lobbies) {
+                    if (lobbies[id].status === 'waiting') {
+                        openLobbyId = id;
+                        break;
+                    }
+                }
+            } catch (err) {
+                rejectAndClean(err);
+                return;
+            }
+
+            // -----------------------------------------------------------------
+            // Сценарий А: найдено открытое лобби – присоединяемся вторым игроком
+            // -----------------------------------------------------------------
+            if (openLobbyId) {
+                const lobbySnap = await get(ref(db, `lobbies/${openLobbyId}`));
+                const lobby = lobbySnap.val();
+
+                // Проверка на случай гонки состояний
+                if (!lobby || lobby.status !== 'waiting') {
+                    rejectAndClean('Лобби уже недоступно');
+                    return;
+                }
+
+                const players = lobby.players || {};
+                if (players[playerId]) {
+                    rejectAndClean('Вы уже находитесь в этом лобби');
+                    return;
+                }
+                if (Object.keys(players).length >= 2) {
+                    rejectAndClean('Лобби уже заполнено');
+                    return;
+                }
+
+                const hostId = lobby.hostId;
+                const questions = lobby.questions;
+                const hostName = lobby.hostName;
+
+                // Добавляем себя в players лобби
+                myPlayerRef = ref(db, `lobbies/${openLobbyId}/players/${playerId}`);
+                try {
+                    await set(myPlayerRef, {
                         name: playerName,
                         progress: 0,
                         score: 0,
                         finished: false,
                         totalTimeSec: 0,
                         answers: []
-                    }
-                },
-                createdAt: serverTimestamp()
-            });
-        } catch (err) {
-            reject(err);
-            return;
-        }
+                    });
+                } catch (err) {
+                    rejectAndClean(err);
+                    return;
+                }
 
-        // Слушаем появление второго игрока
-        const playersRef = ref(db, `lobbies/${newLobbyRef.key}/players`);
-        const unsubPlayers = onValue(playersRef, (snap) => {
-            if (settled) return;
-            const players = snap.val() || {};
-            const ids = Object.keys(players);
-            if (ids.length >= 2) {
-                unsubPlayers();
-                const opponentId = ids.find(id => id !== playerId);
-                const opponentName = players[opponentId]?.name || 'Игрок';
+                // Слушаем установку startTime хостом
+                const startListener = listenForStartTime(openLobbyId, (startTime) => {
+                    resolveAndClean({
+                        sessionId: openLobbyId,
+                        questions,
+                        opponentId: hostId,
+                        opponentName: hostName,
+                        startTime
+                    });
+                });
+                activity.add(startListener.unsubscribe);
 
-                // Активируем лобби (только хост)
-                update(ref(db, `lobbies/${newLobbyRef.key}`), {
-                    status: 'active',
-                    startTime: serverTimestamp()
-                }).catch(() => {});
-
-                // Ждём, пока сервер вернёт реальное значение startTime
-                const startTimeRef = ref(db, `lobbies/${newLobbyRef.key}/startTime`);
-                const unsubStart = onValue(startTimeRef, (s) => {
+                // Если лобби внезапно удалится (хост вышел)
+                const lobbyWatcherRef = ref(db, `lobbies/${openLobbyId}`);
+                const unsubLobby = onValue(lobbyWatcherRef, (snap) => {
                     if (settled) return;
-                    const st = s.val();
-                    if (st && typeof st === 'number' && st > 0) {
-                        settled = true;
-                        unsubStart();
-                        activity.clear();
-                        lobbyRef = null;  // лобби остаётся активным, не удаляем
-                        resolve({
+                    if (!snap.exists()) {
+                        rejectAndClean('Создатель игры вышел');
+                    }
+                });
+                activity.add(unsubLobby);
+                return;
+            }
+
+            // -----------------------------------------------------------------
+            // Сценарий Б: открытых лобби нет – создаём новое (становимся хостом)
+            // -----------------------------------------------------------------
+            const newLobbyRef = push(ref(db, 'lobbies'));
+            lobbyRef = newLobbyRef;
+            const questions = buildUniqueQuestionList(selectedRounds);
+
+            try {
+                await set(newLobbyRef, {
+                    hostId: playerId,
+                    hostName: playerName,
+                    status: 'waiting',
+                    questions,
+                    players: {
+                        [playerId]: {
+                            name: playerName,
+                            progress: 0,
+                            score: 0,
+                            finished: false,
+                            totalTimeSec: 0,
+                            answers: []
+                        }
+                    },
+                    createdAt: serverTimestamp()
+                });
+            } catch (err) {
+                rejectAndClean(err);
+                return;
+            }
+
+            // Ждём появления второго игрока
+            const playersRef = ref(db, `lobbies/${newLobbyRef.key}/players`);
+            const unsubPlayers = onValue(playersRef, (snap) => {
+                if (settled) return;
+                const players = snap.val() || {};
+                const ids = Object.keys(players);
+                if (ids.length >= 2) {
+                    // Отписываемся от players
+                    unsubPlayers();
+                    activity.cleanups = activity.cleanups.filter(f => f !== unsubPlayers);
+
+                    const opponentId = ids.find(id => id !== playerId);
+                    const opponentName = players[opponentId]?.name || 'Игрок';
+
+                    // Активируем лобби (устанавливаем startTime)
+                    update(ref(db, `lobbies/${newLobbyRef.key}`), {
+                        status: 'active',
+                        startTime: serverTimestamp()
+                    }).catch(() => {});
+
+                    // Теперь слушаем появление реального startTime от сервера
+                    const startListener = listenForStartTime(newLobbyRef.key, (startTime) => {
+                        resolveAndClean({
                             sessionId: newLobbyRef.key,
                             questions,
                             opponentId,
                             opponentName,
-                            startTime: st
+                            startTime
                         });
-                    }
-                });
-                activity.add(unsubStart);
-            }
-        });
-        activity.add(unsubPlayers);
+                    });
+                    activity.add(startListener.unsubscribe);
+                }
+            });
+            activity.add(unsubPlayers);
 
-        // Если наше лобби почему‑то удалили извне
-        const lobbyWatcher = onValue(ref(db, `lobbies/${newLobbyRef.key}`), (snap) => {
-            if (settled) return;
-            if (!snap.exists()) {
-                settled = true;
-                activity.clear();
-                lobbyRef = null;
-                reject(new Error('Лобби удалено'));
-            }
+            // Следим, не удалили ли наше лобби извне
+            const lobbyWatcher = onValue(ref(db, `lobbies/${newLobbyRef.key}`), (snap) => {
+                if (settled) return;
+                if (!snap.exists()) {
+                    rejectAndClean('Лобби было удалено');
+                }
+            });
+            activity.add(lobbyWatcher);
+
+        })().catch((err) => {
+            // Любая необработанная ошибка в async IIFE
+            rejectAndClean(err);
         });
-        activity.add(lobbyWatcher);
     });
 
-    // Функция отмены поиска
+    // Функция отмены поиска (вызывается извне)
     const cancel = () => {
-        if (settled) return;
-        settled = true;
-        finalCleanup();
+        if (!settled) {
+            settled = true;
+            finalCleanup();
+        }
     };
 
-    // Дополнительная очистка при разрешении промиса (успех / ошибка)
+    // Дополнительная гарантия очистки при разрешении промиса
     promise
-        .then(() => { activity.clear(); })
-        .catch(() => { activity.clear(); });
+        .then(() => activity.clear())
+        .catch(() => activity.clear());
 
     return { cancel, promise };
 }
 
-// -----------------------------------------------------------------------------
-// subscribeOpponentProgress – подписка на обновления соперника
-// -----------------------------------------------------------------------------
+// =============================================================================
+// Подписка на прогресс соперника
+// =============================================================================
+
+/**
+ * Подписывает на изменения данных соперника в лобби.
+ * Возвращает функцию для отписки.
+ *
+ * @param {string} sessionId - идентификатор сессии (лобби)
+ * @param {string} myPlayerId - идентификатор текущего игрока
+ * @param {function} callback - функция, принимающая объект с полями:
+ *   { progress, score, finished, totalTimeSec, answers }
+ * @returns {Function} функция отписки
+ */
 export function subscribeOpponentProgress(sessionId, myPlayerId, callback) {
     const playersRef = ref(db, `lobbies/${sessionId}/players`);
     return onValue(playersRef, (snapshot) => {
         const players = snapshot.val() || {};
+        // Ищем запись соперника (любой id, не равный myPlayerId)
         const opponentEntry = Object.entries(players).find(([id]) => id !== myPlayerId);
         if (opponentEntry) {
             const [, data] = opponentEntry;
@@ -266,7 +356,7 @@ export function subscribeOpponentProgress(sessionId, myPlayerId, callback) {
                 answers: data.answers || []
             });
         } else {
-            // Соперник отсутствует (дисконнект) – передаём нули
+            // Соперник отсутствует (дисконнект) – передаём нулевые значения
             callback({
                 progress: 0,
                 score: 0,
@@ -278,9 +368,21 @@ export function subscribeOpponentProgress(sessionId, myPlayerId, callback) {
     });
 }
 
-// -----------------------------------------------------------------------------
-// updateMyProgress – отправка своего прогресса в лобби
-// -----------------------------------------------------------------------------
+// =============================================================================
+// Отправка собственного прогресса
+// =============================================================================
+
+/**
+ * Обновляет прогресс текущего игрока в лобби.
+ *
+ * @param {string} sessionId - идентификатор сессии (лобби)
+ * @param {string} playerId - идентификатор игрока
+ * @param {number} progress - сколько вопросов отвечено
+ * @param {number} score - количество правильных ответов
+ * @param {boolean} finished - завершил ли игрок все вопросы
+ * @param {number} totalTimeSec - общее затраченное время в секундах
+ * @param {Array|null} answersArray - массив вида [{ index, correct }] или null
+ */
 export async function updateMyProgress(sessionId, playerId, progress, score, finished, totalTimeSec, answersArray = null) {
     const updates = {};
     updates[`players/${playerId}/progress`] = progress;
