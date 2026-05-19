@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя коллекция ссылок</title>
+    <style>
+        :root {
+            --bg: #f4f5f7;
+            --card-bg: #ffffff;
+            --text: #2d3436;
+            --text-secondary: #636e72;
+            --accent: #6c5ce7;
+            --accent-hover: #5a4bd1;
+            --tag-bg: #dfe6e9;
+            --tag-text: #2d3436;
+            --border: #e0e0e0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.10);
+            --radius: 14px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 40px 20px 60px;
+        }
+
+        /* Декоративный фоновый узор */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -180px;
+            right: -180px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(108, 92, 231, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -120px;
+            left: -120px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(253, 121, 168, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Заголовок */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .header .icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1e1e2f;
+            margin-bottom: 6px;
+        }
+        .header .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Категория */
+        .category {
+            margin-bottom: 44px;
+        }
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ececec;
+        }
+        .category-title .cat-icon {
+            font-size: 1.5rem;
+        }
+        .category-title .count {
+            margin-left: auto;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: #eef0f2;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+
+        /* Сетка карточек */
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 18px;
+        }
+
+        /* Карточка ссылки */
+        .link-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 22px 20px 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+        }
+        .link-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: #d0c8f0;
+        }
+        /* Цветная полоска сверху при наведении */
+        .link-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 0;
+            background: var(--accent);
+            transition: height 0.2s ease;
+            border-radius: var(--radius) var(--radius) 0 0;
+            z-index: 0;
+        }
+        .link-card:hover::after {
+            height: 4px;
+        }
+        .link-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .link-card .link-favicon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #f0edff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        .link-card .link-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 6px;
+            color: #1e1e2f;
+        }
+        .link-card .link-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            flex-grow: 1;
+            line-height: 1.5;
+        }
+        .link-card .link-domain {
+            font-size: 0.8rem;
+            color: #a0a0b0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+            word-break: break-all;
+        }
+        .link-card .link-domain .globe {
+            font-size: 0.9rem;
+        }
+        .link-card .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .link-card .tag {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 500;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 3px 10px;
+            border-radius: 14px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Футер */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #b2bec3;
+            font-size: 0.85rem;
+        }
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .links-grid {
+                grid-template-columns: 1fr;
+            }
+            .link-card {
+                padding: 18px 16px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Шапка -->
+        <header class="header">
+            <span class="icon">📚</span>
+            <h1>Моя коллекция ссылок</h1>
+            <p class="subtitle">Работаем с тремя хостингами</p>
+        </header>
+
+        <!-- Категория: Инструменты -->
+        <section class="category">
+            <h2 class="category-title">
+                <span class="cat-icon">🛠️</span> Хостинг провайдеры
+                <span class="count">3 ссылки</span>
+            </h2>
+            <div class="links-grid">
+
+                <!-- Карточка 1 -->
+                <a href="https://cp.beget.com/main" class="link-card" target="_blank" rel="noopener noreferrer">
+                    <div class="link-favicon">🎨</div>
+                    <div class="tag-row">
+                        <span class="tag">Дизайн</span>
+                        <span class="tag">Бесплатно</span>
+                    </div>
+                    <div class="link-title">Beget</div>
+                    <div class="link-desc">
+                        Облачная платформа с широким выбором IT-сервисов
+                    </div>
+                    <div class="link-domain">
+                        <span class="globe">🌐</span> beget.com
+                    </div>
+                </a>
+
+                <!-- Карточка 2 -->
+                <a href="https://cp.sweb.ru/main" class="link-card" target="_blank" rel="noopener noreferrer">
+                    <div class="link-favicon">📝</div>
+                    <div class="tag-row">
+                        <span class="tag">PostgreSQL</span>
+                        <span class="tag">Бесплатно</span>
+                    </div>
+                    <div class="link-title">SpaceWeb</div>
+                    <div class="link-desc">
+                        Следим за актуальностью программного обеспечения на серверах и регулярно обновляем его: PHP 8.4, MySQL 8, PostgreSQL 14 и др.
+                    </div>
+                    <div class="link-domain">
+                        <span class="globe">🌐</span> sweb.ru
+                    </div>
+                </a>
+
+                <!-- Карточка 3 -->
+                <a href="https://my.hostiman.ru/cabinet/services/shared/275930" class="link-card" target="_blank" rel="noopener noreferrer">
+                    <div class="link-favicon">✏️</div>
+                    <div class="tag-row">
+                        <span class="tag">Заходить раз в месяц</span>
+                        <span class="tag">Бесплатно</span>
+                    </div>
+                    <div class="link-title">HostiMan</div>
+                    <div class="link-desc">
+                        Ваши сайты будут летать с ДДР5!
+                    </div>
+                    <div class="link-domain">
+                        <span class="globe">🌐</span> hostiman.ru
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Категория: Ссылки -->
+        <section class="category">
+            <h2 class="category-title">
+                <span class="cat-icon">🎓</span> Мои страницы у них
+                <span class="count">3 ссылки</span>
+            </h2>
+            <div class="links-grid">
+
+                <!-- Карточка 5 -->
+                <a href="http://r9182119.beget.tech/" class="link-card" target="_blank" rel="noopener noreferrer">
+                    <div class="link-favicon">📖</div>
+                    <div class="tag-row">
+                        <span class="tag">php</span>
+                        <span class="tag">mySQL</span>
+                    </div>
+                    <div class="link-title">на Beget</div>
+                    <div class="link-desc">
+                        Стабильная работа, первый экспериментальный хостинг.
+                    </div>
+                    <div class="link-domain">
+                        <span class="globe">🌐</span> r9182119.beget.tech
+                    </div>
+                </a>
+
+                <!-- Карточка 6 -->
+                <a href="http://kabunda.temp.swtest.ru/" class="link-card" target="_blank" rel="noopener noreferrer">
+                    <div class="link-favicon">💻</div>
+                    <div class="tag-row">
+                        <span class="tag">php</span>
+                        <span class="tag">mySQL</span>
+                        <span class="tag">PostgreSQL</span>
+                    </div>
+                    <div class="link-title">на SpaceWeb</div>
+                    <div class="link-desc">
+                        Хороший вариант из-за поддержки PostgreSQL
+                    </div>
+                    <div class="link-domain">
+                        <span class="globe">🌐</span> kabunda.temp.swtest.ru
+                    </div>
+                </a>
+
+                <!-- Карточка 7 -->
+                <a href="http://kabunda.h1n.ru/" class="link-card" target="_blank" rel="noopener noreferrer">
+                    <div class="link-favicon">🏛️</div>
+                    <div class="tag-row">
+                        <span class="tag">30 дней</span>
+                        <span class="tag">возможность подключения SSL</span>
+                    </div>
+                    <div class="link-title">на HostiMan</div>
+                    <div class="link-desc">
+                        Не стабильный вариат, но возможно подключение SSL
+                    </div>
+                    <div class="link-domain">
+                        <span class="globe">🌐</span> kabunda.h1n.ru
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Футер -->
+        <footer class="footer">
+            <p>Сделано с ❤️ &nbsp;|&nbsp; Отредактируйте этот файл, чтобы добавить свои ссылки</p>
+        </footer>
+    </div>
+</body>
+</html>
