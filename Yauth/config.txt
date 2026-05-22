@@ -8,3 +8,7 @@ const CONFIG = {
     // URL-адрес вашего сайта, куда Яндекс вернет пользователя после авторизации
     REDIRECT_URI: 'https://kabunda.github.io/Saite/Yauth/', // Замените на ваш Redirect URI
 };
+
+// облачная функция ID
+d4ec0efi2s8u2vmsc6lu
+d4ec0efi2s8u2vmsc6lu
