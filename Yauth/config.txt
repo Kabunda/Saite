@@ -1,0 +1,10 @@
+// auth.js
+
+// Конфигурация вашего приложения
+const CONFIG = {
+    YANDEX_CLIENT_ID: '290d912b03064db5a704dee57630b8d0', // Замените на ваш Client ID
+    // URL для обмена кода на токен через вашу облачную функцию
+    CLOUD_FUNCTION_URL: 'https://d5d6f50lp67cmro77v51.kocrdvxt.apigw.yandexcloud.net',//'https://functions.yandexcloud.net/d4ec0efi2s8u2vmsc6lu', // Замените на ваш URL
+    // URL-адрес вашего сайта, куда Яндекс вернет пользователя после авторизации
+    REDIRECT_URI: 'https://kabunda.github.io/Saite/Yauth/', // Замените на ваш Redirect URI
+};
