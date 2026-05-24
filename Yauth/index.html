@@ -1,6 +1,5 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +7,51 @@
 </head>
 <body>
     <h1>Добро пожаловать!</h1>
-    <button id="yandex-auth-btn" style="background-color: #FC3F1D; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-            <path d="M12 1.5C6.201 1.5 1.5 6.201 1.5 12S6.201 22.5 12 22.5 22.5 17.799 22.5 12 17.799 1.5 12 1.5zm1.302 12.796l-.605 1.848h-1.363l3.028-8.325h1.438l3.027 8.325h-1.387l-.605-1.848h-3.533zm2.605-2.25l-.711-2.17c-.116-.356-.223-.713-.33-1.07h-.023c-.105.357-.213.714-.33 1.07l-.713 2.17h2.107z"/>
-        </svg>
-        Войти через Яндекс
-    </button>
-    <div id="result" style="margin-top: 20px; white-space: pre-wrap;"></div>
+
+    <!-- Контейнер для отображения имени пользователя -->
+    <div id="profile-info" style="display: none;"> <!-- Скрыто по умолчанию -->
+        <div id="avatar-container"></div> <!-- Контейнер для аватарки -->
+        <span id="username-display"></span> <!-- Элемент для имени -->
+        <!-- Можно добавить кнопку выхода -->
+        <!-- <button id="logout-btn">Выйти</button> -->
+    </div>
+
+    <!-- Кнопка входа (видна, если пользователь не вошёл) -->
+    <div id="login-section">
+        <button id="yandex-auth-btn">Войти через Яндекс</button>
+    </div>
+
+    <!-- Элемент для отображения статуса (ошибок, сообщений) -->
+    <div id="result"></div>
 
     <script src="auth.js"></script>
+    <script>
+        // Дополнительный скрипт для управления видимостью элементов
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('yandex_access_token');
+            const profileInfoDiv = document.getElementById('profile-info');
+            const loginSectionDiv = document.getElementById('login-section');
+
+            if (token) {
+                // Если токен есть, показываем профиль и скрываем кнопку входа
+                profileInfoDiv.style.display = 'block';
+                loginSectionDiv.style.display = 'none';
+            } else {
+                // Если токена нет, скрываем профиль и показываем кнопку входа
+                profileInfoDiv.style.display = 'none';
+                loginSectionDiv.style.display = 'block';
+            }
+
+            // Добавим простую кнопку выхода (опционально)
+            /*
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('yandex_access_token');
+                localStorage.removeItem('yandex_oauth_state'); // Также очистим state
+                // Перезагрузим страницу, чтобы обновить состояние
+                window.location.reload();
+            });
+            */
+        });
+    </script>
 </body>
 </html>
