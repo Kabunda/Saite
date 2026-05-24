@@ -6,7 +6,7 @@
     <title>Static Auth with Yandex ID</title>
 </head>
 <body>
-    <h1>Добро пожаловать!</h1>
+    <h1>Добро пожаловать! 1235</h1>
 
     <!-- Контейнер для отображения имени пользователя -->
     <div id="profile-info" style="display: none;"> <!-- Скрыто по умолчанию -->
@@ -34,7 +34,8 @@
 
             if (token) {
                 // Если токен есть, показываем профиль и скрываем кнопку входа
-                profileInfoDiv.style.display = 'block';
+                profileInfoDiv.style.display = 'flex'; // или 'block', если предпочитаете
+                profileInfoDiv.style.alignItems = 'center'; // Выравнивание аватарки и имени
                 loginSectionDiv.style.display = 'none';
             } else {
                 // Если токена нет, скрываем профиль и показываем кнопку входа

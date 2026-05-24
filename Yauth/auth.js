@@ -77,7 +77,8 @@ async function exchangeCodeForToken(code) {
 async function fetchUserInfo(accessToken) {
     try {
         log('USER_INFO_FETCH', 'Запрос данных пользователя...');
-        const response = await fetch('https://api-yandex-id.readthedocs.io/ru/latest/reference/get-docs-intro.html', { // Исправьте URL на реальный endpoint, например, 'https://login.yandex.ru/info'
+        // ИСПРАВЛЕНО: используем правильный URL API Яндекса
+        const response = await fetch('https://login.yandex.ru/info', {
             method: 'GET',
             headers: {
                 'Authorization': `OAuth ${accessToken}`, // Важно: используется 'OAuth', а не 'Bearer'
