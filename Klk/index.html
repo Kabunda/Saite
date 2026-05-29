@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiplayer Text Game</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Экран авторизации -->
+    <section id="auth-screen" class="screen">
+      <h1>Вход в игру</h1>
+      <button id="google-login-btn">Google</button>
+      <button id="yandex-login-btn">Яндекс</button>
+      <div id="auth-error"></div>
+    </section>
+
+    <!-- Главное меню -->
+    <section id="menu-screen" class="screen hidden">
+      <h1>Главное меню</h1>
+      <p id="player-name"></p>
+      <button id="play-btn">Играть</button>
+      <button id="logout-btn">Выйти</button>
+    </section>
+
+    <!-- Поиск соперника / лобби -->
+    <section id="lobby-screen" class="screen hidden">
+      <h1>Поиск соперника...</h1>
+      <p id="lobby-status">Ожидаем игрока</p>
+      <button id="cancel-search-btn">Отмена</button>
+    </section>
+
+    <!-- Игровой экран -->
+    <section id="game-screen" class="screen hidden">
+      <h1>Игра</h1>
+      <p id="game-info"></p>
+      <div id="game-actions">
+        <!-- динамические кнопки действий -->
+      </div>
+    </section>
+
+    <!-- Результаты -->
+    <section id="result-screen" class="screen hidden">
+      <h1>Результат</h1>
+      <p id="result-text"></p>
+      <button id="to-menu-btn">В главное меню</button>
+    </section>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
