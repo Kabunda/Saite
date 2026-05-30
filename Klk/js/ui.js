@@ -1,4 +1,4 @@
-import { ref, onValue } from "firebase/database";
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { db } from "./config.js";
 import { auth } from "./config.js";
 
