@@ -1,5 +1,5 @@
 import { initAuthUI, onAuthChange, getCurrentUser } from "./auth.js";
-import { showScreen } from "./ui.js";
+import { showScreen, showOnlinePlayers } from "./ui.js";
 import { findOrCreateRoom, leaveLobby } from "./lobby.js";
 
 // Инициализация UI авторизации (вешаем кнопки)
@@ -19,6 +19,9 @@ onAuthChange((user) => {
     leaveLobby(); // на всякий случай очистим слушатели
   }
 });
+
+// Показываем список онлайн игроков
+showOnlinePlayers();
 
 // Кнопка "В главное меню" на экране результатов
 document.getElementById('to-menu-btn').addEventListener('click', () => {
