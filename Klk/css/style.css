@@ -2,3 +2,29 @@
 .screen { max-width: 400px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; text-align: center; }
 button { margin: 5px; padding: 10px 20px; }
 #auth-error { color: red; margin-top: 10px; }
+
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.player-name {
+  flex: 1;
+  text-align: left;
+}
+.player-status {
+  font-size: 0.8em;
+  opacity: 0.8;
+}

@@ -3,25 +3,26 @@ import { db } from "./config.js";
 
 export function initPresence(user) {
   const presenceRef = ref(db, `userPresence/${user.uid}`);
-  
+
   const presenceData = {
     online: true,
     lastSeen: serverTimestamp(),
-    currentRoom: null
+    currentRoom: null,
+    displayName: user.displayName || 'Аноним',
+    photoURL: user.photoURL || null
   };
-  
+
   set(presenceRef, presenceData);
-  
-  // При отключении: онлайн=false, комната сбрасывается
+
   onDisconnect(presenceRef).update({
     online: false,
     lastSeen: serverTimestamp(),
     currentRoom: null
+    // имя и аватар оставляем – они не исчезнут при выходе
   });
 }
 
-// Обновление текущей комнаты
 export function setCurrentRoom(uid, roomId) {
-  const ref = ref(db, `userPresence/${uid}/currentRoom`);
-  set(ref, roomId);
+  const presenceRef = ref(db, `userPresence/${uid}/currentRoom`);
+  set(presenceRef, roomId);
 }

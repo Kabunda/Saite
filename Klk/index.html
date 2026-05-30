@@ -17,12 +17,22 @@
     </section>
 
     <!-- Главное меню -->
-    <section id="menu-screen" class="screen hidden">
-      <h1>Главное меню</h1>
+  <section id="menu-screen" class="screen hidden">
+    <h1>Главное меню</h1>
+    <div id="player-info">
+      <img id="player-avatar" src="" alt="Аватар" style="width:64px; height:64px; border-radius:50%; display:none;">
       <p id="player-name"></p>
-      <button id="play-btn">Играть</button>
-      <button id="logout-btn">Выйти</button>
-    </section>
+    </div>
+    <button id="play-btn">Играть</button>
+    <button id="logout-btn">Выйти</button>
+
+        <!-- Список онлайн игроков -->
+    <div id="online-players-container">
+      <h2>Игроки онлайн</h2>
+      <div id="online-players-list"></div>
+    </div>
+
+  </section>
 
     <!-- Поиск соперника / лобби -->
     <section id="lobby-screen" class="screen hidden">
@@ -47,8 +57,6 @@
       <button id="to-menu-btn">В главное меню</button>
     </section>
   </div>
-
-  <div id="online-list"></div>
   
   <script type="module" src="./js/app.js"></script>
 </body>
