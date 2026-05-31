@@ -1,6 +1,6 @@
 import {
   ref, get, update, set, serverTimestamp,
-  onValue, off, query, orderByChild, equalTo, limitToFirst
+  onValue, off, push
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { db } from "./config.js";
 import { getCurrentUser } from "./auth.js";
@@ -102,8 +102,10 @@ export async function findOrCreateRoom() {
 
 function createNewRoom() {
   const user = getCurrentUser();
-  const newRoomKey = ref(db, 'rooms').push().key;
-  const newRoomRef = ref(db, `rooms/${newRoomKey}`);
+  const roomsRef = ref(db, 'rooms');
+  const newRoomRef = push(roomsRef);   // правильный способ создать ссылку с авто-ключом
+  const newRoomKey = newRoomRef.key;
+
   console.log(`[Lobby] Создание новой комнаты с ключом: ${newRoomKey}`);
 
   const roomData = {
