@@ -41,11 +41,16 @@ export function startOnlinePlayersList(containerId) {
       li.className = 'player-item';
 
       // Аватар
-      const avatar = document.createElement('img');
-      avatar.src = data.photoURL || 'https://via.placeholder.com/32';
-      avatar.alt = 'Аватар';
-      avatar.className = 'player-avatar';
-
+      let avatar;
+      if (data.photoURL) {
+        avatar = document.createElement('img');
+        avatar.src = data.photoURL;
+        avatar.alt = 'Аватар';
+        avatar.className = 'player-avatar';
+      } else {
+        avatar = document.createElement('div');
+        avatar.className = 'player-avatar placeholder-avatar';
+}
       // Имя
       const name = document.createElement('span');
       name.textContent = data.displayName || 'Игрок';
