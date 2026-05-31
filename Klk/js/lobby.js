@@ -1,6 +1,13 @@
 import {
-  ref, get, update, set, serverTimestamp,
-  onValue, off, push
+  ref,
+  get,
+  set,
+  update,
+  serverTimestamp,
+  onValue,
+  off,
+  push,
+  runTransaction            // ← добавлен runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { db } from "./config.js";
 import { getCurrentUser } from "./auth.js";
@@ -21,16 +28,14 @@ export async function findOrCreateRoom() {
   console.log(`[Lobby] Поиск комнаты для игрока ${user.uid} (${user.displayName})`);
   showScreen('lobby-screen');
   document.getElementById('lobby-status').textContent = 'Поиск комнаты...';
-  console.log('[Lobby] Запрос комнат со статусом waiting...');
+
   try {
-    // 1. Получаем ВСЕ комнаты без сортировки и фильтрации на сервере
     console.log('[Lobby] Загрузка всех комнат...');
     const allRoomsSnapshot = await get(ref(db, 'rooms'));
     const allRooms = allRoomsSnapshot.val() || {};
 
     console.log('[Lobby] Все комнаты в базе:', allRooms);
 
-    // 2. Ищем первую waiting-комнату на клиенте
     let targetRoomId = null;
     for (const [id, room] of Object.entries(allRooms)) {
       if (room?.meta?.status === 'waiting') {
@@ -40,58 +45,43 @@ export async function findOrCreateRoom() {
     }
 
     if (targetRoomId) {
-      // Пытаемся присоединиться
-            console.log(`[Lobby] Найдена waiting-комната: ${targetRoomId}`, allRooms[targetRoomId]);
-      // Пытаемся присоединиться через транзакцию
+      console.log(`[Lobby] Найдена waiting-комната: ${targetRoomId}`, allRooms[targetRoomId]);
       const roomRef = ref(db, `rooms/${targetRoomId}`);
 
-      roomRef.transaction((room) => {
-        console.log('[Lobby] Транзакция: текущее состояние комнаты:', room);
-        if (!room) {
-          console.log('[Lobby] Комната не существует, отмена транзакции');
-          return;
-        }
-        if (room.meta.status !== 'waiting') {
-          console.log(`[Lobby] Статус комнаты изменился: ${room.meta?.status}, отмена`);
-          return;
-        }
-        const players = room.players || {};
-        const playerCount = Object.keys(players).length;
-        console.log(`[Lobby] Игроков в комнате: ${playerCount}, максимум: ${room.meta.maxPlayers}`);
-        if (playerCount >= room.meta.maxPlayers) {
-          console.log('[Lobby] Комната заполнена, отмена');
-          return;
-        }
+      // Исправленная транзакция через runTransaction
+      try {
+        const result = await runTransaction(roomRef, (room) => {
+          console.log('[Lobby] Транзакция: текущее состояние комнаты:', room);
+          if (!room) return;  // комната удалена
+          if (room.meta.status !== 'waiting') return;
+          const players = room.players || {};
+          if (Object.keys(players).length >= room.meta.maxPlayers) return;
+          room.players = room.players || {};
+          room.players[user.uid] = {
+            name: user.displayName || 'Аноним',
+            ready: false,
+            score: 0
+          };
+          if (Object.keys(room.players).length === room.meta.maxPlayers) {
+            room.meta.status = 'playing';
+          }
+          return room;
+        });
 
-        // Добавляем игрока
-        room.players = room.players || {};
-        room.players[user.uid] = {
-          name: user.displayName || 'Аноним',
-          ready: false,
-          score: 0
-        };
-        console.log(`[Lobby] Добавляем игрока ${user.uid} в комнату`);
-
-        if (Object.keys(room.players).length === room.meta.maxPlayers) {
-          room.meta.status = 'playing';
-          console.log('[Lobby] Комната заполнена, меняем статус на playing');
-        }
-        return room;
-      }).then(({ committed, snapshot }) => {
-        console.log('[Lobby] Транзакция завершена. committed:', committed, 'snapshot:', snapshot.val());
-        if (committed) {
+        console.log('[Lobby] Транзакция завершена. committed:', result.committed, 'snapshot:', result.snapshot.val());
+        if (result.committed) {
           console.log('[Lobby] Успешно вошли в комнату');
           enterRoom(targetRoomId);
         } else {
-          console.warn('[Lobby] Не удалось войти (возможно, комната уже занята). Создаём новую.');
+          console.warn('[Lobby] Не удалось войти (комната занята/удалена). Создаём новую.');
           createNewRoom();
         }
-      }).catch((error) => {
-        console.error('[Lobby] Ошибка транзакции:', error);
-        document.getElementById('lobby-status').textContent = 'Ошибка соединения, попробуйте снова';
-      });
+      } catch (transError) {
+        console.error('[Lobby] Ошибка транзакции:', transError);
+        document.getElementById('lobby-status').textContent = 'Ошибка присоединения, попробуйте снова';
+      }
     } else {
-      console.log('[Lobby] Нет доступных waiting-комнат, создаём новую');
+      console.log('[Lobby] Нет waiting-комнат, создаём новую');
       createNewRoom();
     }
   } catch (error) {
@@ -103,7 +93,7 @@ export async function findOrCreateRoom() {
 function createNewRoom() {
   const user = getCurrentUser();
   const roomsRef = ref(db, 'rooms');
-  const newRoomRef = push(roomsRef);   // правильный способ создать ссылку с авто-ключом
+  const newRoomRef = push(roomsRef);
   const newRoomKey = newRoomRef.key;
 
   console.log(`[Lobby] Создание новой комнаты с ключом: ${newRoomKey}`);
@@ -182,16 +172,18 @@ export function leaveLobby() {
   }
   if (roomId) {
     const user = getCurrentUser();
-    console.log(`[Lobby] Удаление игрока ${user?.uid} из комнаты ${roomId}`);
-    update(ref(db, `rooms/${roomId}/players/${user.uid}`), null)
-      .then(() => console.log('[Lobby] Игрок удалён из комнаты'))
-      .catch(err => console.error('[Lobby] Ошибка удаления из комнаты:', err));
-    setCurrentRoom(user.uid, null);
+    if (user) {
+      console.log(`[Lobby] Удаление игрока ${user.uid} из комнаты ${roomId}`);
+      update(ref(db, `rooms/${roomId}/players/${user.uid}`), null)
+        .then(() => console.log('[Lobby] Игрок удалён из комнаты'))
+        .catch(err => console.error('[Lobby] Ошибка удаления из комнаты:', err));
+      setCurrentRoom(user.uid, null);
+    }
     roomId = null;
   }
 }
 
-// Привязка кнопки отмены
+// Кнопка отмены
 document.getElementById('cancel-search-btn').addEventListener('click', () => {
   console.log('[Lobby] Нажата кнопка "Отмена"');
   leaveLobby();
