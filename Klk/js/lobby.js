@@ -21,37 +21,28 @@ export async function findOrCreateRoom() {
   console.log(`[Lobby] Поиск комнаты для игрока ${user.uid} (${user.displayName})`);
   showScreen('lobby-screen');
   document.getElementById('lobby-status').textContent = 'Поиск комнаты...';
-
-  const roomsRef = ref(db, 'rooms');
-  // Получаем все комнаты и фильтруем на клиенте
-  const roomsSnapshot = await get(ref(db, 'rooms'));
-  let targetRoomId = null;
-
-  if (roomsSnapshot.exists()) {
-    const rooms = roomsSnapshot.val();
-    // Находим первую комнату со статусом 'waiting'
-    const waitingRoomId = Object.keys(rooms).find(id => 
-      rooms[id]?.meta?.status === 'waiting'
-    );
-    if (waitingRoomId) {
-      targetRoomId = waitingRoomId;
-    }
-  }
   console.log('[Lobby] Запрос комнат со статусом waiting...');
   try {
-    const snapshot = await get(waitingRoomsQuery);
-    console.log('[Lobby] Результат запроса waiting-комнат:', snapshot.val());
+    // 1. Получаем ВСЕ комнаты без сортировки и фильтрации на сервере
+    console.log('[Lobby] Загрузка всех комнат...');
+    const allRoomsSnapshot = await get(ref(db, 'rooms'));
+    const allRooms = allRoomsSnapshot.val() || {};
 
+    console.log('[Lobby] Все комнаты в базе:', allRooms);
+
+    // 2. Ищем первую waiting-комнату на клиенте
     let targetRoomId = null;
-    if (snapshot.exists()) {
-      const rooms = snapshot.val();
-      targetRoomId = Object.keys(rooms)[0];
-      console.log(`[Lobby] Найдена комната: ${targetRoomId}`, rooms[targetRoomId]);
+    for (const [id, room] of Object.entries(allRooms)) {
+      if (room?.meta?.status === 'waiting') {
+        targetRoomId = id;
+        break;
+      }
     }
 
     if (targetRoomId) {
       // Пытаемся присоединиться
-      console.log(`[Lobby] Попытка присоединиться к комнате ${targetRoomId}...`);
+            console.log(`[Lobby] Найдена waiting-комната: ${targetRoomId}`, allRooms[targetRoomId]);
+      // Пытаемся присоединиться через транзакцию
       const roomRef = ref(db, `rooms/${targetRoomId}`);
 
       roomRef.transaction((room) => {
