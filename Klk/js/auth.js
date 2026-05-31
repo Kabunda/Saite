@@ -1,11 +1,13 @@
 import {
   GoogleAuthProvider,
-  OAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
   signOut,
-  updateProfile
+  updateProfile,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 import { auth } from "./config.js";
 import { showScreen } from "./ui.js";
 import { initPresence } from "./presence.js";
@@ -13,88 +15,101 @@ import { loadProfile } from "./profile.js";
 
 let currentUser = null;
 
-// Провайдеры
 const googleProvider = new GoogleAuthProvider();
-const yandexProvider = new OAuthProvider('oidc.yandex');  // Provider ID из консоли Firebase
 
-// Настройка дополнительных scope для Яндекса (они же права приложения)
-yandexProvider.addScope('login:email');
-yandexProvider.addScope('login:info');
-yandexProvider.addScope('login:avatar');
-
-// Принудительный выбор аккаунта при каждом входе
-yandexProvider.setCustomParameters({
-  prompt: 'select_account'
-});
-
+// Привязка кнопок и инициализация обработчиков
 export function initAuthUI() {
-  document.getElementById('google-login-btn').addEventListener('click', () => signIn(googleProvider, 'Google'));
-  document.getElementById('yandex-login-btn').addEventListener('click', () => signIn(yandexProvider, 'Yandex'));
-  document.getElementById('logout-btn').addEventListener('click', logout);
+  document.getElementById('google-login-btn')
+    .addEventListener('click', signInWithGoogle);
+
+  document.getElementById('email-login-btn')
+    .addEventListener('click', signInWithEmail);
+
+  document.getElementById('email-register-btn')
+    .addEventListener('click', registerWithEmail);
+
+  document.getElementById('logout-btn')
+    .addEventListener('click', logout);
 }
 
-async function signIn(provider, name) {
+// --- Google ---
+async function signInWithGoogle() {
   try {
-    const result = await signInWithPopup(auth, provider);
-    
-    // Для Яндекса: дополнительно получаем полный профиль через API
-    if (name === 'Yandex') {
-      await enrichYandexProfile(result);
-    }
-    // Успешный вход обработает onAuthStateChanged
+    await signInWithPopup(auth, googleProvider);
+    // onAuthStateChanged обработает вход
   } catch (error) {
-    document.getElementById('auth-error').textContent = `Ошибка входа (${name}): ${error.message}`;
+    document.getElementById('auth-error').textContent =
+      `Ошибка Google: ${error.message}`;
   }
 }
 
-async function enrichYandexProfile(result) {
-  // Получаем access token Яндекса из credential
-  const credential = OAuthProvider.credentialFromResult(result);
-  const accessToken = credential.accessToken;
+// --- Email/Password ---
+async function signInWithEmail() {
+  const email = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input').value;
+  const errorDiv = document.getElementById('email-auth-error');
+  errorDiv.textContent = '';
 
-  if (!accessToken) return;
+  if (!email || !password) {
+    errorDiv.textContent = 'Заполните email и пароль';
+    return;
+  }
 
   try {
-    const response = await fetch('https://login.yandex.ru/info?format=json', {
-      headers: { Authorization: `OAuth ${accessToken}` }
-    });
-    const data = await response.json();
-    
-    // Обновляем профиль Firebase
-    if (data.display_name || data.real_name || data.default_avatar_id) {
-      const displayName = data.display_name || data.real_name || result.user.displayName;
-      const photoURL = data.default_avatar_id 
-        ? `https://avatars.yandex.net/get-yapic/${data.default_avatar_id}/islands-200`
-        : null;
-      const email = data.default_email || result.user.email;
-      
-      // Обновляем профиль пользователя Firebase (отображаемое имя и аватар)
-      await updateProfile(result.user, {
-        displayName: displayName,
-        photoURL: photoURL
-      });
-      
-      // Принудительно обновляем текущего пользователя
-      currentUser = auth.currentUser; 
-    }
-  } catch (e) {
-    console.warn('Не удалось получить профиль Яндекса, используется базовая информация', e);
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    errorDiv.textContent = `Ошибка входа: ${error.message}`;
   }
 }
 
+async function registerWithEmail() {
+  const email = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input').value;
+  const errorDiv = document.getElementById('email-auth-error');
+  errorDiv.textContent = '';
+
+  if (!email || !password) {
+    errorDiv.textContent = 'Заполните email и пароль';
+    return;
+  }
+  if (password.length < 6) {
+    errorDiv.textContent = 'Пароль должен быть не менее 6 символов';
+    return;
+  }
+
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    // Опционально: установить displayName из email
+    await updateProfile(result.user, {
+      displayName: email.split('@')[0]
+    });
+    // Принудительно обновим currentUser (хотя onAuthStateChanged тоже сработает)
+    currentUser = auth.currentUser;
+  } catch (error) {
+    errorDiv.textContent = `Ошибка регистрации: ${error.message}`;
+  }
+}
+
+// --- Общие ---
 async function logout() {
-  await signOut(auth);
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error('Ошибка выхода:', error);
+  }
 }
 
 export function getCurrentUser() {
   return currentUser;
 }
 
+// Подписка на изменение состояния аутентификации
 export function onAuthChange(callback) {
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
     callback(user);
     if (user) {
+      // Инициализируем online-статус и профиль
       initPresence(user);
       loadProfile(user);
     }
