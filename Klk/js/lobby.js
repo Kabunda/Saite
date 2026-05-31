@@ -23,13 +23,20 @@ export async function findOrCreateRoom() {
   document.getElementById('lobby-status').textContent = 'Поиск комнаты...';
 
   const roomsRef = ref(db, 'rooms');
-  const waitingRoomsQuery = query(
-    ref(db, 'rooms'),
-    orderByChild('meta/status'),
-    equalTo('waiting'),
-    limitToFirst(1)
-  );
+  // Получаем все комнаты и фильтруем на клиенте
+  const roomsSnapshot = await get(ref(db, 'rooms'));
+  let targetRoomId = null;
 
+  if (roomsSnapshot.exists()) {
+    const rooms = roomsSnapshot.val();
+    // Находим первую комнату со статусом 'waiting'
+    const waitingRoomId = Object.keys(rooms).find(id => 
+      rooms[id]?.meta?.status === 'waiting'
+    );
+    if (waitingRoomId) {
+      targetRoomId = waitingRoomId;
+    }
+  }
   console.log('[Lobby] Запрос комнат со статусом waiting...');
   try {
     const snapshot = await get(waitingRoomsQuery);
