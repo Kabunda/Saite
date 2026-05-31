@@ -23,6 +23,11 @@ onAuthChange((user) => {
     
     showScreen('menu-screen');
     document.getElementById('play-btn').onclick = findOrCreateRoom;
+    // Обработка кнопки отмены поиска
+    document.getElementById('cancel-search-btn').addEventListener('click', () => {
+      leaveLobby();
+      showScreen('menu-screen');
+    });
 
     // Запускаем отображение онлайн-игроков
     startOnlinePlayersList('online-players-list');
