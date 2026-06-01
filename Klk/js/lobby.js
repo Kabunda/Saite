@@ -2,11 +2,11 @@ import {
   ref,
   get,
   set,
-  remove,            // <-- для удаления игрока из комнаты
+  remove,
   serverTimestamp,
   onValue,
   push,
-  runTransaction
+  update
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 import { db } from "./config.js";
@@ -45,71 +45,14 @@ export async function findOrCreateRoom() {
 
     if (targetRoomId) {
       console.log(`[Lobby] Найдена waiting-комната: ${targetRoomId}`);
-      const roomRef = ref(db, `rooms/${targetRoomId}`);
-
-      // Одноразовая подписка для заполнения кэша и получения актуальных данных
-      const unsubscribe = onValue(roomRef, async (snapshot) => {
-        unsubscribe(); // сразу отписываемся
-        const room = snapshot.val();
-        console.log('[Lobby] Данные комнаты через onValue:', room);
-
-        if (!room || room.meta.status !== 'waiting' ||
-            Object.keys(room.players || {}).length >= room.meta.maxPlayers) {
-          console.warn('[Lobby] Комната недоступна, создаём новую');
-          createNewRoom();
-          return;
-        }
-
-        // Теперь данные в кэше есть, транзакция увидит реальный объект
-        try {
-          const result = await runTransaction(roomRef, (currentRoom) => {
-            console.log('[Lobby] Транзакция: текущее состояние комнаты:', currentRoom);
-            if (!currentRoom) return; // защита
-
-            if (currentRoom.meta.status !== 'waiting') return;
-            const players = currentRoom.players || {};
-            if (Object.keys(players).length >= currentRoom.meta.maxPlayers) return;
-
-            const updatedPlayers = {
-              ...players,
-              [user.uid]: {
-                name: user.displayName || 'Аноним',
-                ready: false,
-                score: 0
-              }
-            };
-
-            const newStatus = Object.keys(updatedPlayers).length === currentRoom.meta.maxPlayers
-              ? 'playing'
-              : 'waiting';
-
-            return {
-              ...currentRoom,
-              players: updatedPlayers,
-              meta: {
-                ...currentRoom.meta,
-                status: newStatus
-              }
-            };
-          });
-
-          console.log('[Lobby] Транзакция завершена. committed:', result.committed,
-                      'snapshot:', result.snapshot.val());
-
-          if (result.committed) {
-            console.log('[Lobby] Успешно вошли в комнату');
-            enterRoom(targetRoomId);
-          } else {
-            console.warn('[Lobby] Транзакция не применена, создаём новую');
-            createNewRoom();
-          }
-        } catch (transError) {
-          console.error('[Lobby] Ошибка транзакции:', transError);
-          document.getElementById('lobby-status').textContent = 'Ошибка присоединения, попробуйте снова';
-        }
-      });
-
-      // Таймаут не нужен, onValue вызовется обязательно при наличии данных
+      const joined = await tryJoinRoom(targetRoomId, user);
+      if (joined) {
+        console.log('[Lobby] Присоединение выполнено');
+        enterRoom(targetRoomId);
+      } else {
+        console.warn('[Lobby] Не удалось присоединиться (комната занята/изменилась), создаём новую');
+        createNewRoom();
+      }
     } else {
       console.log('[Lobby] Нет waiting-комнат, создаём новую');
       createNewRoom();
@@ -117,6 +60,52 @@ export async function findOrCreateRoom() {
   } catch (error) {
     console.error('[Lobby] Ошибка при поиске комнат:', error);
     document.getElementById('lobby-status').textContent = 'Ошибка поиска, повторите позже';
+  }
+}
+
+async function tryJoinRoom(roomId, user) {
+  const roomRef = ref(db, `rooms/${roomId}`);
+
+  // Читаем актуальное состояние комнаты
+  const snapshot = await get(roomRef);
+  const room = snapshot.val();
+  if (!room || room.meta.status !== 'waiting') {
+    console.warn('[Lobby] Комната недоступна для входа');
+    return false;
+  }
+
+  const currentPlayers = room.players || {};
+  const playerCount = Object.keys(currentPlayers).length;
+  if (playerCount >= room.meta.maxPlayers) {
+    console.warn('[Lobby] Комната заполнена');
+    return false;
+  }
+
+  // Добавляем нового игрока и меняем статус, если комната заполнится
+  const newPlayers = {
+    ...currentPlayers,
+    [user.uid]: {
+      name: user.displayName || 'Аноним',
+      ready: false,
+      score: 0
+    }
+  };
+  const newStatus = Object.keys(newPlayers).length === room.meta.maxPlayers ? 'playing' : 'waiting';
+
+  // Оптимистичная попытка записи
+  const updates = {
+    players: newPlayers,
+    'meta/status': newStatus
+  };
+
+  console.log('[Lobby] Пытаемся обновить комнату:', updates);
+  try {
+    await update(roomRef, updates);
+    console.log('[Lobby] Обновление успешно');
+    return true;
+  } catch (e) {
+    console.error('[Lobby] Ошибка обновления:', e);
+    return false;
   }
 }
 
@@ -206,7 +195,6 @@ export function leaveLobby() {
     const user = getCurrentUser();
     if (user) {
       console.log(`[Lobby] Удаление игрока ${user.uid} из комнаты ${roomId}`);
-      // Используем remove() вместо update(null)
       remove(ref(db, `rooms/${roomId}/players/${user.uid}`))
         .then(() => console.log('[Lobby] Игрок удалён из комнаты'))
         .catch(err => console.error('[Lobby] Ошибка удаления из комнаты:', err));
