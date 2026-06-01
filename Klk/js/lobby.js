@@ -2,7 +2,7 @@ import {
   ref,
   get,
   set,
-  update,
+  remove,            // <-- для удаления игрока из комнаты
   serverTimestamp,
   onValue,
   push,
@@ -47,37 +47,24 @@ export async function findOrCreateRoom() {
       console.log(`[Lobby] Найдена waiting-комната: ${targetRoomId}`);
       const roomRef = ref(db, `rooms/${targetRoomId}`);
 
-      // ✅ ВРЕМЕННАЯ ПОДПИСКА, чтобы кэш Firebase наполнился актуальными данными
+      // Одноразовая подписка для заполнения кэша и получения актуальных данных
       const unsubscribe = onValue(roomRef, async (snapshot) => {
-        unsubscribe(); // сразу отписываемся, больше не нужна
-
+        unsubscribe(); // сразу отписываемся
         const room = snapshot.val();
         console.log('[Lobby] Данные комнаты через onValue:', room);
 
-        if (!room) {
-          console.warn('[Lobby] Комната исчезла, создаём новую');
+        if (!room || room.meta.status !== 'waiting' ||
+            Object.keys(room.players || {}).length >= room.meta.maxPlayers) {
+          console.warn('[Lobby] Комната недоступна, создаём новую');
           createNewRoom();
           return;
         }
 
-        if (room.meta.status !== 'waiting') {
-          console.warn(`[Lobby] Статус изменился на ${room.meta.status}, создаём новую`);
-          createNewRoom();
-          return;
-        }
-
-        const playerCount = Object.keys(room.players || {}).length;
-        if (playerCount >= room.meta.maxPlayers) {
-          console.warn('[Lobby] Комната заполнена, создаём новую');
-          createNewRoom();
-          return;
-        }
-
-        // Теперь кэш заполнен, транзакция получит реальные данные
+        // Теперь данные в кэше есть, транзакция увидит реальный объект
         try {
           const result = await runTransaction(roomRef, (currentRoom) => {
             console.log('[Lobby] Транзакция: текущее состояние комнаты:', currentRoom);
-            if (!currentRoom) return; // если вдруг null — прерываем
+            if (!currentRoom) return; // защита
 
             if (currentRoom.meta.status !== 'waiting') return;
             const players = currentRoom.players || {};
@@ -113,7 +100,7 @@ export async function findOrCreateRoom() {
             console.log('[Lobby] Успешно вошли в комнату');
             enterRoom(targetRoomId);
           } else {
-            console.warn('[Lobby] Транзакция не применена, создаём новую комнату');
+            console.warn('[Lobby] Транзакция не применена, создаём новую');
             createNewRoom();
           }
         } catch (transError) {
@@ -122,13 +109,7 @@ export async function findOrCreateRoom() {
         }
       });
 
-      // Если в течение короткого времени не получили данные — считаем ошибкой
-      setTimeout(() => {
-        unsubscribe?.(); // на всякий случай отписка
-        console.warn('[Lobby] Таймаут ожидания данных комнаты, создаём новую');
-        createNewRoom();
-      }, 5000);
-
+      // Таймаут не нужен, onValue вызовется обязательно при наличии данных
     } else {
       console.log('[Lobby] Нет waiting-комнат, создаём новую');
       createNewRoom();
@@ -225,7 +206,8 @@ export function leaveLobby() {
     const user = getCurrentUser();
     if (user) {
       console.log(`[Lobby] Удаление игрока ${user.uid} из комнаты ${roomId}`);
-      update(ref(db, `rooms/${roomId}/players/${user.uid}`), null)
+      // Используем remove() вместо update(null)
+      remove(ref(db, `rooms/${roomId}/players/${user.uid}`))
         .then(() => console.log('[Lobby] Игрок удалён из комнаты'))
         .catch(err => console.error('[Lobby] Ошибка удаления из комнаты:', err));
       setCurrentRoom(user.uid, null);
