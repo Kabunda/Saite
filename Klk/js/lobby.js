@@ -6,7 +6,8 @@ import {
   serverTimestamp,
   onValue,
   push,
-  update
+  update,
+  onDisconnect
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 import { db } from "./config.js";
@@ -37,7 +38,9 @@ export async function findOrCreateRoom() {
 
     let targetRoomId = null;
     for (const [id, room] of Object.entries(allRooms)) {
-      if (room?.meta?.status === 'waiting') {
+      // Игнорируем комнаты без игроков (пустые)
+      if (room?.meta?.status === 'waiting' &&
+          room.players && Object.keys(room.players).length > 0) {
         targetRoomId = id;
         break;
       }
@@ -66,7 +69,6 @@ export async function findOrCreateRoom() {
 async function tryJoinRoom(roomId, user) {
   const roomRef = ref(db, `rooms/${roomId}`);
 
-  // Читаем актуальное состояние комнаты
   const snapshot = await get(roomRef);
   const room = snapshot.val();
   if (!room || room.meta.status !== 'waiting') {
@@ -81,7 +83,6 @@ async function tryJoinRoom(roomId, user) {
     return false;
   }
 
-  // Добавляем нового игрока и меняем статус, если комната заполнится
   const newPlayers = {
     ...currentPlayers,
     [user.uid]: {
@@ -92,7 +93,6 @@ async function tryJoinRoom(roomId, user) {
   };
   const newStatus = Object.keys(newPlayers).length === room.meta.maxPlayers ? 'playing' : 'waiting';
 
-  // Оптимистичная попытка записи
   const updates = {
     players: newPlayers,
     'meta/status': newStatus
@@ -141,6 +141,9 @@ function createNewRoom() {
       roomId = newRoomKey;
       document.getElementById('lobby-status').textContent = 'Ожидание соперника...';
       setCurrentRoom(user.uid, roomId);
+      // Автоудаление игрока при разрыве соединения
+      const playerRef = ref(db, `rooms/${roomId}/players/${user.uid}`);
+      onDisconnect(playerRef).remove();
       listenRoom();
     })
     .catch((error) => {
@@ -152,7 +155,11 @@ function createNewRoom() {
 function enterRoom(id) {
   console.log(`[Lobby] Вход в комнату ${id}`);
   roomId = id;
-  setCurrentRoom(getCurrentUser().uid, roomId);
+  const user = getCurrentUser();
+  setCurrentRoom(user.uid, roomId);
+  // Автоудаление при разрыве соединения
+  const playerRef = ref(db, `rooms/${roomId}/players/${user.uid}`);
+  onDisconnect(playerRef).remove();
   listenRoom();
 }
 
@@ -194,10 +201,28 @@ export function leaveLobby() {
   if (roomId) {
     const user = getCurrentUser();
     if (user) {
-      console.log(`[Lobby] Удаление игрока ${user.uid} из комнаты ${roomId}`);
-      remove(ref(db, `rooms/${roomId}/players/${user.uid}`))
-        .then(() => console.log('[Lobby] Игрок удалён из комнаты'))
-        .catch(err => console.error('[Lobby] Ошибка удаления из комнаты:', err));
+      const playerRef = ref(db, `rooms/${roomId}/players/${user.uid}`);
+      const roomRef = ref(db, `rooms/${roomId}`);
+
+      // Отменяем запланированное удаление при дисконнекте
+      onDisconnect(playerRef).cancel()
+        .then(() => {
+          console.log('[Lobby] Отменён onDisconnect для игрока');
+          return remove(playerRef);
+        })
+        .then(() => {
+          console.log('[Lobby] Игрок удалён из комнаты');
+          return get(roomRef);
+        })
+        .then((snapshot) => {
+          const room = snapshot.val();
+          if (!room || !room.players || Object.keys(room.players).length === 0) {
+            console.log('[Lobby] Комната опустела, удаляем');
+            return remove(roomRef);
+          }
+        })
+        .catch(err => console.error('[Lobby] Ошибка при очистке:', err));
+
       setCurrentRoom(user.uid, null);
     }
     roomId = null;
