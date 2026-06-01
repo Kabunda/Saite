@@ -2,7 +2,6 @@ import {
   ref,
   onValue,
   update,
-  off,
   get,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -14,11 +13,11 @@ import { updateStats } from "./profile.js";
 
 let gameRef = null;
 let gameListener = null;
-let currentRoomId = null;   // <-- сохраняем roomId для использования в makeMove
+let currentRoomId = null;
 
 export function startGame(roomId, hostUid) {
   showScreen('game-screen');
-  currentRoomId = roomId;   // запоминаем
+  currentRoomId = roomId;
   gameRef = ref(db, `rooms/${roomId}`);
   const user = getCurrentUser();
 
@@ -34,6 +33,8 @@ export function startGame(roomId, hostUid) {
   gameListener = onValue(gameRef, (snapshot) => {
     const room = snapshot.val();
     if (!room) {
+      // Комната удалена
+      cleanupGame();
       showScreen('menu-screen');
       return;
     }
@@ -47,7 +48,7 @@ export function startGame(roomId, hostUid) {
     document.getElementById('my-score').textContent = `Мой счёт: ${myData?.score || 0}`;
     document.getElementById('opponent-score').textContent = `Счёт соперника: ${opponentData?.score || 0}`;
 
-    // Проверка завершения (заглушка: кто первый набрал 5 очков)
+    // Проверка завершения (кто первый набрал 5 очков)
     const myScore = myData?.score || 0;
     const oppScore = opponentData?.score || 0;
     if (myScore >= 5 || oppScore >= 5) {
@@ -62,6 +63,8 @@ function makeMove() {
   const scoreRef = ref(db, `rooms/${currentRoomId}/players/${user.uid}/score`);
   get(scoreRef).then(snapshot => {
     const current = snapshot.val() || 0;
+    // Не даём увеличивать счёт после завершения (простая проверка)
+    if (current >= 5) return;
     update(ref(db, `rooms/${currentRoomId}/players/${user.uid}`), {
       score: current + 1
     });
@@ -69,7 +72,9 @@ function makeMove() {
 }
 
 function finishGame(myScore, oppScore, myUid, oppUid) {
-  off(gameListener);
+  if (!gameListener) return; // уже завершена
+  // Отписываемся от слушателя
+  gameListener(); // теперь корректно
   gameListener = null;
 
   const winner = myScore > oppScore ? myUid : oppUid;
@@ -85,4 +90,14 @@ function finishGame(myScore, oppScore, myUid, oppUid) {
   document.getElementById('result-text').textContent =
     isWin ? 'Победа!' : 'Поражение...';
   showScreen('result-screen');
+  cleanupGame();
+}
+
+function cleanupGame() {
+  gameRef = null;
+  currentRoomId = null;
+  if (gameListener) {
+    gameListener();
+    gameListener = null;
+  }
 }
