@@ -44,64 +44,91 @@ export async function findOrCreateRoom() {
     }
 
     if (targetRoomId) {
-      console.log(`[Lobby] Найдена waiting-комната: ${targetRoomId}`, allRooms[targetRoomId]);
+      console.log(`[Lobby] Найдена waiting-комната: ${targetRoomId}`);
       const roomRef = ref(db, `rooms/${targetRoomId}`);
 
-      // Проверяем, существует ли комната прямо сейчас
-      const preCheck = await get(roomRef);
-      if (!preCheck.exists()) {
-        console.warn('[Lobby] Комната исчезла до начала транзакции, создаём новую');
-        createNewRoom();
-        return;
-      }
+      // ✅ ВРЕМЕННАЯ ПОДПИСКА, чтобы кэш Firebase наполнился актуальными данными
+      const unsubscribe = onValue(roomRef, async (snapshot) => {
+        unsubscribe(); // сразу отписываемся, больше не нужна
 
-      try {
-        const result = await runTransaction(roomRef, (room) => {
-          console.log('[Lobby] Транзакция: текущее состояние комнаты:', room);
+        const room = snapshot.val();
+        console.log('[Lobby] Данные комнаты через onValue:', room);
 
-          if (!room) return;
-          if (room.meta.status !== 'waiting') return;
-          const players = room.players || {};
-          if (Object.keys(players).length >= room.meta.maxPlayers) return;
-
-          // Иммутабельное добавление игрока
-          const updatedPlayers = {
-            ...players,
-            [user.uid]: {
-              name: user.displayName || 'Аноним',
-              ready: false,
-              score: 0
-            }
-          };
-
-          const newStatus = Object.keys(updatedPlayers).length === room.meta.maxPlayers
-            ? 'playing'
-            : 'waiting';
-
-          return {
-            ...room,
-            players: updatedPlayers,
-            meta: {
-              ...room.meta,
-              status: newStatus
-            }
-          };
-        });
-
-        console.log('[Lobby] Транзакция завершена. committed:', result.committed,
-                    'snapshot:', result.snapshot.val());
-
-        if (result.committed) {
-          console.log('[Lobby] Успешно вошли в комнату');
-          enterRoom(targetRoomId);
-        } else {
-          console.warn('[Lobby] Транзакция не применена, создаём новую комнату');
+        if (!room) {
+          console.warn('[Lobby] Комната исчезла, создаём новую');
           createNewRoom();
+          return;
         }
-      } catch (transError) {
-        console.error('[Lobby] Ошибка транзакции:', transError);
-        document.getElementById('lobby-status').textContent = 'Ошибка присоединения, попробуйте снова';
-      }
+
+        if (room.meta.status !== 'waiting') {
+          console.warn(`[Lobby] Статус изменился на ${room.meta.status}, создаём новую`);
+          createNewRoom();
+          return;
+        }
+
+        const playerCount = Object.keys(room.players || {}).length;
+        if (playerCount >= room.meta.maxPlayers) {
+          console.warn('[Lobby] Комната заполнена, создаём новую');
+          createNewRoom();
+          return;
+        }
+
+        // Теперь кэш заполнен, транзакция получит реальные данные
+        try {
+          const result = await runTransaction(roomRef, (currentRoom) => {
+            console.log('[Lobby] Транзакция: текущее состояние комнаты:', currentRoom);
+            if (!currentRoom) return; // если вдруг null — прерываем
+
+            if (currentRoom.meta.status !== 'waiting') return;
+            const players = currentRoom.players || {};
+            if (Object.keys(players).length >= currentRoom.meta.maxPlayers) return;
+
+            const updatedPlayers = {
+              ...players,
+              [user.uid]: {
+                name: user.displayName || 'Аноним',
+                ready: false,
+                score: 0
+              }
+            };
+
+            const newStatus = Object.keys(updatedPlayers).length === currentRoom.meta.maxPlayers
+              ? 'playing'
+              : 'waiting';
+
+            return {
+              ...currentRoom,
+              players: updatedPlayers,
+              meta: {
+                ...currentRoom.meta,
+                status: newStatus
+              }
+            };
+          });
+
+          console.log('[Lobby] Транзакция завершена. committed:', result.committed,
+                      'snapshot:', result.snapshot.val());
+
+          if (result.committed) {
+            console.log('[Lobby] Успешно вошли в комнату');
+            enterRoom(targetRoomId);
+          } else {
+            console.warn('[Lobby] Транзакция не применена, создаём новую комнату');
+            createNewRoom();
+          }
+        } catch (transError) {
+          console.error('[Lobby] Ошибка транзакции:', transError);
+          document.getElementById('lobby-status').textContent = 'Ошибка присоединения, попробуйте снова';
+        }
+      });
+
+      // Если в течение короткого времени не получили данные — считаем ошибкой
+      setTimeout(() => {
+        unsubscribe?.(); // на всякий случай отписка
+        console.warn('[Lobby] Таймаут ожидания данных комнаты, создаём новую');
+        createNewRoom();
+      }, 5000);
+
     } else {
       console.log('[Lobby] Нет waiting-комнат, создаём новую');
       createNewRoom();
