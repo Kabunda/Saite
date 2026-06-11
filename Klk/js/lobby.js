@@ -15,6 +15,7 @@ import { getCurrentUser } from "./auth.js";
 import { setCurrentRoom } from "./presence.js";
 import { showScreen } from "./ui.js";
 import { startGame } from "./game.js";
+import { buildUniqueQuestionList } from "./generator.js";
 
 let roomId = null;
 let playerListener = null;
@@ -116,7 +117,8 @@ function createNewRoom() {
   const newRoomKey = newRoomRef.key;
 
   console.log(`[Lobby] Создание новой комнаты с ключом: ${newRoomKey}`);
-
+  
+  const questions = buildUniqueQuestionList(20); // 20 уникальных вопросов
   const roomData = {
     meta: {
       createdAt: serverTimestamp(),
@@ -131,7 +133,8 @@ function createNewRoom() {
         score: 0
       }
     },
-    gameState: {}
+    gameState: {},
+    questions: questions   // <-- сохраняем вопросы в комнате
   };
   console.log('[Lobby] Данные новой комнаты:', roomData);
 

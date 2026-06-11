@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Multiplayer Text Game</title>
   <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/klava.css">
 </head>
 <body>
   <div id="app">
     <!-- Экран авторизации -->
   <section id="auth-screen" class="screen">
-    <h1>Вход в игру 90</h1>
+    <h1>Вход в игру</h1>
     
     <!-- Блок Email/Password -->
     <div id="email-auth-block">
@@ -30,7 +31,7 @@
 
     <!-- Главное меню -->
   <section id="menu-screen" class="screen hidden">
-    <h1>Главное меню 90</h1>
+    <h1>Главное меню</h1>
     <div id="player-info">
       <img id="player-avatar" src="" alt="Аватар" style="width:64px; height:64px; border-radius:50%; display:none;">
       <p id="player-name"></p>
@@ -55,10 +56,41 @@
 
     <!-- Игровой экран -->
     <section id="game-screen" class="screen hidden">
-      <h1>Игра</h1>
-      <p id="game-info"></p>
-      <div id="game-actions">
-        <!-- динамические кнопки действий -->
+      <h1>Умножение</h1>
+      <div class="game-multiplication">
+        <div class="game-players-scores">
+          <p>Мой счёт: <span id="my-score">0</span></p>
+          <p>Счёт соперника: <span id="opponent-score">0</span></p>
+        </div>
+        <div class="game-question-area">
+          <p id="question-text" class="question">5 × 3 = ?</p>
+          <p id="answer-input" class="answer-input">_</p>
+          <p id="feedback-message" class="feedback"></p>
+        </div>
+        <!-- Цифровая клавиатура -->
+        <div class="keyboard" id="multiplication-keypad">
+          <div class="keyboard-row">
+            <div class="key" data-key="7">7</div>
+            <div class="key" data-key="8">8</div>
+            <div class="key" data-key="9">9</div>
+          </div>
+          <div class="keyboard-row">
+            <div class="key" data-key="4">4</div>
+            <div class="key" data-key="5">5</div>
+            <div class="key" data-key="6">6</div>
+          </div>
+          <div class="keyboard-row">
+            <div class="key" data-key="1">1</div>
+            <div class="key" data-key="2">2</div>
+            <div class="key" data-key="3">3</div>
+          </div>
+          <div class="keyboard-row">
+            <div class="key" data-key="0">0</div>
+            <div class="key key-action" data-key="del">⌫</div>
+            <div class="key key-action" data-key="clear">C</div>
+            <div class="key key-enter" data-key="enter">✓</div>
+          </div>
+        </div>
       </div>
     </section>
 
