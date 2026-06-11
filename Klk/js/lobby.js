@@ -117,7 +117,7 @@ function createNewRoom() {
   const newRoomKey = newRoomRef.key;
 
   console.log(`[Lobby] Создание новой комнаты с ключом: ${newRoomKey}`);
-  
+
   const questions = buildUniqueQuestionList(20); // 20 уникальных вопросов
   const roomData = {
     meta: {
@@ -134,7 +134,8 @@ function createNewRoom() {
       }
     },
     gameState: {},
-    questions: questions   // <-- сохраняем вопросы в комнате
+    questions: questions,   // <-- сохраняем вопросы в комнате
+    playerAnswers: {}   // <-- будет заполняться динамически
   };
   console.log('[Lobby] Данные новой комнаты:', roomData);
 
