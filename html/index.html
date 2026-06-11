@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Трёхмерная сцена - Three.js</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 15px;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            font-size: 14px;
+        }
+        #controls-note {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(255,255,255,0.7);
+            background: rgba(0,0,0,0.4);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <strong>✨ 3D сцена</strong> | Куб + Сфера | Вращение объектов
+    </div>
+    <div id="controls-note">
+        🖱️ Мышь: вращение камеры (если подключены OrbitControls) | В данном примере объекты вращаются самостоятельно
+    </div>
+
+    <!-- Подключаем Three.js из CDN -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- 1. Создаём сцену, камеру и рендерер ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111122); // тёмно-синий фон
+        scene.fog = new THREE.FogExp2(0x111122, 0.008); // лёгкий туман для глубины
+
+        // Перспективная камера: угол обзора, соотношение сторон, ближняя плоскость, дальняя
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(4, 3, 5);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // включаем тени для более реалистичной сцены
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // --- 2. Освещение ---
+        
+        // AmbientLight - равномерный свет со всех сторон
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        
+        // Основной направленный свет (слева сверху)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(3, 5, 2);
+        directionalLight.castShadow = true;
+        directionalLight.receiveShadow = true;
+        // Настройка качества теней
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 8;
+        directionalLight.shadow.camera.left = -5;
+        directionalLight.shadow.camera.right = 5;
+        directionalLight.shadow.camera.top = 5;
+        directionalLight.shadow.camera.bottom = -5;
+        scene.add(directionalLight);
+        
+        // Дополнительный точечный свет с другой стороны для подсветки теней
+        const backLight = new THREE.PointLight(0x4466cc, 0.5);
+        backLight.position.set(-2, 1, -3);
+        scene.add(backLight);
+        
+        // Тёплый свет снизу для мягкости
+        const fillLight = new THREE.PointLight(0xffaa66, 0.3);
+        fillLight.position.set(1, -1, 2);
+        scene.add(fillLight);
+        
+        // Опционально: небольшой помощник для визуализации источника света (отключено, но можно раскомментировать)
+        // const lightHelper = new THREE.DirectionalLightHelper(directionalLight, 0.2);
+        // scene.add(lightHelper);
+        
+        // --- 3. Объекты сцены ---
+        
+        // ---- Куб (основной, с металлическим материалом) ----
+        const cubeGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+        const cubeMaterial = new THREE.MeshStandardMaterial({
+            color: 0xe34234,    // терракотовый
+            roughness: 0.3,
+            metalness: 0.7,
+            emissive: 0x221100
+        });
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube.castShadow = true;
+        cube.receiveShadow = true;
+        cube.position.set(-1, 0.2, 0);
+        scene.add(cube);
+        
+        // ---- Сфера (гладкая, немного отражающая) ----
+        const sphereGeometry = new THREE.SphereGeometry(0.8, 64, 64);
+        const sphereMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3a86ff,
+            roughness: 0.2,
+            metalness: 0.4,
+            emissive: 0x001133
+        });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.castShadow = true;
+        sphere.receiveShadow = true;
+        sphere.position.set(1.2, 0.2, 0);
+        scene.add(sphere);
+        
+        // ---- Пол / плоскость с текстурой-сеткой (для отражения теней и референса) ----
+        const planeGeometry = new THREE.PlaneGeometry(6, 6);
+        const planeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3c3f4a,
+            roughness: 0.8,
+            metalness: 0.1,
+            side: THREE.DoubleSide
+        });
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = -0.5;
+        plane.receiveShadow = true;
+        scene.add(plane);
+        
+        // Вспомогательная сетка (для наглядности координат)
+        const gridHelper = new THREE.GridHelper(8, 20, 0x88aaff, 0x335588);
+        gridHelper.position.y = -0.45;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.6;
+        scene.add(gridHelper);
+        
+        // ---- Декоративные маленькие парящие частицы (звёзды/пыль) ----
+        const particleCount = 800;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            particlePositions[i*3] = (Math.random() - 0.5) * 30;
+            particlePositions[i*3+1] = (Math.random() - 0.5) * 8;
+            particlePositions[i*3+2] = (Math.random() - 0.5) * 15 - 5;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            color: 0x88aaff,
+            size: 0.05,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+        
+        // --- 4. Простая анимация (вращение куба и сферы вокруг своей оси + лёгкое покачивание) ---
+        let time = 0;
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.012;
+            
+            // Вращение куба
+            cube.rotation.x += 0.008;
+            cube.rotation.y += 0.015;
+            cube.rotation.z += 0.005;
+            
+            // Сфера вращается в противоположную сторону для контраста
+            sphere.rotation.x -= 0.007;
+            sphere.rotation.y += 0.01;
+            
+            // Лёгкое вертикальное покачивание сферы и куба (эффект парения)
+            cube.position.y = 0.2 + Math.sin(time * 1.5) * 0.05;
+            sphere.position.y = 0.2 + Math.cos(time * 1.8) * 0.05;
+            
+            // Плавное изменение цвета фонового освещения (очень медленно)
+            const hue = (time * 0.02) % 1;
+            // менять только ambient цвет слегка
+            ambientLight.intensity = 0.5 + Math.sin(time * 0.3) * 0.1;
+            
+            // Камера совершает микро-движения (очень плавный облёт)
+            // это не обязательно, но делает сцену живой
+            // camera.position.x = 4 + Math.sin(time * 0.1) * 0.1;
+            // camera.lookAt(0, 0.2, 0);
+            // Но для простоты закомментировано, оставим статичную камеру.
+            
+            // Вращение частиц (очень медленное)
+            particles.rotation.y = time * 0.03;
+            particles.rotation.x = Math.sin(time * 0.1) * 0.1;
+            
+            // Рендеринг сцены
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // --- 5. Адаптация под изменение размера окна ---
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Небольшой лог в консоль для уверенности
+        console.log('3D сцена запущена | Three.js версия:', THREE.REVISION);
+    </script>
+</body>
+</html>
