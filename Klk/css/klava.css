@@ -1,48 +1,90 @@
+:root {
+    --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --bg: #f4f7fc;
+    --surface: #ffffff;
+    --surface-hover: #eef2f6;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --ok-color: #10b981;
+    --bad-color: #ef4444;
+    --border: #e2e8f0;
+    --shadow: 0 4px 12px rgba(0,0,0,0.05);
+    --cell-bg: #e0e7ff;
+    --cell-ok: #10b981;
+    --cell-bad: #ef4444;
+    --cell-current: #3b82f6;
+    --key-bg: #f1f5f9;
+    --key-active: #2563eb;
+    --key-text: #1e293b;
+    --radius: 16px;
+    --transition: 0.2s ease;
+}
+
+/* ===== Клавиатура ===== */
 .keyboard {
-  max-width: 400px;
-  margin: 20px auto;
+    background: var(--bg);
+    border-radius: 20px;
+    padding: 14px;
+    user-select: none;
 }
-.keyboard-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
+.keyboard__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) 1fr;
+    grid-template-rows: repeat(4, 1fr);
+    grid-template-areas:
+        "k7 k8 k9 del"
+        "k4 k5 k6 enter"
+        "k1 k2 k3 enter"
+        "k0 k0 k0 enter";
+    gap: 8px;
 }
+
+/* Разметка кнопок клавиатуры */
+.key:nth-child(1) { grid-area: k1; }
+.key:nth-child(2) { grid-area: k2; }
+.key:nth-child(3) { grid-area: k3; }
+.key:nth-child(4) { grid-area: k4; }
+.key:nth-child(5) { grid-area: k5; }
+.key:nth-child(6) { grid-area: k6; }
+.key:nth-child(7) { grid-area: k7; }
+.key:nth-child(8) { grid-area: k8; }
+.key:nth-child(9) { grid-area: k9; }
+.key:nth-child(10) { grid-area: k0; }  /* 0 */
+.key:nth-child(11) { grid-area: del; }  /* ⌫ */
+.key:nth-child(13) { grid-area: enter; } /* OK */
+
 .key {
-  background: #2c3e66;
-  color: white;
-  font-size: 1.8rem;
-  font-weight: bold;
-  padding: 15px 0;
-  width: 70px;
-  text-align: center;
-  border-radius: 12px;
-  cursor: pointer;
-  user-select: none;
-  transition: 0.1s;
+    background: var(--key-bg);
+    border: none;
+    color: var(--key-text);
+    font-size: 1.6rem;
+    font-weight: 600;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 14px 0;
 }
-.key:active { background: #1a2a44; transform: scale(0.96); }
-.key-action, .key-enter { background: #e67e22; }
-.key-enter { background: #27ae60; }
-.question {
-  font-size: 2.5rem;
-  margin: 20px 0;
+.key:active {
+    transform: scale(0.96);
+    background: var(--accent);
+    color: white;
 }
-.answer-input {
-  font-size: 2rem;
-  min-height: 3rem;
-  background: #f0f0f0;
-  display: inline-block;
-  padding: 10px 20px;
-  border-radius: 20px;
+
+.key--wide { font-size: 1.6rem; }
+.key--action {
+    font-size: 1.4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
 }
-.feedback {
-  font-size: 1.2rem;
-  margin-top: 10px;
+.key--enter {
+    background: var(--accent);
+    color: white;
+    font-size: 1.4rem;
 }
-.game-players-scores {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-  font-size: 1.2rem;
-}
+.key--enter:active { background: var(--accent-hover); }
