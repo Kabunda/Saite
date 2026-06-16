@@ -1,6 +1,55 @@
-/* styles.css — полностью адаптированные стили для игры на телефоне без прокрутки */
+/* ============================================================
+   styles.css — ПОЛНЫЙ ФАЙЛ СТИЛЕЙ ДЛЯ ИГРЫ (с клавиатурой)
+   ============================================================ */
 
-/* ---------- Сброс и база ---------- */
+/* ---------- ПЕРЕМЕННЫЕ (тема по умолчанию — тёмная) ---------- */
+:root {
+  --font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+
+  /* Фоны и поверхности */
+  --bg: #0b0e14;
+  --surface: #1a1f2b;
+  --surface-hover: #262e3e;
+  --surface-light: #2d3748;
+
+  /* Текст */
+  --text: #eaeef2;
+  --text-secondary: #aab7cc;
+  --text-muted: #8f9eb3;
+
+  /* Акценты */
+  --accent: #4f7df3;
+  --accent-hover: #3b62c9;
+  --accent-gradient: linear-gradient(135deg, #f0c27f, #fc5c7d);
+
+  /* Состояния */
+  --ok-color: #2ecc71;
+  --bad-color: #e74c3c;
+  --warning: #f39c12;
+
+  /* Границы и тени */
+  --border: #3f4a5e;
+  --shadow: 0 4px 12px rgba(0,0,0,0.4);
+
+  /* Клавиатура */
+  --key-bg: #2d3748;
+  --key-digit: #39455c;
+  --key-action: #4f5d74;
+  --key-enter: #4f7df3;
+  --key-clear: #dc3545;
+  --key-shadow: 0 3px 0 #161c26;
+  --key-radius: 14px;
+  --key-font-size: 1.6rem;
+
+  /* Радиусы */
+  --radius: 16px;
+  --radius-large: 28px;
+
+  /* Отступы */
+  --padding-app: 12px;
+}
+
+/* ---------- СБРОС И БАЗА ---------- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,37 +58,36 @@
 
 html, body {
   height: 100%;
-  overflow: hidden; /* убираем прокрутку всей страницы */
-  font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
-  background: #0b0e14;
-  color: #eaeef2;
+  overflow: hidden;
+  font-family: var(--font-family);
+  background: var(--bg);
+  color: var(--text);
   touch-action: manipulation;
 }
 
 #app {
   width: 100%;
   max-width: 500px;
-  height: 100vh; /* занимает всю высоту экрана */
+  height: 100vh;
   max-height: 100vh;
   margin: 0 auto;
-  background: #1a1f2b;
+  background: var(--surface);
   display: flex;
   flex-direction: column;
-  padding: 12px 12px 16px;
-  overflow: hidden; /* внутренняя прокрутка отключена */
-  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+  padding: var(--padding-app);
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
-/* ---------- Все экраны ---------- */
+/* ---------- ЭКРАНЫ ---------- */
 .screen {
   display: flex;
   flex-direction: column;
   flex: 1;
   height: 100%;
-  overflow: hidden; /* никаких прокруток внутри */
+  overflow: hidden;
   animation: fadeIn 0.25s ease;
 }
-
 .screen.hidden {
   display: none !important;
 }
@@ -49,24 +97,22 @@ html, body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ---------- Общие элементы ---------- */
+/* ---------- ОБЩИЕ КОМПОНЕНТЫ ---------- */
 h1, h2 {
   font-weight: 600;
   letter-spacing: 0.3px;
   text-align: center;
 }
-
 h1 {
   font-size: 1.8rem;
-  background: linear-gradient(135deg, #f0c27f, #fc5c7d);
+  background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
 h2 {
   font-size: 1.2rem;
-  color: #cdd9e6;
+  color: var(--text-secondary);
 }
 
 .button {
@@ -78,8 +124,8 @@ h2 {
   border-radius: 60px;
   font-size: 1rem;
   font-weight: 600;
-  background: #2d3748;
-  color: #eaeef2;
+  background: var(--surface-light);
+  color: var(--text);
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
@@ -87,139 +133,127 @@ h2 {
   touch-action: manipulation;
   user-select: none;
 }
-
 .button:active {
   transform: scale(0.96);
 }
-
 .button-primary {
-  background: #4f7df3;
+  background: var(--accent);
   color: #fff;
 }
-.button-primary:active { background: #3b62c9; }
-
+.button-primary:active {
+  background: var(--accent-hover);
+}
 .button-secondary {
-  background: #3d4a5c;
+  background: var(--surface-hover);
 }
 .button-danger {
-  background: #dc3545;
+  background: var(--bad-color);
   color: #fff;
 }
 .button-success {
-  background: #28a745;
+  background: var(--ok-color);
   color: #fff;
 }
 .button-block {
   width: 100%;
 }
 
-/* ---------- Экран авторизации ---------- */
+/* ---------- АВТОРИЗАЦИЯ ---------- */
 #auth-screen {
   justify-content: center;
   align-items: stretch;
   gap: 16px;
   padding: 12px 0;
 }
-
 #auth-screen .logo {
   font-size: 3rem;
   text-align: center;
 }
-
 .auth-input {
-  background: #2a3140;
-  border: 1px solid #3f4a5e;
+  background: var(--surface-light);
+  border: 1px solid var(--border);
   border-radius: 40px;
   padding: 14px 18px;
   font-size: 0.95rem;
-  color: #eaeef2;
+  color: var(--text);
   width: 100%;
   outline: none;
 }
 .auth-input:focus {
-  border-color: #4f7df3;
+  border-color: var(--accent);
 }
-
 #auth-error, #email-auth-error {
-  color: #f8a5a5;
+  color: var(--bad-color);
   font-size: 0.85rem;
   text-align: center;
   min-height: 1.4em;
 }
 
-/* ---------- Меню ---------- */
+/* ---------- МЕНЮ ---------- */
 #menu-screen {
   align-items: center;
   gap: 14px;
 }
-
 .player-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #262e3e;
+  background: var(--surface-hover);
   border-radius: 60px;
   padding: 6px 16px 6px 6px;
   width: 100%;
 }
-
 #player-avatar {
   width: 44px;
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  background: #3a455a;
-  border: 2px solid #4f7df3;
+  background: var(--surface-light);
+  border: 2px solid var(--accent);
 }
-
 #player-name {
   font-size: 1rem;
   font-weight: 500;
   flex: 1;
 }
-
 .online-players {
   width: 100%;
-  background: #1e2533;
-  border-radius: 16px;
+  background: var(--surface-hover);
+  border-radius: var(--radius);
   padding: 10px 14px;
   max-height: 140px;
   overflow-y: auto;
   flex-shrink: 0;
 }
-
 .online-players h3 {
   font-size: 0.9rem;
-  color: #aab7cc;
+  color: var(--text-secondary);
   margin-bottom: 6px;
 }
-
 .player-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 .player-item {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 0;
-  border-bottom: 1px solid #2a3142;
+  border-bottom: 1px solid var(--border);
 }
 .player-item:last-child {
   border-bottom: none;
 }
-
 .player-avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
   object-fit: cover;
-  background: #3a455a;
+  background: var(--surface-light);
 }
 .placeholder-avatar {
-  background: #4f7df3;
+  background: var(--accent);
   color: white;
   display: flex;
   align-items: center;
@@ -227,26 +261,24 @@ h2 {
   font-weight: bold;
   font-size: 0.7rem;
 }
-
 .player-name {
   flex: 1;
   font-size: 0.85rem;
 }
 .player-status {
   font-size: 0.7rem;
-  color: #8f9eb3;
+  color: var(--text-muted);
 }
 
-/* ---------- Лобби ---------- */
+/* ---------- ЛОББИ ---------- */
 #lobby-screen {
   align-items: center;
   justify-content: center;
   gap: 20px;
 }
-
 #lobby-status {
   font-size: 1.1rem;
-  background: #262e3e;
+  background: var(--surface-hover);
   padding: 14px 20px;
   border-radius: 60px;
   text-align: center;
@@ -259,18 +291,16 @@ h2 {
   height: 100%;
   max-height: 100%;
   padding: 0;
-  justify-content: space-between; /* распределяем пространство */
+  justify-content: space-between;
 }
-
 .game-header {
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
-  color: #aab7cc;
+  color: var(--text-secondary);
   padding: 2px 0;
   flex-shrink: 0;
 }
-
 .progress-item {
   display: flex;
   align-items: center;
@@ -279,14 +309,13 @@ h2 {
 .progress-item .label {
   opacity: 0.7;
 }
-
 #question-text {
   font-size: 1.6rem;
   font-weight: 600;
   text-align: center;
   padding: 8px 4px;
-  background: #262e3e;
-  border-radius: 16px;
+  background: var(--surface-hover);
+  border-radius: var(--radius);
   min-height: 60px;
   display: flex;
   align-items: center;
@@ -294,49 +323,47 @@ h2 {
   word-break: break-word;
   flex-shrink: 0;
 }
-
 #answer-input {
   font-size: 2.4rem;
   font-weight: 700;
   text-align: center;
-  background: #0b0e14;
-  border-radius: 16px;
+  background: var(--bg);
+  border-radius: var(--radius);
   padding: 6px 0;
   min-height: 54px;
   letter-spacing: 4px;
   color: #f0c27f;
   flex-shrink: 0;
 }
-
 #feedback-message {
   min-height: 2rem;
   font-size: 0.9rem;
   text-align: center;
   padding: 2px 0;
-  color: #cdd9e6;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
-/* ---------- Клавиатура (занимает оставшееся место) ---------- */
+/* ---------- КЛАВИАТУРА (из klava.css, адаптирована) ---------- */
 #multiplication-keypad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  flex: 1; /* растягивается на всё доступное пространство */
-  min-height: 0; /* для корректного сжатия */
+  flex: 1;
+  min-height: 0;
   align-content: stretch;
   padding-top: 4px;
 }
 
 .key {
-  background: #2d3748;
+  background: var(--key-bg);
   border: none;
-  border-radius: 14px;
+  border-radius: var(--key-radius);
   padding: 0;
-  font-size: 1.4rem;
+  font-size: var(--key-font-size);
   font-weight: 600;
-  color: #eaeef2;
-  box-shadow: 0 3px 0 #161c26;
+  color: var(--text);
+  box-shadow: var(--key-shadow);
   transition: all 0.08s;
   cursor: pointer;
   touch-action: manipulation;
@@ -344,71 +371,115 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0; /* высота зависит от грида */
+  min-height: 0;
   height: auto;
-  aspect-ratio: 1 / 0.9; /* чуть шире чем высокие */
+  aspect-ratio: 1 / 0.9;
 }
-
 .key:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 #161c26;
+  box-shadow: 0 1px 0 var(--key-shadow);
 }
 
+/* Цифры */
 .key-digit {
-  background: #39455c;
+  background: var(--key-digit);
 }
 .key-digit:active {
-  background: #2d3748;
+  background: var(--key-bg);
 }
 
+/* Действия (Del, Clear) */
 .key-action {
-  background: #4f5d74;
-  font-size: 1rem;
-}
-.key-action:active {
-  background: #3d4a5e;
-}
-
-.key-enter {
-  background: #4f7df3;
-  grid-column: span 2;
+  background: var(--key-action);
   font-size: 1.2rem;
 }
-.key-enter:active {
-  background: #3b62c9;
+.key-action:active {
+  background: var(--surface-light);
 }
 
+/* Enter (занимает 2 колонки) */
+.key-enter {
+  background: var(--key-enter);
+  color: #fff;
+  grid-column: span 2;
+  font-size: 1.4rem;
+}
+.key-enter:active {
+  background: var(--accent-hover);
+}
+
+/* Clear (красная кнопка) */
 .key-clear {
-  background: #dc3545;
+  background: var(--key-clear);
   color: #fff;
 }
 .key-clear:active {
   background: #b02a37;
 }
 
-/* ---------- Экран результата ---------- */
+/* ---------- ЭКРАН РЕЗУЛЬТАТА ---------- */
 #result-screen {
   align-items: center;
   justify-content: center;
   gap: 16px;
   text-align: center;
 }
-
 #result-text {
   font-size: 2.8rem;
   font-weight: 700;
   margin: 8px 0;
 }
-
 #result-screen .subtitle {
   font-size: 1rem;
-  color: #aab7cc;
+  color: var(--text-secondary);
 }
 
-/* ---------- Мелкие экраны (до 400px) ---------- */
+/* ---------- ВЫБОР ТЕМЫ (в меню) ---------- */
+.theme-selector {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.theme-selector p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.theme-btn {
+  border: none;
+  border-radius: 30px;
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  background: var(--surface-light);
+  color: var(--text);
+}
+.theme-btn:active {
+  transform: scale(0.95);
+}
+.theme-btn[data-theme="theme-dark"] {
+  background: #2d3748;
+  color: #eaeef2;
+}
+.theme-btn[data-theme="theme-light"] {
+  background: #e8ecf1;
+  color: #1a1f2b;
+}
+.theme-btn[data-theme="theme-blue"] {
+  background: #1e3a52;
+  color: #e0eef7;
+}
+
+/* ---------- АДАПТИВНОСТЬ (до 400px) ---------- */
 @media (max-width: 400px) {
-  #app {
-    padding: 8px 8px 12px;
+  :root {
+    --padding-app: 8px;
+    --key-font-size: 1.2rem;
   }
   #question-text {
     font-size: 1.3rem;
@@ -420,7 +491,6 @@ h2 {
     min-height: 44px;
   }
   .key {
-    font-size: 1.2rem;
     border-radius: 12px;
   }
   .key-enter {
@@ -450,7 +520,7 @@ h2 {
   }
 }
 
-/* ---------- Очень высокие экраны (большой запас) ---------- */
+/* ---------- ВЫСОКИЕ ЭКРАНЫ (больше места) ---------- */
 @media (min-height: 800px) {
   #question-text {
     font-size: 2rem;
@@ -465,19 +535,19 @@ h2 {
   }
 }
 
-/* ---------- Стилизация скролла для списка онлайн (остаётся) ---------- */
+/* ---------- СКРОЛЛ ДЛЯ СПИСКА ОНЛАЙН ---------- */
 .online-players::-webkit-scrollbar {
   width: 4px;
 }
 .online-players::-webkit-scrollbar-track {
-  background: #1a1f2b;
+  background: var(--bg);
 }
 .online-players::-webkit-scrollbar-thumb {
-  background: #4f7df3;
+  background: var(--accent);
   border-radius: 8px;
 }
 
-/* ---------- Утилиты ---------- */
+/* ---------- УТИЛИТЫ ---------- */
 .hidden {
   display: none !important;
 }
