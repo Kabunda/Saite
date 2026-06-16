@@ -199,7 +199,6 @@ function handleKeyPress(key) {
   }
 }
 
-// Прикрепление обработчиков к клавиатуре (виртуальной)
 function attachKeyboardHandlers() {
   const keypad = document.getElementById("multiplication-keypad");
   if (!keypad) return;
@@ -222,11 +221,9 @@ async function finishGame(winnerUid, myUid, opponentId) {
     gameListener = null;
   }
 
-  // Обновляем статистику побед/поражений текущего игрока
   const isWin = (winnerUid === myUid);
   updateStats(myUid, isWin);
 
-  // Меняем статус комнаты на finished и записываем победителя
   await update(ref(db, `rooms/${currentRoomId}/meta`), {
     status: "finished",
     winner: winnerUid,
@@ -237,7 +234,6 @@ async function finishGame(winnerUid, myUid, opponentId) {
   cleanupGame();
 }
 
-// Проверка, завершили ли оба игрока, и определение победителя
 function checkBothFinishedAndDetermineWinner(roomData, myUid) {
   const players = roomData.players || {};
   const opponentId = Object.keys(players).find(id => id !== myUid);
@@ -261,7 +257,6 @@ function checkBothFinishedAndDetermineWinner(roomData, myUid) {
   return false;
 }
 
-// Обновление отображения прогресса на экране
 function updateProgressDisplay(roomData, myUid) {
   const playerAnswers = roomData.playerAnswers || {};
   const myAnswers = playerAnswers[myUid];
@@ -280,7 +275,6 @@ function updateProgressDisplay(roomData, myUid) {
   document.getElementById("opponent-progress").textContent = `${oppProgress}/${total}`;
 }
 
-// Слушатель изменений комнаты (прогресс, завершение игры)
 function attachGameListener(roomId, myUid) {
   const roomRef = ref(db, `rooms/${roomId}`);
   gameListener = onValue(roomRef, (snapshot) => {
@@ -292,7 +286,6 @@ function attachGameListener(roomId, myUid) {
       return;
     }
 
-    // Обновляем отображение прогресса
     updateProgressDisplay(room, myUid);
 
     if (checkBothFinishedAndDetermineWinner(room, myUid)) return;
@@ -327,7 +320,6 @@ async function initPlayerData(roomId, userId) {
   }
 }
 
-// Загрузка вопросов из комнаты
 async function loadQuestions(roomId) {
   const roomRef = ref(db, `rooms/${roomId}`);
   const snapshot = await get(roomRef);
@@ -368,7 +360,6 @@ export async function startGame(roomId, hostUid) {
   attachKeyboardHandlers();
 
   try {
-    // Загружаем вопросы
     questionsList = await loadQuestions(roomId);
     console.log(`[Game] Загружено ${questionsList.length} вопросов`);
 
@@ -387,7 +378,6 @@ export async function startGame(roomId, hostUid) {
   }
 }
 
-// Очистка ресурсов (выход из игры)
 function cleanupGame() {
   console.log("[Game] cleanupGame");
   if (gameListener) {
