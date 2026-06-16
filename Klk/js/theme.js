@@ -2,7 +2,7 @@
 function switchTheme(themeName) {
   const link = document.getElementById('theme-style');
   if (link) {
-    link.href = `${themeName}.css`;
+    link.href = `./css/${themeName}.css`;
   }
   // Сохраняем выбор в localStorage, чтобы при перезагрузке тема сохранялась
   localStorage.setItem('selectedTheme', themeName);
