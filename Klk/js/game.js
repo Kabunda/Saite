@@ -1,11 +1,9 @@
 // game.js
-// Модуль управления игровым процессом: отображение вопросов, обработка ответов,
-// синхронизация с Firebase, определение победителя.
-
 import {
   ref,
   onValue,
   get,
+  set,
   update,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -15,25 +13,23 @@ import { getCurrentUser } from "./auth.js";
 import { showScreen } from "./ui.js";
 import { updateStats } from "./profile.js";
 
-// ---------- Внутреннее состояние модуля ----------
-let currentRoomId = null;          // ID текущей комнаты
-let gameListener = null;           // Слушатель изменений комнаты
-let questionsList = [];            // Массив вопросов [{ text, answer }]
-let currentQuestionIdx = 0;        // Индекс текущего вопроса (0-based)
-let currentAnswer = "";            // Вводимый ответ (строка)
-let isWaitingForAnswer = true;     // Ожидание ответа на текущий вопрос
-let questionStartTime = 0;         // Время начала вопроса (performance.now)
-let totalResponseTimeMs = 0;       // Суммарное время ответов (мс)
-let playerFinishedLocally = false; // Флаг, что игрок локально завершил все вопросы
+// ---------- Состояние ----------
+let currentRoomId = null;
+let gameListener = null;
+let questionsList = [];
+let currentQuestionIdx = 0;
+let currentAnswer = "";
+let isWaitingForAnswer = true;
+let questionStartTime = 0;
+let totalResponseTimeMs = 0;
+let playerFinishedLocally = false;
 
-// ---------- Вспомогательные функции ----------
-// Обновление отображения введённого ответа
+// ---------- Отображение ----------
 function updateAnswerDisplay() {
   const display = document.getElementById("answer-input");
   if (display) display.textContent = currentAnswer || "_";
 }
 
-// Отображение текущего вопроса на экране
 function displayCurrentQuestion() {
   if (!questionsList.length || currentQuestionIdx >= questionsList.length) {
     console.warn("[Game] displayCurrentQuestion: нет вопросов или индекс вне диапазона");
@@ -56,7 +52,6 @@ function displayCurrentQuestion() {
   console.log(`[Game] Вопрос ${currentQuestionIdx + 1}/${questionsList.length}: ${q.text}`);
 }
 
-// Воспроизведение звукового сигнала (правильно/неправильно)
 function playSoundEffect(correct) {
   if (!window.AudioContext && !window.webkitAudioContext) return;
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -73,7 +68,7 @@ function playSoundEffect(correct) {
   osc.stop(audioCtx.currentTime + 0.2);
 }
 
-// Сохранение ответа в Firebase и обновление прогресса игрока
+// ---------- Работа с Firebase ----------
 async function submitAnswerToDB(userAnswerNum, isCorrect, responseTimeMs) {
   const user = getCurrentUser();
   if (!user || !currentRoomId) {
@@ -83,22 +78,33 @@ async function submitAnswerToDB(userAnswerNum, isCorrect, responseTimeMs) {
   const answerRecord = {
     questionIndex: currentQuestionIdx,
     answer: userAnswerNum,
-    isCorrect: isCorrect,
-    responseTimeMs: responseTimeMs,
+    isCorrect,
+    responseTimeMs,
     timestamp: serverTimestamp(),
   };
 
   const playerAnswersRef = ref(db, `rooms/${currentRoomId}/playerAnswers/${user.uid}`);
 
-  // Получаем текущие данные игрока
   const snapshot = await get(playerAnswersRef);
-  const currentData = snapshot.val() || { answers: [], totalTimeMs: 0, finished: false };
+  let currentData = snapshot.val();
+
+  // Защита от повреждённых данных – всегда приводим к нужной структуре
+  if (!currentData || typeof currentData !== "object") {
+    console.warn("[Game] currentData повреждён, создаём заново");
+    currentData = { answers: [], totalTimeMs: 0, finished: false };
+  }
+  if (!Array.isArray(currentData.answers)) {
+    console.warn("[Game] currentData.answers не массив, инициализируем");
+    currentData.answers = [];
+  }
+  if (typeof currentData.totalTimeMs !== "number") {
+    currentData.totalTimeMs = 0;
+  }
 
   const newAnswers = [...currentData.answers, answerRecord];
   const newTotalTime = currentData.totalTimeMs + responseTimeMs;
   const isFinished = newAnswers.length === questionsList.length;
 
-  // Обновляем запись
   await update(playerAnswersRef, {
     answers: newAnswers,
     totalTimeMs: newTotalTime,
@@ -109,7 +115,7 @@ async function submitAnswerToDB(userAnswerNum, isCorrect, responseTimeMs) {
   return { isFinished, newTotalTime };
 }
 
-// Обработка ответа пользователя (вызывается при нажатии Enter)
+// ---------- Обработка ответа пользователя ----------
 async function handleSubmitAnswer() {
   if (!isWaitingForAnswer || playerFinishedLocally) {
     console.log("[Game] Ответ не принимается (ожидание или уже завершён)");
@@ -138,7 +144,6 @@ async function handleSubmitAnswer() {
   const responseTimeMs = performance.now() - questionStartTime;
   totalResponseTimeMs += responseTimeMs;
 
-  // Отображаем обратную связь
   const feedbackEl = document.getElementById("feedback-message");
   if (isCorrect) {
     feedbackEl.textContent = `✓ Верно! +${responseTimeMs.toFixed(0)} мс`;
@@ -152,7 +157,6 @@ async function handleSubmitAnswer() {
 
   isWaitingForAnswer = false;
 
-  // Сохраняем ответ в БД
   let isFinished = false;
   try {
     const result = await submitAnswerToDB(userAnswerNum, isCorrect, responseTimeMs);
@@ -160,28 +164,22 @@ async function handleSubmitAnswer() {
   } catch (err) {
     console.error("[Game] Ошибка сохранения ответа:", err);
     feedbackEl.textContent = "Ошибка сохранения ответа, попробуйте ещё раз";
-    isWaitingForAnswer = true; // Разрешаем повторную попытку
+    isWaitingForAnswer = true;
     return;
   }
 
-  // Переход к следующему вопросу или завершение
   currentQuestionIdx++;
 
   if (!isFinished) {
-    // Задержка перед следующим вопросом
-    setTimeout(() => {
-      displayCurrentQuestion();
-    }, 800);
+    setTimeout(() => displayCurrentQuestion(), 800);
   } else {
-    // Игрок завершил все вопросы – ждём соперника
     playerFinishedLocally = true;
     feedbackEl.textContent = "Вы ответили на все вопросы! Ожидаем соперника...";
     feedbackEl.style.color = "#3498db";
-    // Блокируем дальнейший ввод (isWaitingForAnswer уже false)
   }
 }
 
-// Обработка нажатий клавиш (цифры, Del, Clear, Enter)
+// ---------- Клавиатура ----------
 function handleKeyPress(key) {
   if (!isWaitingForAnswer || playerFinishedLocally) return;
 
@@ -194,7 +192,7 @@ function handleKeyPress(key) {
   } else if (key === "enter") {
     if (currentAnswer !== "") handleSubmitAnswer();
   } else if (/^\d$/.test(key)) {
-    if (currentAnswer.length < 3) { // Максимум 3 цифры (произведение до 700)
+    if (currentAnswer.length < 3) {
       currentAnswer += key;
       updateAnswerDisplay();
     }
@@ -204,14 +202,9 @@ function handleKeyPress(key) {
 // Прикрепление обработчиков к клавиатуре (виртуальной)
 function attachKeyboardHandlers() {
   const keypad = document.getElementById("multiplication-keypad");
-  if (!keypad) {
-    console.warn("[Game] Элемент #multiplication-keypad не найден");
-    return;
-  }
-  // Удаляем старые обработчики, чтобы избежать дублирования
+  if (!keypad) return;
   const newKeypad = keypad.cloneNode(true);
   keypad.parentNode.replaceChild(newKeypad, keypad);
-
   newKeypad.addEventListener("click", (e) => {
     const keyDiv = e.target.closest(".key");
     if (!keyDiv) return;
@@ -220,12 +213,12 @@ function attachKeyboardHandlers() {
   });
 }
 
-// ---------- Логика завершения игры ----------
+// ---------- Завершение игры ----------
 async function finishGame(winnerUid, myUid, opponentId) {
   console.log(`[Game] Игра завершена. Победитель: ${winnerUid}`);
 
   if (gameListener) {
-    gameListener(); // Отписываемся от изменений комнаты
+    gameListener();
     gameListener = null;
   }
 
@@ -239,12 +232,8 @@ async function finishGame(winnerUid, myUid, opponentId) {
     winner: winnerUid,
   });
 
-  // Показываем экран результата
-  const resultText = isWin ? "Победа!" : "Поражение...";
-  const resultEl = document.getElementById("result-text");
-  if (resultEl) resultEl.textContent = resultText;
+  document.getElementById("result-text").textContent = isWin ? "Победа!" : "Поражение...";
   showScreen("result-screen");
-
   cleanupGame();
 }
 
@@ -257,7 +246,6 @@ function checkBothFinishedAndDetermineWinner(roomData, myUid) {
   const playerAnswers = roomData.playerAnswers || {};
   const myAnswers = playerAnswers[myUid];
   const oppAnswers = playerAnswers[opponentId];
-
   if (!myAnswers || !oppAnswers) return false;
 
   const myFinished = myAnswers.finished === true;
@@ -280,7 +268,6 @@ function updateProgressDisplay(roomData, myUid) {
   if (!myAnswers) return;
 
   const myProgress = myAnswers.answers?.length || 0;
-
   const players = roomData.players || {};
   const opponentId = Object.keys(players).find(id => id !== myUid);
   let oppProgress = 0;
@@ -289,10 +276,8 @@ function updateProgressDisplay(roomData, myUid) {
   }
 
   const total = questionsList.length;
-  const mySpan = document.getElementById("my-progress");
-  const oppSpan = document.getElementById("opponent-progress");
-  if (mySpan) mySpan.textContent = `${myProgress}/${total}`;
-  if (oppSpan) oppSpan.textContent = `${oppProgress}/${total}`;
+  document.getElementById("my-progress").textContent = `${myProgress}/${total}`;
+  document.getElementById("opponent-progress").textContent = `${oppProgress}/${total}`;
 }
 
 // Слушатель изменений комнаты (прогресс, завершение игры)
@@ -301,7 +286,7 @@ function attachGameListener(roomId, myUid) {
   gameListener = onValue(roomRef, (snapshot) => {
     const room = snapshot.val();
     if (!room) {
-      console.warn("[Game] Комната удалена или не существует");
+      console.warn("[Game] Комната удалена");
       cleanupGame();
       showScreen("menu-screen");
       return;
@@ -310,11 +295,9 @@ function attachGameListener(roomId, myUid) {
     // Обновляем отображение прогресса
     updateProgressDisplay(room, myUid);
 
-    // Проверяем, не завершили ли оба игрока
-    const finished = checkBothFinishedAndDetermineWinner(room, myUid);
-    if (finished) return;
+    if (checkBothFinishedAndDetermineWinner(room, myUid)) return;
 
-    // Дополнительно: если локально игрок завершил, но соперник ещё нет – показываем ожидание
+    // Если локально ещё не завершили, но в базе уже finished – синхронизируем флаг
     const playerAnswers = room.playerAnswers || {};
     const myFinished = playerAnswers[myUid]?.finished || false;
     if (myFinished && !playerFinishedLocally) {
@@ -329,17 +312,16 @@ function attachGameListener(roomId, myUid) {
   });
 }
 
-// Инициализация записи ответов для игрока (если отсутствует)
-async function initPlayerData(roomId, userId, totalQuestions) {
+// ---------- Инициализация данных игрока ----------
+async function initPlayerData(roomId, userId) {
   const playerAnswersRef = ref(db, `rooms/${roomId}/playerAnswers/${userId}`);
   const snapshot = await get(playerAnswersRef);
   if (!snapshot.exists()) {
-    await update(ref(db, `rooms/${roomId}/playerAnswers`), {
-      [userId]: {
-        answers: [],
-        totalTimeMs: 0,
-        finished: false,
-      },
+    // Используем set для гарантии структуры
+    await set(playerAnswersRef, {
+      answers: [],
+      totalTimeMs: 0,
+      finished: false,
     });
     console.log("[Game] Создана запись ответов для игрока", userId);
   }
@@ -356,7 +338,7 @@ async function loadQuestions(roomId) {
   return room.questions;
 }
 
-// ---------- Основная функция запуска игры ----------
+// ---------- Старт игры ----------
 export async function startGame(roomId, hostUid) {
   console.log("[Game] startGame вызван", { roomId, hostUid });
 
@@ -367,7 +349,7 @@ export async function startGame(roomId, hostUid) {
     return;
   }
 
-  // Сброс локального состояния
+  // Сброс состояния
   currentRoomId = roomId;
   questionsList = [];
   currentQuestionIdx = 0;
@@ -377,7 +359,6 @@ export async function startGame(roomId, hostUid) {
   totalResponseTimeMs = 0;
   playerFinishedLocally = false;
 
-  // Очищаем старый слушатель, если был
   if (gameListener) {
     gameListener();
     gameListener = null;
@@ -391,13 +372,9 @@ export async function startGame(roomId, hostUid) {
     questionsList = await loadQuestions(roomId);
     console.log(`[Game] Загружено ${questionsList.length} вопросов`);
 
-    // Инициализируем данные игрока в БД
-    await initPlayerData(roomId, user.uid, questionsList.length);
+    await initPlayerData(roomId, user.uid);
 
-    // Отображаем первый вопрос
     displayCurrentQuestion();
-
-    // Устанавливаем слушатель изменений комнаты (для прогресса и завершения)
     attachGameListener(roomId, user.uid);
   } catch (err) {
     console.error("[Game] Ошибка при старте игры:", err);
