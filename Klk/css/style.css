@@ -1,4 +1,4 @@
-/* styles.css — адаптивные стили для игры на телефоне */
+/* styles.css — полностью адаптированные стили для игры на телефоне без прокрутки */
 
 /* ---------- Сброс и база ---------- */
 * {
@@ -7,38 +7,36 @@
   padding: 0;
 }
 
-body {
+html, body {
+  height: 100%;
+  overflow: hidden; /* убираем прокрутку всей страницы */
   font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
   background: #0b0e14;
   color: #eaeef2;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px;
-  margin: 0;
-  touch-action: manipulation; /* отключаем двойное увеличение */
+  touch-action: manipulation;
 }
 
-/* ---------- Контейнер приложения ---------- */
 #app {
   width: 100%;
-  max-width: 500px;  /* комфортная ширина для телефона */
+  max-width: 500px;
+  height: 100vh; /* занимает всю высоту экрана */
+  max-height: 100vh;
+  margin: 0 auto;
   background: #1a1f2b;
-  border-radius: 28px;
-  padding: 20px 16px 30px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  min-height: 90vh;
   display: flex;
   flex-direction: column;
+  padding: 12px 12px 16px;
+  overflow: hidden; /* внутренняя прокрутка отключена */
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
 }
 
-/* ---------- Экранные контейнеры ---------- */
+/* ---------- Все экраны ---------- */
 .screen {
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 16px;
+  height: 100%;
+  overflow: hidden; /* никаких прокруток внутри */
   animation: fadeIn 0.25s ease;
 }
 
@@ -47,11 +45,11 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ---------- Общие компоненты ---------- */
+/* ---------- Общие элементы ---------- */
 h1, h2 {
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -59,8 +57,7 @@ h1, h2 {
 }
 
 h1 {
-  font-size: 2rem;
-  margin-bottom: 4px;
+  font-size: 1.8rem;
   background: linear-gradient(135deg, #f0c27f, #fc5c7d);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -68,26 +65,25 @@ h1 {
 }
 
 h2 {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   color: #cdd9e6;
-  margin-bottom: 8px;
 }
 
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 24px;
+  padding: 12px 20px;
   border: none;
   border-radius: 60px;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 600;
   background: #2d3748;
   color: #eaeef2;
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  min-height: 56px;
+  min-height: 48px;
   touch-action: manipulation;
   user-select: none;
 }
@@ -100,25 +96,19 @@ h2 {
   background: #4f7df3;
   color: #fff;
 }
-
-.button-primary:active {
-  background: #3b62c9;
-}
+.button-primary:active { background: #3b62c9; }
 
 .button-secondary {
   background: #3d4a5c;
 }
-
 .button-danger {
   background: #dc3545;
   color: #fff;
 }
-
 .button-success {
   background: #28a745;
   color: #fff;
 }
-
 .button-block {
   width: 100%;
 }
@@ -127,58 +117,55 @@ h2 {
 #auth-screen {
   justify-content: center;
   align-items: stretch;
-  gap: 20px;
-  padding: 20px 0;
+  gap: 16px;
+  padding: 12px 0;
 }
 
 #auth-screen .logo {
-  font-size: 3.2rem;
+  font-size: 3rem;
   text-align: center;
-  margin-bottom: 8px;
 }
 
 .auth-input {
   background: #2a3140;
   border: 1px solid #3f4a5e;
   border-radius: 40px;
-  padding: 16px 20px;
-  font-size: 1rem;
+  padding: 14px 18px;
+  font-size: 0.95rem;
   color: #eaeef2;
   width: 100%;
   outline: none;
 }
-
 .auth-input:focus {
   border-color: #4f7df3;
 }
 
 #auth-error, #email-auth-error {
   color: #f8a5a5;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-align: center;
-  min-height: 1.5em;
+  min-height: 1.4em;
 }
 
 /* ---------- Меню ---------- */
 #menu-screen {
   align-items: center;
-  gap: 20px;
+  gap: 14px;
 }
 
 .player-card {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   background: #262e3e;
   border-radius: 60px;
-  padding: 8px 20px 8px 8px;
+  padding: 6px 16px 6px 6px;
   width: 100%;
-  margin-bottom: 8px;
 }
 
 #player-avatar {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
   background: #3a455a;
@@ -186,7 +173,7 @@ h2 {
 }
 
 #player-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 500;
   flex: 1;
 }
@@ -194,16 +181,17 @@ h2 {
 .online-players {
   width: 100%;
   background: #1e2533;
-  border-radius: 18px;
-  padding: 12px 16px;
-  max-height: 200px;
+  border-radius: 16px;
+  padding: 10px 14px;
+  max-height: 140px;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .online-players h3 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #aab7cc;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .player-list {
@@ -215,23 +203,21 @@ h2 {
 .player-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 4px;
+  gap: 8px;
+  padding: 6px 0;
   border-bottom: 1px solid #2a3142;
 }
-
 .player-item:last-child {
   border-bottom: none;
 }
 
 .player-avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
   background: #3a455a;
 }
-
 .placeholder-avatar {
   background: #4f7df3;
   color: white;
@@ -239,15 +225,15 @@ h2 {
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  font-size: 0.7rem;
 }
 
 .player-name {
   flex: 1;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
-
 .player-status {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #8f9eb3;
 }
 
@@ -255,100 +241,112 @@ h2 {
 #lobby-screen {
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 #lobby-status {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   background: #262e3e;
-  padding: 16px 24px;
+  padding: 14px 20px;
   border-radius: 60px;
   text-align: center;
   width: 100%;
 }
 
-/* ---------- Игровой экран ---------- */
+/* ---------- ИГРОВОЙ ЭКРАН (без прокрутки) ---------- */
 #game-screen {
-  gap: 8px;
+  gap: 4px;
+  height: 100%;
+  max-height: 100%;
+  padding: 0;
+  justify-content: space-between; /* распределяем пространство */
 }
 
 .game-header {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #aab7cc;
-  padding: 4px 0;
+  padding: 2px 0;
+  flex-shrink: 0;
 }
 
 .progress-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
-
 .progress-item .label {
   opacity: 0.7;
 }
 
 #question-text {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 600;
   text-align: center;
-  padding: 12px 0;
+  padding: 8px 4px;
   background: #262e3e;
-  border-radius: 20px;
-  min-height: 80px;
+  border-radius: 16px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   word-break: break-word;
+  flex-shrink: 0;
 }
 
 #answer-input {
-  font-size: 2.8rem;
+  font-size: 2.4rem;
   font-weight: 700;
   text-align: center;
   background: #0b0e14;
-  border-radius: 20px;
-  padding: 12px 0;
-  min-height: 70px;
+  border-radius: 16px;
+  padding: 6px 0;
+  min-height: 54px;
   letter-spacing: 4px;
   color: #f0c27f;
+  flex-shrink: 0;
 }
 
 #feedback-message {
-  min-height: 2.4rem;
-  font-size: 1rem;
+  min-height: 2rem;
+  font-size: 0.9rem;
   text-align: center;
-  padding: 4px 0;
+  padding: 2px 0;
   color: #cdd9e6;
+  flex-shrink: 0;
 }
 
-/* ---------- Клавиатура ---------- */
+/* ---------- Клавиатура (занимает оставшееся место) ---------- */
 #multiplication-keypad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 4px;
+  gap: 8px;
+  flex: 1; /* растягивается на всё доступное пространство */
+  min-height: 0; /* для корректного сжатия */
+  align-content: stretch;
+  padding-top: 4px;
 }
 
 .key {
   background: #2d3748;
   border: none;
-  border-radius: 16px;
-  padding: 18px 0;
-  font-size: 1.6rem;
+  border-radius: 14px;
+  padding: 0;
+  font-size: 1.4rem;
   font-weight: 600;
   color: #eaeef2;
-  box-shadow: 0 4px 0 #161c26;
+  box-shadow: 0 3px 0 #161c26;
   transition: all 0.08s;
   cursor: pointer;
   touch-action: manipulation;
   user-select: none;
-  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 0; /* высота зависит от грида */
+  height: auto;
+  aspect-ratio: 1 / 0.9; /* чуть шире чем высокие */
 }
 
 .key:active {
@@ -359,16 +357,14 @@ h2 {
 .key-digit {
   background: #39455c;
 }
-
 .key-digit:active {
   background: #2d3748;
 }
 
 .key-action {
   background: #4f5d74;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
-
 .key-action:active {
   background: #3d4a5e;
 }
@@ -376,9 +372,8 @@ h2 {
 .key-enter {
   background: #4f7df3;
   grid-column: span 2;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
 }
-
 .key-enter:active {
   background: #3b62c9;
 }
@@ -387,7 +382,6 @@ h2 {
   background: #dc3545;
   color: #fff;
 }
-
 .key-clear:active {
   background: #b02a37;
 }
@@ -396,65 +390,82 @@ h2 {
 #result-screen {
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
   text-align: center;
 }
 
 #result-text {
-  font-size: 3.2rem;
+  font-size: 2.8rem;
   font-weight: 700;
-  margin: 12px 0;
+  margin: 8px 0;
 }
 
 #result-screen .subtitle {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #aab7cc;
 }
 
-/* ---------- Адаптивность для очень маленьких экранов ---------- */
-@media (max-width: 420px) {
+/* ---------- Мелкие экраны (до 400px) ---------- */
+@media (max-width: 400px) {
   #app {
-    padding: 12px 10px 20px;
-    border-radius: 20px;
+    padding: 8px 8px 12px;
   }
   #question-text {
-    font-size: 1.6rem;
-    min-height: 64px;
+    font-size: 1.3rem;
+    min-height: 48px;
+    padding: 4px;
   }
   #answer-input {
-    font-size: 2.2rem;
-    min-height: 56px;
+    font-size: 2rem;
+    min-height: 44px;
   }
   .key {
-    font-size: 1.3rem;
-    min-height: 54px;
-    padding: 12px 0;
+    font-size: 1.2rem;
     border-radius: 12px;
   }
-  .button {
+  .key-enter {
     font-size: 1rem;
-    padding: 12px 16px;
-    min-height: 48px;
+  }
+  .button {
+    font-size: 0.9rem;
+    padding: 10px 16px;
+    min-height: 40px;
   }
   h1 {
-    font-size: 1.6rem;
-  }
-  .player-card {
-    padding: 6px 12px 6px 6px;
+    font-size: 1.5rem;
   }
   #player-avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
+  }
+  .game-header {
+    font-size: 0.7rem;
+  }
+  #feedback-message {
+    font-size: 0.8rem;
+    min-height: 1.6rem;
+  }
+  #multiplication-keypad {
+    gap: 6px;
   }
 }
 
-/* ---------- Прокрутка при необходимости ---------- */
-.screen {
-  overflow-y: auto;
-  max-height: 90vh;
+/* ---------- Очень высокие экраны (большой запас) ---------- */
+@media (min-height: 800px) {
+  #question-text {
+    font-size: 2rem;
+    min-height: 80px;
+  }
+  #answer-input {
+    font-size: 3rem;
+    min-height: 70px;
+  }
+  .key {
+    font-size: 1.8rem;
+  }
 }
 
-/* ---------- Дополнительно для списка онлайн ---------- */
+/* ---------- Стилизация скролла для списка онлайн (остаётся) ---------- */
 .online-players::-webkit-scrollbar {
   width: 4px;
 }
@@ -466,21 +477,12 @@ h2 {
   border-radius: 8px;
 }
 
-/* ---------- Общие утилиты ---------- */
+/* ---------- Утилиты ---------- */
 .hidden {
   display: none !important;
 }
 .text-center {
   text-align: center;
-}
-.mt-8 {
-  margin-top: 8px;
-}
-.mb-8 {
-  margin-bottom: 8px;
-}
-.gap-8 {
-  gap: 8px;
 }
 .flex-1 {
   flex: 1;
