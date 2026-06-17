@@ -1,129 +1,90 @@
-/* =========================================
-   1. Сброс и базовые настройки
-   ========================================= */
+/* Сброс и базовые настройки для мобильных устройств */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  -webkit-tap-highlight-color: transparent; /* Убирает синюю подсветку при тапе на мобильных */
+  -webkit-tap-highlight-color: transparent;
 }
 
-:root {
-  /* Стандартная тема (по умолчанию) */
-  --bg-color: #f4f6f8;
-  --text-color: #1a1a1a;
-  --primary-color: #4caf50;
-  --secondary-color: #2196f3;
-  --keypad-bg: #ffffff;
-  --keypad-text: #1a1a1a;
-  --keypad-active: #e0e0e0;
-  --danger-color: #f44336;
-}
-
-/* Тёмная тема */
-body.theme-dark {
-  --bg-color: #121212;
-  --text-color: #ffffff;
-  --primary-color: #bb86fc;
-  --secondary-color: #03dac6;
-  --keypad-bg: #1e1e1e;
-  --keypad-text: #ffffff;
-  --keypad-active: #333333;
-}
-
-/* Светлая тема */
-body.theme-light {
-  --bg-color: #ffffff;
-  --text-color: #000000;
-  --primary-color: #2e7d32;
-  --secondary-color: #1565c0;
-  --keypad-bg: #f5f5f5;
-  --keypad-text: #000000;
-  --keypad-active: #e0e0e0;
-}
-
-/* Синяя тема */
-body.theme-blue {
-  --bg-color: #e3f2fd;
-  --text-color: #0d47a1;
-  --primary-color: #1976d2;
-  --secondary-color: #64b5f6;
-  --keypad-bg: #bbdefb;
-  --keypad-text: #0d47a1;
-  --keypad-active: #90caf9;
-}
-
-body {
-  /* 100dvh учитывает адресную строку мобильных браузеров, предотвращая скролл */
-  height: 100dvh;
+html, body {
+  height: 100dvh; /* Динамическая высота viewport для мобильных (учитывает адресную строку) */
   width: 100vw;
-  overflow: hidden; /* Жёсткий запрет на прокрутку */
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  overflow: hidden; /* Запрет прокрутки */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  transition: background-color 0.3s, color 0.3s;
+  background-color: #1a1a2e;
+  color: #e0e0e0;
+  user-select: none; /* Запрет выделения текста при быстрых нажатиях */
 }
 
-/* =========================================
-   2. Общие компоненты
-   ========================================= */
+/* Управление экранами (скрываем неактивные) */
 .screen {
-  display: none; /* Скрываем все экраны по умолчанию */
+  display: none;
   flex-direction: column;
-  height: 100%;
+  height: 100dvh;
   width: 100%;
-  padding: 16px;
-  gap: 12px;
+  padding: 2vmin;
 }
 
 .screen.active {
-  display: flex; /* Показываем только активный экран */
+  display: flex;
 }
 
+/* Заголовки */
 h1, h2 {
   text-align: center;
-  font-size: clamp(1.2rem, 5vw, 1.8rem);
-  margin-bottom: 8px;
+  color: #4ecca3;
+  margin-bottom: 2vmin;
+  font-size: 5vmin;
 }
 
-.btn {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  font-size: clamp(1rem, 4vw, 1.2rem);
-  font-weight: 600;
+/* Кнопки и интерактивные элементы */
+button, .btn {
+  background-color: #16213e;
+  color: #4ecca3;
+  border: 2px solid #4ecca3;
+  border-radius: 2vmin;
+  padding: 2vmin;
+  font-size: 4.5vmin;
+  font-weight: bold;
   cursor: pointer;
-  transition: transform 0.1s, opacity 0.2s;
+  touch-action: manipulation; /* Улучшает отклик на тач-устройствах */
+  transition: background 0.1s;
   text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn:active {
-  transform: scale(0.97);
-  opacity: 0.8;
+button:active, .btn:active {
+  background-color: #4ecca3;
+  color: #1a1a2e;
 }
 
-.btn-primary {
-  background-color: var(--primary-color);
-  color: #ffffff;
+/* Экран входа и меню */
+.auth-container, .menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2vmin;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
 }
 
-.btn-secondary {
-  background-color: var(--secondary-color);
-  color: #ffffff;
+.auth-container button, .menu-container button {
+  width: 80vw;
+  max-width: 300px;
 }
 
-.btn-outline {
-  background-color: transparent;
-  border: 2px solid var(--text-color);
-  color: var(--text-color);
+/* Статус поиска */
+.status-text {
+  text-align: center;
+  font-size: 4vmin;
+  margin: 4vmin 0;
+  color: #a0a0a0;
 }
 
-/* =========================================
-   3. Экран игры (Без прокрутки!)
-   ========================================= */
+/* Игровой экран */
 .game-screen {
   justify-content: space-between;
 }
@@ -131,110 +92,96 @@ h1, h2 {
 .progress-container {
   display: flex;
   justify-content: space-between;
-  font-size: clamp(0.8rem, 3.5vw, 1rem);
-  font-weight: 600;
-  padding: 8px 0;
+  font-size: 3.5vmin;
+  padding: 1vmin 0;
+  color: #a0a0a0;
 }
 
-.question-display {
+.progress-bar {
+  width: 100%;
+  height: 2vmin;
+  background: #0f3460;
+  border-radius: 1vmin;
+  margin-top: 1vmin;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #4ecca3;
+  width: 0%; /* Будет меняться через JS */
+  transition: width 0.3s ease;
+}
+
+/* Блок с вопросом */
+.question-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 16px;
+  align-items: center;
+  gap: 2vmin;
 }
 
 .question-text {
-  font-size: clamp(2.5rem, 10vw, 4rem);
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-
-.input-field {
-  width: 100%;
-  max-width: 300px;
-  min-height: 60px;
-  background-color: var(--keypad-bg);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(2rem, 8vw, 3rem);
+  font-size: 12vmin;
   font-weight: bold;
-  color: var(--primary-color);
-  border: 2px solid transparent;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  color: #fff;
 }
 
-/* Цифровая клавиатура */
+.answer-display {
+  font-size: 10vmin;
+  min-height: 12vmin;
+  min-width: 40vmin;
+  border-bottom: 1vmin solid #4ecca3;
+  text-align: center;
+  color: #4ecca3;
+}
+
+/* Клавиатура */
 .keypad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  gap: 8px;
-  /* Занимает доступное пространство, но не больше половины экрана */
-  flex: 1; 
-  max-height: 55vh; 
+  gap: 1.5vmin;
+  width: 100%;
+  max-height: 55dvh; /* Ограничение высоты, чтобы всё влезало */
+  padding-bottom: 2vmin;
 }
 
-.key {
-  background-color: var(--keypad-bg);
-  color: var(--keypad-text);
+.keypad button {
+  width: 100%;
+  height: 100%;
+  font-size: 7vmin;
+  border-radius: 2vmin;
+  background-color: #0f3460;
+  color: #fff;
   border: none;
-  border-radius: 12px;
-  font-size: clamp(1.2rem, 5vw, 1.8rem);
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: background-color 0.1s;
 }
 
-.key:active {
-  background-color: var(--keypad-active);
+.keypad button:active {
+  background-color: #1a1a2e;
 }
 
-.key.backspace {
-  background-color: var(--danger-color);
+.keypad .btn-action {
+  background-color: #e94560;
   color: white;
 }
 
-.key.ok {
-  background-color: var(--primary-color);
-  color: white;
-  grid-column: span 1;
+.keypad .btn-ok {
+  background-color: #4ecca3;
+  color: #1a1a2e;
 }
 
-.key.zero {
-  grid-column: span 2;
-}
-
-/* =========================================
-   4. Экраны меню и входа
-   ========================================= */
-.menu-screen, .login-screen {
+/* Экран результатов */
+.result-screen {
   justify-content: center;
   align-items: center;
-  gap: 16px;
+  text-align: center;
+  gap: 4vmin;
 }
 
-.theme-selector {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 16px;
-}
-
-.theme-btn {
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--text-color);
-  background: transparent;
-  color: var(--text-color);
-  font-size: 0.9rem;
-  cursor: pointer;
+.result-text {
+  font-size: 6vmin;
+  color: #4ecca3;
 }
