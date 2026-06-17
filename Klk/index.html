@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Multiplayer Text Game</title>
-  <link id="theme-style" rel="stylesheet" href="./css/style.css">
-  <!--<link rel="stylesheet" href="./css/klava.css">-->
+  <link id="theme-style" rel="stylesheet" href="./css/quincss.css">
 </head>
 <body>
   <div id="app">
@@ -21,11 +20,8 @@
       <button id="email-register-btn">Регистрация</button>
       <div id="email-auth-error" style="color:red; margin-top:5px;"></div>
     </div>
-    
-    <hr>
-    
+    <hr>  
     <button id="google-login-btn">Google</button>
-    <!--<button id="yandex-login-btn">Яндекс</button>-->
     <div id="auth-error"></div>
   </section>
 
@@ -38,15 +34,6 @@
     </div>
     <button id="play-btn">Играть</button>
     <button id="logout-btn">Выйти</button>
-
-    <div class="theme-selector">
-      <p>Выберите тему:</p>
-      <button class="theme-btn" data-theme="style">Стандартная</button>
-      <button class="theme-btn" data-theme="theme-dark">🌙 Тёмная</button>
-      <button class="theme-btn" data-theme="theme-light">☀️ Светлая</button>
-      <button class="theme-btn" data-theme="theme-blue">🔵 Синяя</button>
-    </div>
-
         <!-- Список онлайн игроков -->
     <div id="online-players-container">
       <h2>Игроки онлайн</h2>
@@ -97,7 +84,6 @@
           </tr>
           <tr>
             <td colspan="3"><div class="key" data-key="0">0</div></td>
-            <td></td> <!-- пустая ячейка для сохранения 4-х столбцов -->
           </tr>
         </table>
       </div>
@@ -112,6 +98,5 @@
   </div>
   
   <script type="module" src="./js/app.js"></script>
-  <script type="module" src="./js/theme.js"></script>
 </body>
 </html>
