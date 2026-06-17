@@ -300,36 +300,38 @@ h2 {
   flex-shrink: 0;
 }
 
-/* ---------- КЛАВИАТУРА (СЕТКА 4×4) ---------- */
-#multiplication-keypad {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  grid-template-areas:
-    "k7 k8 k9 del"
-    "k4 k5 k6 enter"
-    "k1 k2 k3 enter"
-    "k0 k0 k0 enter";
-  gap: 8px;
-  flex: 1;
-  min-height: 0;
-  align-content: stretch;
-  padding-top: 4px;
+/* ===== Клавиатура ===== */
+.keyboard {
+    background: var(--bg);
+    border-radius: 20px;
+    padding: 14px;
+    user-select: none;
+}
+.keyboard__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) 1fr;
+    grid-template-rows: repeat(4, 1fr);
+    grid-template-areas:
+        "k7 k8 k9 del"
+        "k4 k5 k6 enter"
+        "k1 k2 k3 enter"
+        "k0 k0 k0 enter";
+    gap: 8px;
 }
 
-/* Привязка кнопок к областям сетки по data-key */
-.key[data-key="1"] { grid-area: k1; }
-.key[data-key="2"] { grid-area: k2; }
-.key[data-key="3"] { grid-area: k3; }
-.key[data-key="4"] { grid-area: k4; }
-.key[data-key="5"] { grid-area: k5; }
-.key[data-key="6"] { grid-area: k6; }
-.key[data-key="7"] { grid-area: k7; }
-.key[data-key="8"] { grid-area: k8; }
-.key[data-key="9"] { grid-area: k9; }
-.key[data-key="0"] { grid-area: k0; }
-.key[data-key="del"] { grid-area: del; }
-.key[data-key="enter"] { grid-area: enter; }
+/* Разметка кнопок клавиатуры */
+.key:nth-child(1) { grid-area: k1; }
+.key:nth-child(2) { grid-area: k2; }
+.key:nth-child(3) { grid-area: k3; }
+.key:nth-child(4) { grid-area: k4; }
+.key:nth-child(5) { grid-area: k5; }
+.key:nth-child(6) { grid-area: k6; }
+.key:nth-child(7) { grid-area: k7; }
+.key:nth-child(8) { grid-area: k8; }
+.key:nth-child(9) { grid-area: k9; }
+.key:nth-child(10) { grid-area: k0; }  /* 0 */
+.key:nth-child(11) { grid-area: del; }  /* ⌫ */
+.key:nth-child(12) { grid-area: enter; } /* OK */
 
 .key {
   background: var(--key-bg);
