@@ -1,31 +1,52 @@
+/* ============================================================
+   theme-blue.css — ПОЛНАЯ ТЕМА "СИНЯЯ"
+   Клавиатура — табличная (надёжная и адаптивная)
+   ============================================================ */
+
+/* ---------- ПЕРЕМЕННЫЕ ---------- */
 :root {
   --font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
 
+  /* Фоны */
   --bg: #0c1a2b;
   --surface: #142b3f;
   --surface-hover: #1e3a52;
   --surface-light: #2a4a66;
+
+  /* Текст */
   --text: #c8d9e8;
   --text-secondary: #8aa9c9;
   --text-muted: #6a8aaa;
+
+  /* Акценты */
   --accent: #f5a623;
   --accent-hover: #e09515;
   --accent-gradient: linear-gradient(135deg, #f5a623, #f7c948);
+
+  /* Состояния */
   --ok-color: #2ecc71;
   --bad-color: #e74c3c;
   --warning: #f39c12;
+
+  /* Границы и тени */
   --border: #2a4a66;
   --shadow: 0 4px 12px rgba(0,0,0,0.6);
 
+  /* Клавиатура (таблица) */
   --key-bg: #1e3a52;
   --key-digit: #264b66;
   --key-action: #2c5570;
   --key-enter: #f5a623;
   --key-clear: #dc3545;
   --key-shadow: 0 3px 0 #0f2738;
+  --key-radius: 14px;
+  --key-font-size: 1.6rem;
 
+  /* Радиусы */
   --radius: 16px;
   --radius-large: 28px;
+
+  /* Отступы */
   --padding-app: 12px;
 }
 
@@ -118,7 +139,7 @@ h2 {
 }
 .button-primary {
   background: var(--accent);
-  color: #fff;
+  color: #0c1a2b;
 }
 .button-primary:active {
   background: var(--accent-hover);
@@ -234,7 +255,7 @@ h2 {
 }
 .placeholder-avatar {
   background: var(--accent);
-  color: white;
+  color: #0c1a2b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +286,7 @@ h2 {
   width: 100%;
 }
 
-/* ---------- ИГРОВОЙ ЭКРАН (без прокрутки) ---------- */
+/* ---------- ИГРОВОЙ ЭКРАН ---------- */
 #game-screen {
   gap: 4px;
   height: 100%;
@@ -312,7 +333,7 @@ h2 {
   padding: 6px 0;
   min-height: 54px;
   letter-spacing: 4px;
-  color: #f0c27f;
+  color: var(--accent);
   flex-shrink: 0;
 }
 #feedback-message {
@@ -324,22 +345,28 @@ h2 {
   flex-shrink: 0;
 }
 
-/* ---------- КЛАВИАТУРА (из klava.css, адаптирована) ---------- */
+/* ---------- КЛАВИАТУРА (ТАБЛИЦА) ---------- */
 #multiplication-keypad {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
   flex: 1;
   min-height: 0;
-  align-content: stretch;
-  padding-top: 4px;
+  margin-top: 4px;
 }
 
+#multiplication-keypad td {
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  width: 25%;
+}
+
+/* Общий стиль кнопок */
 .key {
   background: var(--key-bg);
   border: none;
   border-radius: var(--key-radius);
-  padding: 0;
   font-size: var(--key-font-size);
   font-weight: 600;
   color: var(--text);
@@ -351,9 +378,8 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;
-  height: auto;
   aspect-ratio: 1 / 0.9;
+  margin: 4px;
 }
 .key:active {
   transform: translateY(3px);
@@ -368,7 +394,7 @@ h2 {
   background: var(--key-bg);
 }
 
-/* Действия (Del, Clear) */
+/* Действия (Del) */
 .key-action {
   background: var(--key-action);
   font-size: 1.2rem;
@@ -377,24 +403,33 @@ h2 {
   background: var(--surface-light);
 }
 
-/* Enter (занимает 2 колонки) */
+/* Enter */
 .key-enter {
   background: var(--key-enter);
-  color: #fff;
-  grid-column: span 2;
-  font-size: 1.4rem;
+  color: #0c1a2b;
+  font-weight: 700;
 }
 .key-enter:active {
   background: var(--accent-hover);
 }
 
-/* Clear (красная кнопка) */
+/* Очистка (если будет использоваться) */
 .key-clear {
   background: var(--key-clear);
   color: #fff;
 }
 .key-clear:active {
   background: #b02a37;
+}
+
+/* Дополнительные стили для ячеек с rowspan/colspan */
+#multiplication-keypad td[colspan="3"] .key {
+  width: 100%;
+}
+#multiplication-keypad td[rowspan="2"] .key {
+  height: 100%;
+  aspect-ratio: auto;
+  min-height: 80px;
 }
 
 /* ---------- ЭКРАН РЕЗУЛЬТАТА ---------- */
@@ -414,7 +449,7 @@ h2 {
   color: var(--text-secondary);
 }
 
-/* ---------- ВЫБОР ТЕМЫ (в меню) ---------- */
+/* ---------- ВЫБОР ТЕМЫ ---------- */
 .theme-selector {
   width: 100%;
   display: flex;
@@ -451,11 +486,11 @@ h2 {
   color: #1a1f2b;
 }
 .theme-btn[data-theme="theme-blue"] {
-  background: #1e3a52;
-  color: #e0eef7;
+  background: var(--accent);
+  color: #0c1a2b;
 }
 
-/* ---------- АДАПТИВНОСТЬ (до 400px) ---------- */
+/* ---------- АДАПТИВНОСТЬ ---------- */
 @media (max-width: 400px) {
   :root {
     --padding-app: 8px;
@@ -472,6 +507,7 @@ h2 {
   }
   .key {
     border-radius: 12px;
+    margin: 3px;
   }
   .key-enter {
     font-size: 1rem;
@@ -495,12 +531,11 @@ h2 {
     font-size: 0.8rem;
     min-height: 1.6rem;
   }
-  #multiplication-keypad {
-    gap: 6px;
+  #multiplication-keypad td[rowspan="2"] .key {
+    min-height: 60px;
   }
 }
 
-/* ---------- ВЫСОКИЕ ЭКРАНЫ (больше места) ---------- */
 @media (min-height: 800px) {
   #question-text {
     font-size: 2rem;
@@ -513,9 +548,12 @@ h2 {
   .key {
     font-size: 1.8rem;
   }
+  #multiplication-keypad td[rowspan="2"] .key {
+    min-height: 100px;
+  }
 }
 
-/* ---------- СКРОЛЛ ДЛЯ СПИСКА ОНЛАЙН ---------- */
+/* ---------- СКРОЛЛ ДЛЯ ОНЛАЙН ---------- */
 .online-players::-webkit-scrollbar {
   width: 4px;
 }

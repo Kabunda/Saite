@@ -75,27 +75,31 @@
           <p id="answer-input" class="answer-input">_</p>
           <p id="feedback-message" class="feedback"></p>
         </div>
-        <!-- Цифровая клавиатура -->
-        <div class="keyboard" id="multiplication-keypad">
-          <div class="keyboard__grid">
-            <div class="key" data-key="7">7</div>
-            <div class="key" data-key="8">8</div>
-            <div class="key" data-key="9">9</div>
-
-            <div class="key" data-key="4">4</div>
-            <div class="key" data-key="5">5</div>
-            <div class="key" data-key="6">6</div>
-
-            <div class="key" data-key="1">1</div>
-            <div class="key" data-key="2">2</div>
-            <div class="key" data-key="3">3</div>
-
-            <div class="key" data-key="0">0</div>
-            <div class="key key-action" data-key="del">⌫</div>
-
-            <div class="key key-enter" data-key="enter">✓</div>
-          </div>
-        </div>
+        <!-- Клавиатура на таблице -->
+        <table id="multiplication-keypad">
+          <tr>
+            <td><div class="key" data-key="7">7</div></td>
+            <td><div class="key" data-key="8">8</div></td>
+            <td><div class="key" data-key="9">9</div></td>
+            <td><div class="key key-action" data-key="del">⌫</div></td>
+          </tr>
+          <tr>
+            <td><div class="key" data-key="4">4</div></td>
+            <td><div class="key" data-key="5">5</div></td>
+            <td><div class="key" data-key="6">6</div></td>
+            <td rowspan="3"><div class="key key-enter" data-key="enter">OK</div></td>
+          </tr>
+          <tr>
+            <td><div class="key" data-key="1">1</div></td>
+            <td><div class="key" data-key="2">2</div></td>
+            <td><div class="key" data-key="3">3</div></td>
+            <!-- Третья строка, четвёртая ячейка занята rowspan из предыдущей строки -->
+          </tr>
+          <tr>
+            <td colspan="3"><div class="key" data-key="0">0</div></td>
+            <td></td> <!-- пустая ячейка для сохранения 4-х столбцов -->
+          </tr>
+        </table>
       </div>
     </section>
 
