@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отображение txt</title>
+    <style>
+        #content {
+            white-space: pre-wrap;   /* сохраняет переносы строк */
+            font-family: monospace;
+            background: #f4f4f4;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Просмотр файла text.txt</h1>
+    <pre id="content">Загрузка...</pre>
+
+    <script>
+        // Загружаем файл с сервера
+        fetch('text.txt')   // путь к вашему .txt файлу
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Не удалось загрузить файл');
+                }
+                return response.text();
+            })
+            .then(text => {
+                document.getElementById('content').textContent = text;
+            })
+            .catch(error => {
+                document.getElementById('content').textContent = 'Ошибка: ' + error.message;
+                console.error(error);
+            });
+    </script>
+</body>
+</html>
