@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Firebase Auth: Google + Email/Password</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: 0 auto; }
+        button { padding: 12px 24px; font-size: 16px; margin: 8px 8px 0 0; cursor: pointer; border: none; border-radius: 4px; background: #4285f4; color: #fff; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .user-info { margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9; }
+        pre { background: #eee; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        .hidden { display: none; }
+        .auth-form { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
+        .auth-form input { display: block; margin: 8px 0; padding: 8px; width: 100%; max-width: 300px; border: 1px solid #ccc; border-radius: 4px; }
+        .auth-form button { background: #34a853; margin-right: 8px; }
+        .auth-form button[type="button"] { background: #ea4335; }
+        .error-msg { color: #ea4335; font-size: 14px; margin-top: 8px; }
+        .success-msg { color: #34a853; font-size: 14px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Вход: Google + Email/Password</h1>
+
+    <div>
+        <button id="googleBtn">Войти через Google</button>
+        <button id="logoutBtn" class="hidden">Выйти</button>
+    </div>
+
+    <div id="emailForm" class="auth-form">
+        <h3>Вход / Регистрация по Email</h3>
+        <input type="email" id="emailInput" placeholder="Email" />
+        <input type="password" id="passwordInput" placeholder="Пароль (мин. 6 символов)" />
+        <button id="loginEmailBtn">Войти</button>
+        <button type="button" id="registerEmailBtn">Зарегистрироваться</button>
+        <div id="emailError" class="error-msg"></div>
+    </div>
+
+    <div id="userInfo" class="user-info hidden">
+        <h3>👤 Информация о пользователе</h3>
+        <p><strong>UID:</strong> <span id="uid"></span></p>
+        <p><strong>Имя:</strong> <span id="displayName"></span></p>
+        <p><strong>Email:</strong> <span id="email"></span></p>
+        <p><strong>Провайдер:</strong> <span id="provider"></span></p>
+        <p><strong>Firebase ID Token (для REST API):</strong></p>
+        <pre id="idToken"></pre>
+        <p><small>Этот токен можно использовать в заголовке <code>Authorization: Bearer &lt;token&gt;</code> для доступа к Realtime Database.</small></p>
+        <div id="statusMessage" class="success-msg"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // --------------------------------------------
+        // 1. КОНФИГУРАЦИЯ FIREBASE (вставьте свои данные)
+        // --------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyCceGN6t0VgqCb8cRWXrkxYaLoupEAJrS4",
+  authDomain: "croupcalc.firebaseapp.com",
+  databaseURL: "https://croupcalc-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "croupcalc",
+  storageBucket: "croupcalc.firebasestorage.app",
+  messagingSenderId: "104195175047",
+  appId: "1:104195175047:web:194dd61a6ae8e4cc8ebe22",
+  measurementId: "G-9PETG3E8V1"
+};
+        // --------------------------------------------
+        // Импорт и инициализация
+        // --------------------------------------------
+        import { initializeApp } from 'firebase/app';
+        import {
+            getAuth,
+            GoogleAuthProvider,
+            signInWithPopup,          // <-- используем popup
+            signOut,
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword
+        } from 'firebase/auth';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const googleProvider = new GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+
+        // DOM-элементы
+        const googleBtn = document.getElementById('googleBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfo = document.getElementById('userInfo');
+        const uidSpan = document.getElementById('uid');
+        const displayNameSpan = document.getElementById('displayName');
+        const emailSpan = document.getElementById('email');
+        const providerSpan = document.getElementById('provider');
+        const idTokenPre = document.getElementById('idToken');
+        const statusMessage = document.getElementById('statusMessage');
+
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginEmailBtn = document.getElementById('loginEmailBtn');
+        const registerEmailBtn = document.getElementById('registerEmailBtn');
+        const emailError = document.getElementById('emailError');
+
+        // --------------------------------------------
+        // Вход через Google (popup)
+        // --------------------------------------------
+        async function loginWithGoogle() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                console.log('✅ Вход через Google (popup) выполнен:', result.user);
+                // onAuthStateChanged сам обновит UI, но можно вызвать и здесь
+                // updateUI(result.user);
+                statusMessage.textContent = '✅ Вход через Google выполнен!';
+            } catch (error) {
+                console.error('❌ Ошибка входа через Google:', error);
+                // Если пользователь закрыл popup, не показываем alert
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    alert(`Ошибка: ${error.message}`);
+                }
+            }
+        }
+
+        // --------------------------------------------
+        // Функции для Email/Password
+        // --------------------------------------------
+        async function registerWithEmail() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            emailError.textContent = '';
+            if (!email || !password) {
+                emailError.textContent = 'Введите email и пароль.';
+                return;
+            }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('✅ Регистрация успешна:', userCredential.user);
+                updateUI(userCredential.user);
+                statusMessage.textContent = '✅ Регистрация выполнена!';
+            } catch (error) {
+                console.error('❌ Ошибка регистрации:', error);
+                emailError.textContent = error.message;
+            }
+        }
+
+        async function loginWithEmail() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            emailError.textContent = '';
+            if (!email || !password) {
+                emailError.textContent = 'Введите email и пароль.';
+                return;
+            }
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('✅ Вход по email выполнен:', userCredential.user);
+                updateUI(userCredential.user);
+                statusMessage.textContent = '✅ Вход по email выполнен!';
+            } catch (error) {
+                console.error('❌ Ошибка входа по email:', error);
+                emailError.textContent = error.message;
+            }
+        }
+
+        // --------------------------------------------
+        // Выход
+        // --------------------------------------------
+        async function logout() {
+            try {
+                await signOut(auth);
+                console.log('✅ Выход выполнен');
+                userInfo.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                googleBtn.disabled = false;
+                document.getElementById('emailForm').style.display = 'block';
+                statusMessage.textContent = '';
+            } catch (error) {
+                console.error('❌ Ошибка выхода:', error);
+            }
+        }
+
+        // --------------------------------------------
+        // Обновление UI (показывает пользователя и токен)
+        // --------------------------------------------
+        async function updateUI(user) {
+            if (!user) {
+                userInfo.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                googleBtn.disabled = false;
+                document.getElementById('emailForm').style.display = 'block';
+                statusMessage.textContent = '';
+                return;
+            }
+
+            uidSpan.textContent = user.uid;
+            displayNameSpan.textContent = user.displayName || 'не указано';
+            emailSpan.textContent = user.email || 'не указано';
+
+            let providerName = 'неизвестно';
+            if (user.providerData && user.providerData.length > 0) {
+                const p = user.providerData[0].providerId;
+                if (p === 'google.com') providerName = 'Google';
+                else if (p === 'password') providerName = 'Email/Password';
+                else providerName = p;
+            }
+            providerSpan.textContent = providerName;
+
+            try {
+                const token = await user.getIdToken();
+                idTokenPre.textContent = token;
+                console.log('🔑 Firebase ID Token:', token);
+                statusMessage.textContent = `✅ Токен получен (первые 20 символов: ${token.substring(0, 20)}...)`;
+            } catch (e) {
+                console.error('❌ Ошибка получения токена:', e);
+                idTokenPre.textContent = 'Не удалось получить токен';
+                statusMessage.textContent = '❌ Ошибка получения токена';
+            }
+
+            userInfo.classList.remove('hidden');
+            logoutBtn.classList.remove('hidden');
+            googleBtn.disabled = true;
+            document.getElementById('emailForm').style.display = 'none';
+        }
+
+        // --------------------------------------------
+        // Отслеживание состояния аутентификации
+        // --------------------------------------------
+        onAuthStateChanged(auth, (user) => {
+            console.log('🔄 onAuthStateChanged вызван, user:', user ? user.uid : 'null');
+            if (user) {
+                updateUI(user);
+            } else {
+                userInfo.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                googleBtn.disabled = false;
+                document.getElementById('emailForm').style.display = 'block';
+                statusMessage.textContent = '';
+            }
+        });
+
+        // --------------------------------------------
+        // Навешиваем обработчики
+        // --------------------------------------------
+        googleBtn.addEventListener('click', loginWithGoogle);
+        logoutBtn.addEventListener('click', logout);
+        loginEmailBtn.addEventListener('click', loginWithEmail);
+        registerEmailBtn.addEventListener('click', registerWithEmail);
+
+        console.log('🚀 Страница готова. Нажмите "Войти через Google" (popup) или используйте Email/Password.');
+    </script>
+</body>
+</html>
